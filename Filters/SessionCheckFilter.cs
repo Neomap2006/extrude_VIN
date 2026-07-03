@@ -9,10 +9,12 @@ namespace VelastoProductionSystem.Filters
         {
             var controllerName = context.RouteData.Values["controller"]?.ToString();
             
-            // Bypass session check for Account controller (Login/Logout)
-            // and for API routes
+            // Bypass session check for Account controller (Login/Logout/OfflineSession)
+            // and for API routes and OfflineSync (public snapshot endpoint)
             var path = context.HttpContext.Request.Path.Value ?? "";
-            if (controllerName == "Account" || path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
+            if (controllerName == "Account" ||
+                path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith("/OfflineSync/", StringComparison.OrdinalIgnoreCase))
             {
                 base.OnActionExecuting(context);
                 return;

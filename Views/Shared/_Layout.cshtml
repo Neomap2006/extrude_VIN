@@ -160,7 +160,7 @@
                         <i class="bi bi-clipboard2-plus"></i>
                         <span>Form Parameter Setting</span>
                     </a>
-                    <a asp-controller="Dimensi" asp-action="Index" class="nav-item sub">
+                    <a asp-controller="Dimensi" asp-action="App" class="nav-item sub">
                         <i class="bi bi-rulers"></i>
                         <span>Input Dimensi</span>
                     </a>
@@ -211,7 +211,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" style="width:20px;height:20px;fill:currentColor;margin-right:0.5rem;"><path d="M680-80v-400q16 0 31 2.5t29 7.5v380q-14 5-29 7.5T680-80Zm-100-28v-344q14-8 28.5-14.5T640-476v392q-17-3-31.5-9.5T580-108Zm200 0v-344q45 26 72.5 71T880-280q0 56-27.5 101T780-108Zm-240-30q-28-27-44-63.5T480-280q0-42 16-79t44-64v285Zm-60-342ZM370-80l-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-74 56q-22-11-45-18.5T714-558l63-48-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q17 17 36.5 30.5T400-275q1 57 23.5 107T484-80H370Zm41-279q6-20 14.5-38.5T445-433q-11-8-17-20.5t-6-26.5q0-25 17.5-42.5T482-540q14 0 27 6.5t21 17.5q17-11 35-19.5t38-13.5q-18-32-50-51.5T482-620q-59 0-99.5 41T342-480q0 38 18.5 70.5T411-359Z"/></svg>
                         <span class="fw-bold">Form Parameter Setting</span>
                     </a>
-                    <a asp-controller="Dimensi" asp-action="Index" class="nav-item sub">
+                    <a asp-controller="Dimensi" asp-action="App" class="nav-item sub">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" style="width:20px;height:20px;fill:currentColor;margin-right:0.5rem;"><path d="M208-120q-37 0-62.5-25.5T120-208v-548q0-29 27-40.5t47 8.5l90 90-54 54 28 28 54-54 104 104-54 54 28 28 54-54 104 104-54 54 28 28 54-54 104 104-54 54 28 28 54-54 80 80q20 20 8.5 47T756-120H208Zm32-120h332L240-572v332Z"/></svg>
                         <span class="fw-bold">Input Dimensi</span>
                     </a>
@@ -538,6 +538,24 @@
                 
                 if (isDim) { p = []; }
                 else if (isParam) { d = []; }
+
+                // FILTER SAAT OFFLINE
+                if (!navigator.onLine) {
+                    try {
+                        const sessionStr = localStorage.getItem('offline_session');
+                        if (sessionStr) {
+                            const session = JSON.parse(sessionStr);
+                            // Jika bukan admin, filter berdasarkan nama pembuat ATAU nama mesin
+                            if (session.isAdmin !== "true") {
+                                const u = (session.userName || "").toUpperCase();
+                                const m = (session.machineName || "").toUpperCase();
+                                
+                                p = p.filter(x => (x.createdBy || "").toUpperCase() === u || (x.machineName || "").toUpperCase() === m);
+                                d = d.filter(x => (x.createdBy || "").toUpperCase() === u || (x.machineName || "").toUpperCase() === m);
+                            }
+                        }
+                    } catch(e) {}
+                }
 
                 if (p.length===0 && d.length===0) {
                     body.innerHTML = `<div class="t-empty"><i class="bi bi-moon-stars"></i><p>BELUM ADA DATA PADA TANGGAL INI</p></div>`;
@@ -897,6 +915,40 @@
                 window.location.href = '/Account/Login';
             }
         })();
+
+        // --- AUTO PRE-CACHE HALAMAN DINAMIS ---
+        // Solusi agar user tidak perlu masuk ke menu secara manual untuk bisa offline.
+        // Skrip ini akan mengunduh halaman penting ke cache secara diam-diam saat online.
+        window.addEventListener('load', function() {
+            if (navigator.onLine && 'caches' in window) {
+                setTimeout(() => {
+                    const dynamicCacheName = 'velasto-dynamic-pages';
+                    const urlsToPrefetch = [
+                        '/ProductionReport/Create',
+                        '/Dimensi',
+                        '/Dimensi/App'
+                    ];
+                    caches.open(dynamicCacheName).then(cache => {
+                        urlsToPrefetch.forEach(url => {
+                            fetch(url, { redirect: 'error', credentials: 'include' }).then(response => {
+                                if (response.ok) {
+                                    cache.put(url, response.clone());
+                                    console.log('[Auto-Precache] Berhasil menyimpan:', url);
+                                }
+                            }).catch(err => console.warn('[Auto-Precache] Gagal menyimpan (ter-redirect/error):', url));
+                        });
+                        
+                        // Khusus Login, fetch tanpa sesi agar server tidak me-redirect
+                        fetch('/Account/Login', { credentials: 'omit' }).then(res => {
+                            if (res.ok) {
+                                cache.put('/Account/Login', res.clone());
+                                console.log('[Auto-Precache] Berhasil menyimpan: /Account/Login');
+                            }
+                        }).catch(e => {});
+                    });
+                }, 3000); // Tunggu 3 detik setelah halaman selesai dimuat agar tidak mengganggu performa
+            }
+        });
     </script>
     </body>
 </html>

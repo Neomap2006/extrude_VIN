@@ -1398,12 +1398,15 @@
                     
                     if (window.db && window.db.apiCache) {
                         const cacheKey = `PLANNING_${date}_${shiftText}_${machine}`;
-                        await window.db.apiCache.put({ id: cacheKey, data: planningItemsCache, timestamp: new Date().getTime() });
+                        await window.db.apiCache.put({ key: cacheKey, data: planningItemsCache, timestamp: new Date().getTime() });
                     }
                     
                     silentCacheDimensiData(planningItemsCache);
                 }
                 
+                // Coba pre-cache SPS juga saat dari Dexie (jika online)
+                if (!fromServer) silentCacheDimensiData(planningItemsCache);
+
                 planningResultItems = planningItemsCache;
                 planningResultIndex = -1;
 
@@ -1560,7 +1563,7 @@
             loadMaster();
         }
 
-        async function silentCacheDimensiData(items) { if (!navigator.onLine || !window.db || !window.db.apiCache) return; const machine = document.getElementById('h-line')?.innerText || window.SESSION_MACHINE_NAME || ''; const uniqueItems = [...new Set(items.map(i => i.itemCode))].filter(Boolean); for (const code of uniqueItems) { const upperCode = code.toUpperCase().trim(); try { const cachedSps = await window.db.apiCache.get('SPS_DIM_' + upperCode); if (!cachedSps) { let url = '/Dimensi/GetSpsStandard?hoseType=' + encodeURIComponent(code.trim()); if (machine && machine !== '---') url += '&machineCode=' + encodeURIComponent(machine); const res = await fetch(url); if (!res.ok) continue; const data = await res.json(); await window.db.apiCache.put({ id: 'SPS_DIM_' + upperCode, data: data, timestamp: new Date().getTime() }); try { localStorage.setItem('offline_sps_cache_' + code, JSON.stringify(data)); } catch(e){} } } catch (e) { console.warn('Silent cache failed for', code, e); } } }
+        async function silentCacheDimensiData(items) { if (!navigator.onLine || !window.db || !window.db.apiCache) return; const machine = document.getElementById('h-line')?.innerText || window.SESSION_MACHINE_NAME || ''; const uniqueItems = [...new Set(items.map(i => i.itemCode))].filter(Boolean); for (const code of uniqueItems) { const upperCode = code.toUpperCase().trim(); try { const cachedSps = await window.db.apiCache.get('SPS_DIM_' + upperCode); if (!cachedSps) { let url = '/Dimensi/GetSpsStandard?hoseType=' + encodeURIComponent(code.trim()); if (machine && machine !== '---') url += '&machineCode=' + encodeURIComponent(machine); const res = await fetch(url); if (!res.ok) continue; const data = await res.json(); await window.db.apiCache.put({ key: 'SPS_DIM_' + upperCode, data: data, timestamp: new Date().getTime() }); try { localStorage.setItem('offline_sps_cache_' + upperCode, JSON.stringify(data)); } catch(e){} } } catch (e) { console.warn('Silent cache failed for', code, e); } } }
 
         function openPlanningDropdown() {
             const planningInput = document.getElementById('planningSearch');
@@ -2375,18 +2378,33 @@
                 let fromServer = true;
 
                 if (window.db && window.db.apiCache) {
-                    const cachedSps = await window.db.apiCache.get(`SPS_DIM_${code.toUpperCase().trim()}`);
+                    const upperCode = code.toUpperCase().trim();
+                    const cachedSps = await window.db.apiCache.get(`SPS_DIM_${upperCode}`);
                     if (cachedSps) {
                         data = cachedSps.data;
                         fromServer = false;
                         console.log("Loaded SPS master from Dexie Cache");
+                    } else {
+                        // Fallback: cek localStorage (key pakai uppercase)
+                        const lsKey = 'offline_sps_cache_' + upperCode;
+                        const lsCached = localStorage.getItem(lsKey);
+                        if (lsCached) {
+                            try { data = JSON.parse(lsCached); fromServer = false; console.log("Loaded SPS from localStorage:", lsKey); } catch(e){}
+                        }
                     }
                 }
 
                 if (fromServer) {
-                    const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}&machineCode=${encodeURIComponent(machine)}`);
+                    const fetchCtrl = new AbortController();
+                    const fetchTid = setTimeout(() => fetchCtrl.abort(), 4000);
+                    const res = await fetch(`/Dimensi/GetSpsStandard?hoseType=${encodeURIComponent(code)}&machineCode=${encodeURIComponent(machine)}`, { signal: fetchCtrl.signal });
+                    clearTimeout(fetchTid);
                     data = await res.json();
-                    try { localStorage.setItem('offline_sps_cache_' + code, JSON.stringify(data)); } catch(e){}
+                    const upperCode = code.toUpperCase().trim();
+                    try { localStorage.setItem('offline_sps_cache_' + upperCode, JSON.stringify(data)); } catch(e){}
+                    if (window.db && window.db.apiCache) {
+                        await window.db.apiCache.put({ key: 'SPS_DIM_' + upperCode, data: data, timestamp: new Date().getTime() });
+                    }
                 }
                 Swal.close();
                 
@@ -3089,6 +3107,36 @@
                  }
             });
         }
+
+        window.addEventListener('load', () => {
+            if (!navigator.onLine) {
+                // Auto deteksi shift berdasarkan jam saat offline
+                const now = new Date();
+                const time = now.getHours() + now.getMinutes() / 60;
+                let autoShift = 'Shift 1';
+                if (time >= 7.5 && time < 19.5) {
+                    autoShift = 'Shift 1'; // 07:30 - 19:30
+                } else {
+                    autoShift = 'Shift 2'; // 19:30 - 07:30
+                }
+                const shiftEl = document.getElementById('h-shift');
+                if (shiftEl) {
+                    shiftEl.innerText = autoShift;
+                }
+                
+                // Pastikan nama mesin dari offline_session tampil (meskipun navbar sudah menampilkannya, header Dimensi juga butuh)
+                try {
+                    const sessionStr = localStorage.getItem('offline_session');
+                    if (sessionStr) {
+                        const session = JSON.parse(sessionStr);
+                        const machineEl = document.getElementById('h-line');
+                        if (machineEl && session.machineName) {
+                            machineEl.innerText = session.machineName;
+                        }
+                    }
+                } catch(e) {}
+            }
+        });
     </script>
 }
 

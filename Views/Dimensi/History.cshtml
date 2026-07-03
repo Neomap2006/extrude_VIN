@@ -889,7 +889,8 @@
                             data-operator="@(item.CreatedBy ?? "")"
                             data-docvin="@((item.DocumentNumber ?? "") + " " + (item.VinCode ?? ""))"
                             data-ok="@item.QtyOk"
-                            data-ng="@item.NgDimension">
+                            data-ng="@item.NgDimension"
+                            data-machine="@(item.MachineName ?? "")">
 
                             <td>
                                 @{
@@ -1043,17 +1044,21 @@
         let visibleCount = 0;
         let totalOk = 0;
         let totalNg = 0;
+        
+        const machineFilter = (document.getElementById('machineFilterSelect')?.value || '').toUpperCase();
 
         items.forEach(item => {
             const content = searchField
                 ? (item.getAttribute(`data-${searchField}`) || '').toUpperCase()
                 : item.innerText.toUpperCase();
             const date = item.getAttribute('data-date');
+            const itemMachine = (item.getAttribute('data-machine') || '').toUpperCase();
 
             const matchesSearch = content.includes(query);
             const matchesDate = (!dateStart || date >= dateStart) && (!dateEnd || date <= dateEnd);
+            const matchesMachine = !machineFilter || itemMachine === machineFilter || itemMachine.includes(machineFilter);
 
-            if (matchesSearch && matchesDate) {
+            if (matchesSearch && matchesDate && matchesMachine) {
                 item.style.display = '';
                 visibleCount++;
                 totalOk += parseInt(item.getAttribute('data-ok') || 0);
@@ -1154,6 +1159,10 @@
     }
 
     function applyMachineFilter() {
+        if (!navigator.onLine) {
+            filterHistory();
+            return;
+        }
         const machine = document.getElementById('machineFilterSelect').value;
         const params = new URLSearchParams(window.location.search);
 
@@ -1319,5 +1328,23 @@
     });
 
     startSignalR();
-</script>
 
+    window.addEventListener('load', () => {
+        if (!navigator.onLine) {
+            try {
+                const sessionStr = localStorage.getItem('offline_session');
+                if (sessionStr) {
+                    const session = JSON.parse(sessionStr);
+                    if (session.machineName) {
+                        const ms = document.getElementById('machineFilterSelect');
+                        if (ms) {
+                            ms.value = session.machineName;
+                        }
+                    }
+                }
+            } catch(e) {}
+            // Jalankan filter agar tampil sesuai mesin offline
+            filterHistory();
+        }
+    });
+</script>

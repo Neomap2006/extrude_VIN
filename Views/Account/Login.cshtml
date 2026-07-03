@@ -8,6 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Velasto Production System</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
     <link rel="stylesheet" href="~/lib/offline-cdn/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/offline-cdn/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/lib/offline-cdn/sweetalert2.min.css" />
@@ -426,7 +427,7 @@
                 </a>
             </div>
 
-            <button type="submit" class="btn-submit">
+            <button type="submit" id="submitBtn" class="btn-submit">
                 <i class="bi bi-box-arrow-in-right"></i> MASUK
             </button>
         </form>
@@ -477,6 +478,30 @@
         const isDbOffline = @(ViewBag.DbOffline == true ? "true" : "false");
         const needLoadFromCache = !navigator.onLine || isDbOffline;
 
+        // ─── SIMPAN DATA KE LOCALSTORAGE SAAT ONLINE (auto-backup untuk offline) ────
+        // Dilakukan setiap kali halaman load dalam kondisi online & Razor berhasil isi dropdown.
+        if (!needLoadFromCache) {
+            const razorUsers = [];
+            $('#userId option').each(function() {
+                const val = $(this).val();
+                if (val) razorUsers.push({ id: val, fullName: $(this).text() });
+            });
+            const razorMachines = [];
+            $('#machineId option').each(function() {
+                const val = $(this).val();
+                if (val) razorMachines.push({ id: val, kodeMesin: $(this).text().split(' - ')[0], namaMesin: $(this).text().split(' - ').slice(1).join(' - ') });
+            });
+            if (razorUsers.length > 0) {
+                localStorage.setItem('login_users_cache', JSON.stringify(razorUsers));
+                console.log('[Login] Saved', razorUsers.length, 'users to localStorage.');
+            }
+            if (razorMachines.length > 0) {
+                localStorage.setItem('login_machines_cache', JSON.stringify(razorMachines));
+                console.log('[Login] Saved', razorMachines.length, 'machines to localStorage.');
+            }
+        }
+
+        // ─── MODE OFFLINE: Load dropdown dari cache (localStorage → IndexedDB) ─────
         if (needLoadFromCache) {
             const msg = isDbOffline
                 ? 'Server database tidak terjangkau. Memuat data dari cache lokal...'
@@ -490,31 +515,51 @@
                 showConfirmButton: false
             });
 
-            // Load dropdown data dari VelastoOfflineDB
-            db.apiCache.get('LOGIN_DATA').then(data => {
-                if (data && data.data) {
-                    const users = data.data.users;
-                    const machines = data.data.machines;
+            // Prioritas 1: localStorage (terisi otomatis saat online — paling andal)
+            const lsUsers = JSON.parse(localStorage.getItem('login_users_cache') || '[]');
+            const lsMachines = JSON.parse(localStorage.getItem('login_machines_cache') || '[]');
 
-                    let userHtml = '<option value="">-- Pilih Operator --</option>';
-                    users.forEach(u => {
-                        userHtml += `<option value="${u.id}">${u.fullName}</option>`;
-                    });
-                    $('#userId').html(userHtml);
+            if (lsUsers.length > 0 && lsMachines.length > 0) {
+                let userHtml = '<option value="">-- Pilih Operator --</option>';
+                lsUsers.forEach(u => {
+                    userHtml += `<option value="${u.id}">${u.fullName}</option>`;
+                });
+                $('#userId').html(userHtml);
 
-                    let machineHtml = '<option value="">-- Pilih Mesin --</option>';
-                    machines.forEach(m => {
-                        machineHtml += `<option value="${m.id}">${m.kodeMesin} - ${m.namaMesin}</option>`;
-                    });
-                    $('#machineId').html(machineHtml);
-                } else {
-                    Swal.fire(
-                        'Cache Tidak Ditemukan',
-                        'Belum ada data yang tersinkron di perangkat ini. Hubungkan ke jaringan lalu lakukan Sync Master Data terlebih dahulu.',
-                        'warning'
-                    );
-                }
-            }).catch(e => console.error('[Offline Login] Error membaca IndexedDB:', e));
+                let machineHtml = '<option value="">-- Pilih Mesin --</option>';
+                lsMachines.forEach(m => {
+                    machineHtml += `<option value="${m.id}">${m.kodeMesin} - ${m.namaMesin}</option>`;
+                });
+                $('#machineId').html(machineHtml);
+                console.log('[Offline] Dropdown loaded from localStorage.');
+            } else {
+                // Prioritas 2: IndexedDB (dari Sync Master Data)
+                db.apiCache.get('LOGIN_DATA').then(data => {
+                    if (data && data.data) {
+                        const users = data.data.users;
+                        const machines = data.data.machines;
+
+                        let userHtml = '<option value="">-- Pilih Operator --</option>';
+                        users.forEach(u => {
+                            userHtml += `<option value="${u.id}">${u.fullName}</option>`;
+                        });
+                        $('#userId').html(userHtml);
+
+                        let machineHtml = '<option value="">-- Pilih Mesin --</option>';
+                        machines.forEach(m => {
+                            machineHtml += `<option value="${m.id}">${m.kodeMesin} - ${m.namaMesin}</option>`;
+                        });
+                        $('#machineId').html(machineHtml);
+                        console.log('[Offline] Dropdown loaded from IndexedDB.');
+                    } else {
+                        Swal.fire(
+                            'Cache Tidak Ditemukan',
+                            'Belum ada data yang tersimpan di perangkat ini. Hubungkan ke jaringan lalu buka halaman Login sekali saat online.',
+                            'warning'
+                        );
+                    }
+                }).catch(e => console.error('[Offline Login] Error membaca IndexedDB:', e));
+            }
         }
 
         // Toggle Admin Mode
@@ -554,9 +599,15 @@
             }
         });
 
-        // On form submit, handle online/offline intelligently
+        // ─── Login Form Submit Handler (Online/Offline) ───────────────────────────
         $('#loginForm').on('submit', async function(e) {
-            e.preventDefault(); // ALWAYS stop normal POST to handle it via AJAX/Offline
+            e.preventDefault();
+
+            const $btn = $('#submitBtn');
+            const restoreBtn = () => $btn.prop('disabled', false).html('<i class="bi bi-box-arrow-in-right"></i> MASUK');
+
+            // Tampilkan loading saat mengecek koneksi
+            $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i> Memeriksa...');
 
             if (isAdminMode) {
                 $('#adminUsername').val($('#adminUsernameInput').val());
@@ -564,24 +615,44 @@
 
             const pw = $('#password').val();
             let isServerReachable = false;
-            
-            // Coba ping server untuk cek apakah benar-benar online
-            try {
-                const ping = await fetch('/Account/Login', { method: 'HEAD', cache: 'no-store', headers: { 'Cache-Control': 'no-cache' }});
-                if (ping.ok || ping.redirected || ping.status === 405) {
-                    isServerReachable = true;
-                }
-            } catch (err) {
+
+            // Jika DB sudah diketahui offline dari server-side rendering, SKIP ping.
+            // Web server bisa saja masih hidup (ping sukses) tapi DB mati → form POST akan gagal.
+            if (isDbOffline) {
                 isServerReachable = false;
+            } else if (!navigator.onLine) {
+                // Browser langsung tahu tidak ada koneksi
+                isServerReachable = false;
+            } else {
+                // Ping server dengan timeout 3 detik
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                    const ping = await fetch('/Account/Login', {
+                        method: 'HEAD',
+                        cache: 'no-store',
+                        signal: controller.signal,
+                        headers: { 'Cache-Control': 'no-cache' }
+                    });
+                    clearTimeout(timeoutId);
+                    if (ping.ok || ping.redirected || ping.status === 405) {
+                        isServerReachable = true;
+                    }
+                } catch (err) {
+                    // AbortError (timeout) atau TypeError (no network) → offline
+                    isServerReachable = false;
+                }
             }
 
-            // Jika server reachable, submit form secara normal (DOM submit)
+            // Jika server + DB reachable → submit form normal
             if (isServerReachable) {
-                this.submit();
+                this.submit(); // restoreBtn tidak perlu — halaman akan reload
                 return;
             }
 
-            // Jika server tidak reachable (OFFLINE)
+            // ─── MODE OFFLINE ─────────────────────────────────────────────────────
+            restoreBtn(); // kembalikan tombol sebelum validasi offline
+
             let userRole = "OPERATOR";
             let displayName = "";
             let machineName = "";
@@ -608,37 +679,64 @@
                     return;
                 }
                 displayName = $('#userId option:selected').text();
-                machineName = $('#machineId option:selected').text().split(' - ')[0]; // Ambil kode mesin
+                machineName = $('#machineId option:selected').text().split(' - ')[0];
                 if (displayName.toUpperCase().includes('TRIAL')) {
                     userRole = "ENGINEERING";
                 }
             }
 
-            // SIMPAN SESSION KE LOCAL STORAGE
-            const sessionData = {
+            // Simpan session ke localStorage (untuk offline mode murni)
+            const offlineSessionData = {
                 userName: displayName,
                 userRole: userRole,
                 isAdmin: userRole.includes('ADMIN') ? "true" : "false",
                 machineName: machineName,
                 loginTime: new Date().getTime()
             };
-            localStorage.setItem('offline_session', JSON.stringify(sessionData));
+            localStorage.setItem('offline_session', JSON.stringify(offlineSessionData));
 
+            // Coba set server-side session via endpoint OfflineSession (tanpa query DB).
+            // Timeout 2 detik — jika server tidak merespons, langsung redirect.
+            try {
+                const ctrl = new AbortController();
+                const tid = setTimeout(() => ctrl.abort(), 500);
+                const res = await fetch('/Account/OfflineSession', {
+                    method: 'POST',
+                    signal: ctrl.signal,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: 'VELASTO_OFFLINE_TOKEN_extrude2026',
+                        userName: offlineSessionData.userName,
+                        userRole: offlineSessionData.userRole,
+                        isAdmin: offlineSessionData.isAdmin,
+                        machineName: offlineSessionData.machineName
+                    })
+                });
+                clearTimeout(tid);
+                const result = await res.json();
+                if (result.success) {
+                    console.log('[Offline] Server session berhasil di-set.');
+                }
+            } catch (err) {
+                // Timeout atau server tidak terjangkau — lanjut redirect, SW serve dari cache
+                console.log('[Offline] Server timeout/unreachable, lanjut ke cache.');
+            }
+
+            // Redirect — jika server punya session: halaman normal. Jika tidak: SW serve cache.
             Swal.fire({
-                title: 'Login Offline Berhasil',
+                title: '⚡ Login Offline Berhasil',
                 text: `Selamat datang, ${displayName}!`,
                 icon: 'success',
-                timer: 1500,
+                timer: 800,
                 showConfirmButton: false
             }).then(() => {
-                // Redirect ke halaman yang bisa diakses offline
-                if (userRole === 'SUPERADMIN' || userRole === 'ADMIN_PROD' || userRole === 'ADMIN_ENG') {
-                    window.location.href = '/Dimensi/App';
-                } else {
-                    window.location.href = '/Dimensi/App';
-                }
+                // Di mode OFFLINE (server down), semua role (termasuk Admin)
+                // diarahkan ke Form Parameter Settings karena halaman Chart / Master
+                // tidak akan bisa dibuka tanpa koneksi server (akan error / tidak di-cache).
+                window.location.href = '/ProductionReport/Create';
             });
         });
+
 
         // Fitur 1: Auto-Fill Password saat User Dipilih (Operator mode)
         $('#userId').on('change', function() {

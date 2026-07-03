@@ -210,6 +210,30 @@ namespace VelastoProductionSystem.Controllers
             return RedirectToAction(nameof(Login));
         }
 
+        /// <summary>
+        /// Endpoint untuk menetapkan server-side session dari hasil offline login (tanpa query DB).
+        /// Dipanggil via AJAX dari Login.cshtml setelah validasi offline berhasil di client-side.
+        /// Tidak memerlukan [ValidateAntiForgeryToken] karena tidak ada form POST HTML biasa.
+        /// </summary>
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public IActionResult OfflineSession([FromBody] OfflineSessionRequest req)
+        {
+            const string offlineToken = "VELASTO_OFFLINE_TOKEN_extrude2026";
+
+            if (req == null || req.Token != offlineToken)
+                return Json(new { success = false, message = "Token tidak valid." });
+
+            // Set session tanpa query DB
+            HttpContext.Session.SetString("UserName", req.UserName ?? "Offline User");
+            HttpContext.Session.SetString("IsAdmin", req.IsAdmin ?? "false");
+            HttpContext.Session.SetString("UserRole", req.UserRole ?? "OPERATOR");
+            HttpContext.Session.SetString("MachineName", req.MachineName ?? "-");
+            HttpContext.Session.SetString("OfflineMode", "true");
+
+            return Json(new { success = true });
+        }
+
         private async Task PrepareLoginViewData()
         {
             try
@@ -231,5 +255,15 @@ namespace VelastoProductionSystem.Controllers
                 ViewBag.DbOffline = true;
             }
         }
+    }
+
+    // DTO untuk endpoint OfflineSession
+    public class OfflineSessionRequest
+    {
+        public string? Token { get; set; }
+        public string? UserName { get; set; }
+        public string? IsAdmin { get; set; }
+        public string? UserRole { get; set; }
+        public string? MachineName { get; set; }
     }
 }
