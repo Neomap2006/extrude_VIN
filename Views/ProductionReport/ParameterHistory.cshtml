@@ -19,7 +19,39 @@
 }
 
 <div class="hud-dashboard-container" style="min-height: 100vh; background: #020617; color: #fff; padding: 1.5rem; font-family: 'Inter', sans-serif;">
-    <!-- ══ GLOW DECOR ══ -->
+
+    @* ══ PAGE LOADING OVERLAY ══ *@
+    <div id="ph-page-loader" style="
+        position: fixed; inset: 0; z-index: 9999;
+        background: #020617;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+        transition: opacity 0.35s ease;">
+        <div style="position: relative; width: 56px; height: 56px;">
+            <div style="position: absolute; inset: 0; border-radius: 50%; border: 3px solid rgba(14,165,233,0.15);"></div>
+            <div style="position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent;
+                border-top-color: #0ea5e9; border-right-color: #2563eb;
+                animation: ph-spin 0.8s linear infinite;"></div>
+            <div style="position: absolute; inset: 8px; border-radius: 50%; border: 2px solid transparent;
+                border-top-color: rgba(56,189,248,0.5);
+                animation: ph-spin 1.4s linear infinite reverse;"></div>
+        </div>
+        <div style="font-size: 0.65rem; font-weight: 900; letter-spacing: 3px; color: rgba(148,163,184,0.7); text-transform: uppercase;">LOADING PARAMETER HISTORY</div>
+        <div style="width: 160px; height: 2px; background: rgba(59,130,246,0.15); border-radius: 2px; overflow: hidden;">
+            <div style="height: 100%; width: 40%; background: linear-gradient(90deg, transparent, #0ea5e9, transparent);
+                animation: ph-bar 1.2s ease-in-out infinite;"></div>
+        </div>
+    </div>
+    <style>
+        @@keyframes ph-spin { to { transform: rotate(360deg); } }
+        @@keyframes ph-bar  { 0%{ transform: translateX(-100%); } 100%{ transform: translateX(350%); } }
+        #ph-page-loader.ph-loader-hidden { opacity: 0; pointer-events: none; }
+        #ph-content-wrapper { opacity: 0; transition: opacity 0.3s ease 0.05s; }
+        #ph-content-wrapper.ph-ready { opacity: 1; }
+    </style>
+
+    <div id="ph-content-wrapper">
+
+    @* ══ GLOW DECOR ══ *@
     <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% -20%, rgba(14, 165, 233, 0.15), transparent 70%); pointer-events: none; z-index: 0;"></div>
 
     <!-- ══ HEADER HUD ══ -->
@@ -293,7 +325,20 @@
             <i class="bi bi-shield-check text-info me-2"></i>SPS INTEGRATED SYSTEM v2.0 &nbsp;|&nbsp; VELASTO PRODUCTION RECORDING
         </div>
     </div>
-</div>
+    </div>@* end ph-content-wrapper *@
+</div>@* end hud-dashboard-container *@
+
+<script>
+    // Tampilkan konten dan sembunyikan loader segera setelah DOM siap
+    document.addEventListener('DOMContentLoaded', function() {
+        var loader  = document.getElementById('ph-page-loader');
+        var wrapper = document.getElementById('ph-content-wrapper');
+        if (wrapper) wrapper.classList.add('ph-ready');
+        if (loader)  loader.classList.add('ph-loader-hidden');
+        // Hapus loader dari DOM setelah animasi fade selesai
+        if (loader)  setTimeout(function(){ loader.remove(); }, 400);
+    });
+</script>
 
 <form id="deleteForm" asp-action="Delete" method="post" style="display:none;">
     @Html.AntiForgeryToken()
