@@ -460,16 +460,9 @@
 
 <script src="~/lib/offline-cdn/jquery-3.6.0.min.js"></script>
 <script src="~/lib/offline-cdn/sweetalert2.all.min.js"></script>
-<script src="~/lib/offline-cdn/dexie.min.js"></script>
+@* dexie.min.js dinonaktifkan (fitur offline dihapus) *@
 
 <script>
-    // Inisialisasi Dexie — HARUS sama dengan VelastoOfflineDB di offline-sync.js
-    const db = new Dexie('VelastoOfflineDB');
-    db.version(2).stores({
-        syncQueue: '++id, url, timestamp, retryCount',
-        apiCache: 'key, timestamp'
-    });
-
     $(document).ready(function() {
         const defaultPassword = "extrude123!";
         let isAdminMode = false;
@@ -533,32 +526,12 @@
                 $('#machineId').html(machineHtml);
                 console.log('[Offline] Dropdown loaded from localStorage.');
             } else {
-                // Prioritas 2: IndexedDB (dari Sync Master Data)
-                db.apiCache.get('LOGIN_DATA').then(data => {
-                    if (data && data.data) {
-                        const users = data.data.users;
-                        const machines = data.data.machines;
-
-                        let userHtml = '<option value="">-- Pilih Operator --</option>';
-                        users.forEach(u => {
-                            userHtml += `<option value="${u.id}">${u.fullName}</option>`;
-                        });
-                        $('#userId').html(userHtml);
-
-                        let machineHtml = '<option value="">-- Pilih Mesin --</option>';
-                        machines.forEach(m => {
-                            machineHtml += `<option value="${m.id}">${m.kodeMesin} - ${m.namaMesin}</option>`;
-                        });
-                        $('#machineId').html(machineHtml);
-                        console.log('[Offline] Dropdown loaded from IndexedDB.');
-                    } else {
-                        Swal.fire(
-                            'Cache Tidak Ditemukan',
-                            'Belum ada data yang tersimpan di perangkat ini. Hubungkan ke jaringan lalu buka halaman Login sekali saat online.',
-                            'warning'
-                        );
-                    }
-                }).catch(e => console.error('[Offline Login] Error membaca IndexedDB:', e));
+                // Tidak ada data cache di localStorage
+                Swal.fire(
+                    'Cache Tidak Ditemukan',
+                    'Belum ada data yang tersimpan di perangkat ini. Hubungkan ke jaringan lalu buka halaman Login sekali saat online.',
+                    'warning'
+                );
             }
         }
 
@@ -784,15 +757,7 @@
 
 </script>
 
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('[SW] Registered on Login:', reg.scope))
-                .catch(err => console.warn('[SW] Registration failed on Login:', err));
-        });
-    }
-</script>
+@* Service Worker dinonaktifkan (fitur offline dihapus) *@
 
 </body>
 </html>
