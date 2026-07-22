@@ -1359,7 +1359,7 @@
             const midCard = document.getElementById('die_card_MiddleDie');
 
             if (nippleCard) {
-                if (isDoubleLayer || !nippleVal || nippleVal === '--' || nippleVal === '0' || nippleVal === '') {
+                if (!nippleVal || nippleVal === '--' || nippleVal === '0' || nippleVal === '') {
                     nippleCard.classList.add('d-none');
                     nippleCard.style.setProperty('display', 'none', 'important');
                     console.log('🚫 FORCE HIDE Nipple Die. Detected:', (machineHidden || navbarMachine), 'Value:', nippleVal);

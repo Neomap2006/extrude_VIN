@@ -257,7 +257,6 @@
                                     <span style="font-size:9px; font-weight:900; color:#10b981; background:rgba(16,185,129,0.1); padding:1px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.3);">
                                         <i class="bi bi-shield-fill me-1"></i>ALL MACHINES
                                     </span>
-                                }
                             </div>
                             <input id="planningSearch" type="text" class="pcc-search-input"
                                    placeholder="PILIH PLANNING MASTER..."
@@ -1800,7 +1799,7 @@
             const coverVal = String(sps.CoverDie || sps.coverDie || '').trim();
 
             if (nippleCard) {
-                if (isDoubleLayer || !nippleVal || nippleVal === '--' || nippleVal === '0' || nippleVal === '') {
+                if (!nippleVal || nippleVal === '--' || nippleVal === '0' || nippleVal === '') {
                     nippleCard.classList.add('d-none');
                     nippleCard.style.setProperty('display', 'none', 'important');
                 } else {
@@ -1820,7 +1819,7 @@
             }
 
             if (spacerCard) {
-                if (isDoubleLayer || !spacerVal || spacerVal === '--' || spacerVal === '0' || spacerVal === '') {
+                if (!spacerVal || spacerVal === '--' || spacerVal === '0' || spacerVal === '') {
                     spacerCard.classList.add('d-none');
                     spacerCard.style.setProperty('display', 'none', 'important');
                 } else {
@@ -1830,7 +1829,7 @@
             }
 
             if (toleranceCard) {
-                if (isDoubleLayer || !toleranceVal || toleranceVal === '--' || toleranceVal === '0' || toleranceVal === '') {
+                if (!toleranceVal || toleranceVal === '--' || toleranceVal === '0' || toleranceVal === '') {
                     toleranceCard.classList.add('d-none');
                     toleranceCard.style.setProperty('display', 'none', 'important');
                 } else {
