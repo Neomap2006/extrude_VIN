@@ -683,8 +683,22 @@
                                 }
                             }
                             <!-- DIES DIMENSION SECTION -->
+                            @{
+                                bool HasStd(string? spsStr, decimal stdDec) {
+                                    if (!string.IsNullOrWhiteSpace(spsStr) && spsStr != "-" && spsStr != "--" && spsStr != "0" && spsStr != "0.0") return true;
+                                    if (stdDec > 0) return true;
+                                    return false;
+                                }
+                                bool hNipple = HasStd(mSps?.Nipple, D(std?.InnerTarget, 0));
+                                bool hTube   = HasStd(mSps?.TubeDie, D(std?.ThickTarget, 0));
+                                bool hMiddle = HasStd(mSps?.MiddleDie, D(std?.InnerMidTarget, 0));
+                                bool hCover  = HasStd(mSps?.CoverDie, D(std?.TotalTarget, 0));
+                                bool hSpacer = HasStd(mSps?.SpacerDie, D(std?.SpacerDie, 0));
+                                bool hADist  = HasStd(mSps?.ADistance, D(std?.InnerTol, 0));
+                                int diesRowspan = 1 + (hNipple?1:0) + (hTube?1:0) + (hMiddle?1:0) + (hCover?1:0) + (hSpacer?1:0) + (hADist?1:0);
+                            }
                             <tr class="border-top-form">
-                                <th width="30" rowspan="7" class="align-middle text-center p-0" style="background:#f0f0f0;">
+                                <th width="30" rowspan="@diesRowspan" class="align-middle text-center p-0" style="background:#f0f0f0;">
                                     <div style="font-size: 8px; line-height: 1.0; font-weight: 800;">D<br/>I<br/>E<br/>S<br/><br/>D<br/>I<br/>M<br/>E<br/>N<br/>S<br/>I<br/>O<br/>N</div>
                                 </th>
                                 <th style="background:#f0f0f0; width: 110px;" class="text-start ps-2">DIES</th>
@@ -693,6 +707,7 @@
                                 <th colspan="2" style="background:#f0f0f0;" class="text-center">BEFORE</th>
                                 <th style="background:#f0f0f0; width: 60px; border-right: 0 !important;" class="text-center">AFTER</th>
                             </tr>
+                            @if (hNipple) {
                             <tr>
                                 <td class="text-start ps-2">Ø NIPPLE DIE</td>
                                 <td class="p-0 align-middle">
@@ -705,6 +720,8 @@
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.NippleDieInitial == "0" ? "" : Model.NippleDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.NippleDieFinal" placeholder="" /></td>
                             </tr>
+                            }
+                            @if (hTube) {
                             <tr>
                                 <td class="text-start ps-2">Ø TUBE DIE</td>
                                 <td class="p-0 align-middle">
@@ -717,6 +734,8 @@
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.TubeDieInitial == "0" ? "" : Model.TubeDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.TubeDieFinal" placeholder="" /></td>
                             </tr>
+                            }
+                            @if (hMiddle) {
                             <tr>
                                 <td class="text-start ps-2">Ø MIDDLE DIE</td>
                                 <td class="p-0 align-middle">
@@ -725,10 +744,12 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.MiddleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(null, D(std?.InnerMidTarget, 0), "14.2±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.MiddleDie, D(std?.InnerMidTarget, 0), "14.2±0.1")</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.MiddleDieInitial == "0" ? "" : Model.MiddleDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.MiddleDieFinal" placeholder="" /></td>
                             </tr>
+                            }
+                            @if (hCover) {
                             <tr>
                                 <td class="text-start ps-2">Ø COVER DIE</td>
                                 <td class="p-0 align-middle">
@@ -741,6 +762,8 @@
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.CoverDieInitial == "0" ? "" : Model.CoverDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.CoverDieFinal" placeholder="" /></td>
                             </tr>
+                            }
+                            @if (hSpacer) {
                             <tr>
                                 <td class="text-start ps-2">Ø SPACER DIE</td>
                                 <td class="p-0 align-middle">
@@ -749,10 +772,12 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.SpacerDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(null, D(std?.SpacerDie, 0), "7.3±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.SpacerDie, D(std?.SpacerDie, 0), "7.3±0.1")</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.SpacerDieInitial == "0" ? "" : Model.SpacerDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.SpacerDieFinal" placeholder="" /></td>
                             </tr>
+                            }
+                            @if (hADist) {
                             <tr>
                                 <td class="text-start ps-2">A DISTANCE</td>
                                 <td class="p-0 align-middle">
@@ -761,10 +786,11 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.ToleranceDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(null, D(std?.InnerTol, 0), "0.4±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.ADistance, D(std?.InnerTol, 0), "0.4±0.1")</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.ToleranceInitial == "0" ? "" : Model.ToleranceInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.ToleranceFinal" placeholder="" /></td>
                             </tr>
+                            }
                         </table>
                     </div>
                     <!-- MESH & EMBOSS -->
