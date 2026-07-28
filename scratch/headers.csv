@@ -1,6 +1,0 @@
-,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50
-0,,NON-CHS Single/Double Layer Parameter Setting,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-2,ID,No,Machine,No. Document,No. Rev.,Customer,Revision Date,Formulasi,Hose Type,Dimensi,Material,Inner,Outer,Use limits of the material,Use limits of the material,Nipple,Tube Die,Cover Die,Mesh screen,Mesh screen,Head Temp.,Head Temp.,Cylinder 1,Cylinder 1,Cylinder 2,Cylinder 2,FEED,FEED,Screw Temp.,Screw Temp.,Screw Speed,Screw Speed,Pressure,Pressure,Am meter,OD sensor,Marking Sort,Text marking mt'l,Marking Colour,Chiller water temp.,Cutting speed,Take up conveyor speed,± Inner,± Outer,Tebal Inner,Tebal Outer,Tebal Total,Selisih tebal,No. Document,,
-3,,,,,,,,,,,,#tube,#cover,#Inner,#Outer,#material,#material,#material,#material 1,#material 2,#material 1,#material 2,#material 1,#material 2,#material 1,#material 2,#material 1,#material 2,#material 1,#material 2,#material 1,#material 2,#material 1,#material 2,,,,,,,,,,,,,,,,,
-4,,,,SPS,,,,,,(Ømm)-(Ømm),TSM,compound,compound,,,(Ømm),(Ømm),(Ømm),(mm),(mm),(◦C),(◦C),(◦C),(◦C),(◦C),(◦C),(◦C),(◦C),(◦C),(◦C),(rpm),(rpm),(mpa),(mpa),A,(mm),,,,(◦C),(m/min),(m/min),(mm),(mm),(mm),(mm),(mm),(mm),EPR PARAMETER,EPR DIMENSI,ITEM
