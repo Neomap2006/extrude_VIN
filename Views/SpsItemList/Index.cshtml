@@ -66,6 +66,9 @@
                         <th style="width: 70px;">No</th>
                         <th>Item List</th>
                         <th>No. Document</th>
+                        <th class="text-center" style="min-width:90px;">Length Shrink<br/><small>MIN (mm)</small></th>
+                        <th class="text-center" style="min-width:90px;">Length Shrink<br/><small>STN (mm)</small></th>
+                        <th class="text-center" style="min-width:90px;">Length Shrink<br/><small>MAX (mm)</small></th>
                         <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -83,6 +86,9 @@
                             <td>
                                 @Html.DisplayFor(modelItem => item.DocumentNumber)
                             </td>
+                            <td class="text-center">@(item.LengthShrinkMin.HasValue ? item.LengthShrinkMin.Value.ToString("0.#") : "-")</td>
+                            <td class="text-center"><strong>@(item.LengthShrinkStd.HasValue ? item.LengthShrinkStd.Value.ToString("0.#") : "-")</strong></td>
+                            <td class="text-center">@(item.LengthShrinkMax.HasValue ? item.LengthShrinkMax.Value.ToString("0.#") : "-")</td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Edit">

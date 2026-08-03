@@ -1127,11 +1127,11 @@
             if (source != null)
             {
                 // In DB, ToleranceInner_Asli mistakenly holds the Inner Diameter (e.g. 33.3)
-                targetInner = source.ToleranceInner_Asli?.ToString("F2") ?? source.ThickTarget;
+                targetInner = source.ToleranceInner_Asli?.ToString("F2") ?? source.InnerTarget;
                 if (string.IsNullOrEmpty(targetInner) || targetInner == "0") targetInner = source.Dimensi;
 
                 // In DB, TebalInner_Asli mistakenly holds the Inner Thickness (e.g. 2.3)
-                targetThick = source.TebalInner_Asli?.ToString("F2") ?? source.InnerTarget;
+                targetThick = source.TebalInner_Asli?.ToString("F2") ?? source.ThickTarget;
                 if (string.IsNullOrEmpty(targetThick) || targetThick == "0") targetThick = source.TebalInner;
 
                 targetTotal = source.TebalTotal_Asli?.ToString("F2") ?? source.TotalTarget;
@@ -2562,7 +2562,16 @@
                         if(partEl) partEl.innerText = window._dimSelectedItemCode || m.itemList || "---";
                         
                         const stdPnjgEl = document.getElementById('disp-std-pnjg');
-                        if(stdPnjgEl) stdPnjgEl.value = m.dimensi || "-"; 
+                        if(stdPnjgEl) {
+                            let shrinkText = "0";
+                            if (m.shrinkStd != null) {
+                                shrinkText = m.shrinkStd + " mm";
+                                if (m.shrinkMin != null && m.shrinkMax != null) {
+                                    shrinkText += ` (${m.shrinkMin} - ${m.shrinkMax})`;
+                                }
+                            }
+                            stdPnjgEl.value = shrinkText;
+                        }
                         
                         const qtyTargetInput = document.getElementById('disp-qty-target');
                         if(qtyTargetInput && qtyTargetInput.value == "0") qtyTargetInput.value = "";

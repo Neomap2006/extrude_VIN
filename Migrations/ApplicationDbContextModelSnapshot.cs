@@ -55,6 +55,9 @@ namespace VelastoProductionSystem.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RequestCode")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -1294,6 +1297,15 @@ namespace VelastoProductionSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<float?>("LengthShrinkMax")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("LengthShrinkMin")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("LengthShrinkStd")
+                        .HasColumnType("real");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentNumber");
@@ -1839,6 +1851,9 @@ namespace VelastoProductionSystem.Migrations
 
                     b.Property<string>("InnerUCL")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Machine")
                         .HasColumnType("nvarchar(max)");

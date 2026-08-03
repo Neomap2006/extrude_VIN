@@ -101,7 +101,8 @@ namespace VelastoProductionSystem.Controllers
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("SPS Item List");
 
-            var headers = new[] { "No", "ID", "Item List", "No. Document", "Machine", "Hose Type" };
+            var headers = new[] { "No", "ID", "Item List", "No. Document", "Machine", "Hose Type",
+                                  "Length Shrink MIN (mm)", "Length Shrink STN (mm)", "Length Shrink MAX (mm)" };
             for (var i = 0; i < headers.Length; i++)
             {
                 worksheet.Cells[1, i + 1].Value = headers[i];
@@ -125,6 +126,9 @@ namespace VelastoProductionSystem.Controllers
                 worksheet.Cells[rowIndex, 4].Value = item.DocumentNumber;
                 worksheet.Cells[rowIndex, 5].Value = item.SpsNoDoc?.MachineCode ?? item.SpsNoDoc?.Machine;
                 worksheet.Cells[rowIndex, 6].Value = item.SpsNoDoc?.HoseType;
+                worksheet.Cells[rowIndex, 7].Value = item.LengthShrinkMin.HasValue ? (object)item.LengthShrinkMin.Value : null;
+                worksheet.Cells[rowIndex, 8].Value = item.LengthShrinkStd.HasValue ? (object)item.LengthShrinkStd.Value : null;
+                worksheet.Cells[rowIndex, 9].Value = item.LengthShrinkMax.HasValue ? (object)item.LengthShrinkMax.Value : null;
                 rowIndex++;
                 runningNo++;
             }
@@ -194,7 +198,7 @@ namespace VelastoProductionSystem.Controllers
         // POST: SpsItemList/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,ItemList,DocumentNumber")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
+        public async Task<IActionResult> Create([Bind("Id,ItemList,DocumentNumber,LengthShrinkMin,LengthShrinkStd,LengthShrinkMax")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
         {
             spsItemList.ItemList = NormalizeItemListCode(spsItemList.ItemList);
 
@@ -317,7 +321,7 @@ namespace VelastoProductionSystem.Controllers
         // POST: SpsItemList/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ItemList,DocumentNumber")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ItemList,DocumentNumber,LengthShrinkMin,LengthShrinkStd,LengthShrinkMax")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
         {
             if (id != spsItemList.Id)
             {
@@ -489,8 +493,11 @@ namespace VelastoProductionSystem.Controllers
                 
                 worksheet.Cells[1, 1].Value = "ITEM LIST";
                 worksheet.Cells[1, 2].Value = "NO.DOC";
+                worksheet.Cells[1, 3].Value = "LENGTH SHRINK MIN (mm)";
+                worksheet.Cells[1, 4].Value = "LENGTH SHRINK STN (mm)";
+                worksheet.Cells[1, 5].Value = "LENGTH SHRINK MAX (mm)";
                 
-                using (var range = worksheet.Cells[1, 1, 1, 2])
+                using (var range = worksheet.Cells[1, 1, 1, 5])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
@@ -499,16 +506,20 @@ namespace VelastoProductionSystem.Controllers
                     range.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                 }
                 
+                // Contoh data
                 worksheet.Cells[2, 1].Value = "NA5030";
                 worksheet.Cells[2, 2].Value = "SOP/PROD/HOSE/24/10/038";
+                worksheet.Cells[2, 3].Value = 272;
+                worksheet.Cells[2, 4].Value = 274;
+                worksheet.Cells[2, 5].Value = 276;
                 
                 worksheet.Cells[4, 1].Value = "Contoh Pengisian:";
                 worksheet.Cells[4, 1].Style.Font.Italic = true;
                 worksheet.Cells[4, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
-                worksheet.Cells[5, 1].Value = "Row 2: HN3040 | SOP/PROD/HOSE/24/10/030";
+                worksheet.Cells[5, 1].Value = "Row 2: HN3040 | SOP/PROD/HOSE/24/10/030 | 121 | 123 | 125";
                 worksheet.Cells[5, 1].Style.Font.Size = 9;
                 worksheet.Cells[5, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
-                worksheet.Cells[6, 1].Value = "Row 3: NA2670 | SOP/PROD/HOSE/24/10/039";
+                worksheet.Cells[6, 1].Value = "Kolom Length Shrink boleh dikosongkan";
                 worksheet.Cells[6, 1].Style.Font.Size = 9;
                 worksheet.Cells[6, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
                 
@@ -590,6 +601,9 @@ namespace VelastoProductionSystem.Controllers
                     {
                         var col1Value = worksheet.Cells[row, 1].Text?.Trim();
                         var col2Value = worksheet.Cells[row, 2].Text?.Trim();
+                        var col3Value = worksheet.Cells[row, 3].Text?.Trim(); // Length Shrink MIN
+                        var col4Value = worksheet.Cells[row, 4].Text?.Trim(); // Length Shrink STN
+                        var col5Value = worksheet.Cells[row, 5].Text?.Trim(); // Length Shrink MAX
 
                         if (string.IsNullOrWhiteSpace(col1Value) || string.IsNullOrWhiteSpace(col2Value))
                         {
@@ -599,6 +613,12 @@ namespace VelastoProductionSystem.Controllers
 
                         string itemList = NormalizeItemListCode(isNewFormat ? col1Value : col2Value);
                         string documentNumber = isNewFormat ? col2Value : col1Value;
+
+                        // Parse Length Shrink values (optional)
+                        float? shrinkMin = null, shrinkStd = null, shrinkMax = null;
+                        if (!string.IsNullOrWhiteSpace(col3Value) && float.TryParse(col3Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsedMin)) shrinkMin = parsedMin;
+                        if (!string.IsNullOrWhiteSpace(col4Value) && float.TryParse(col4Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsedStd)) shrinkStd = parsedStd;
+                        if (!string.IsNullOrWhiteSpace(col5Value) && float.TryParse(col5Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsedMax)) shrinkMax = parsedMax;
 
                         if (string.IsNullOrWhiteSpace(itemList))
                         {
@@ -619,7 +639,10 @@ namespace VelastoProductionSystem.Controllers
                                 _context.SpsItemLists.Add(new SpsItemList
                                 {
                                     DocumentNumber = spsNoDoc.DocumentNumber,
-                                    ItemList = itemList
+                                    ItemList = itemList,
+                                    LengthShrinkMin = shrinkMin,
+                                    LengthShrinkStd = shrinkStd,
+                                    LengthShrinkMax = shrinkMax
                                 });
                                 importedCount++;
                             }

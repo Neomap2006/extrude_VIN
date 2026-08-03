@@ -166,6 +166,23 @@ namespace VelastoProductionSystem.Controllers
                 var finalSpiralTolerance = ResolveSpiralPitchTolerance(sps);
                 var finalSpiralDisplay = ResolveSpiralPitchDisplay(sps);
 
+                // Populate Length Shrink from SpsItemList if available
+                float? shrinkMin = null, shrinkStd = null, shrinkMax = null;
+                if (sps.ItemLists != null && sps.ItemLists.Any())
+                {
+                    var matchedList = sps.ItemLists.FirstOrDefault(il => il.ItemList != null && il.ItemList.Replace("-", "").Replace(" ", "").ToUpper() == sanitizedItemLookup);
+                    if (matchedList == null)
+                    {
+                        matchedList = sps.ItemLists.FirstOrDefault(il => il.ItemList != null && il.ItemList.Replace("-", "").Replace(" ", "").ToUpper().Contains(sanitizedItemLookup));
+                    }
+                    if (matchedList != null)
+                    {
+                        shrinkMin = matchedList.LengthShrinkMin;
+                        shrinkStd = matchedList.LengthShrinkStd;
+                        shrinkMax = matchedList.LengthShrinkMax;
+                    }
+                }
+
                 return Json(new { 
                     success = true,
                     id = sps.DocumentNumber,
@@ -190,7 +207,10 @@ namespace VelastoProductionSystem.Controllers
                         innerTol = sps.InnerTol,
                         thickTol = sps.ThickTol,
                         totalTol = sps.TotalTol,
-                        bypass = "2.0 mm" 
+                        bypass = "2.0 mm",
+                        shrinkMin = shrinkMin,
+                        shrinkStd = shrinkStd,
+                        shrinkMax = shrinkMax
                     }
                 });
             }
@@ -542,6 +562,26 @@ namespace VelastoProductionSystem.Controllers
             ViewBag.Master = await _context.SpsNoDocs
                 .OrderByDescending(m => m.DocumentNumber)
                 .FirstOrDefaultAsync(m => m.DocumentNumber != null && m.DocumentNumber.Contains(report.ItemCode ?? ""));
+
+            // Fetch SpsItemList shrink data using VinCode / ItemCode
+            var vinCode = report.VinCode ?? report.ItemCode ?? "";
+            var sanitizedVin = vinCode.Trim().Replace("-", "").Replace(" ", "").ToUpper();
+            var itemListEntry = await _context.SpsItemLists
+                .FirstOrDefaultAsync(il => il.ItemList != null &&
+                    il.ItemList.Replace("-", "").Replace(" ", "").ToUpper() == sanitizedVin);
+            // Also check summaries for per-row vin codes if main record doesn't match
+            if (itemListEntry == null && report.Summaries != null)
+            {
+                var firstVin = report.Summaries.FirstOrDefault()?.VinCode;
+                if (!string.IsNullOrEmpty(firstVin))
+                {
+                    var sanVin = firstVin.Trim().Replace("-", "").Replace(" ", "").ToUpper();
+                    itemListEntry = await _context.SpsItemLists
+                        .FirstOrDefaultAsync(il => il.ItemList != null &&
+                            il.ItemList.Replace("-", "").Replace(" ", "").ToUpper() == sanVin);
+                }
+            }
+            ViewBag.ShrinkData = itemListEntry;
 
             return View(report);
         }

@@ -2447,7 +2447,16 @@
                     if(partEl) partEl.innerText = window._dimSelectedItemCode || m.itemList || m.hoseType || "---";
                     
                     const stdPnjgEl = document.getElementById('disp-std-pnjg');
-                    if(stdPnjgEl) stdPnjgEl.value = m.cuttingLength && m.cuttingLength !== '-' ? m.cuttingLength : (m.dimensi || "-"); 
+                    if(stdPnjgEl) {
+                        let shrinkText = "0";
+                        if (m.shrinkStd != null) {
+                            shrinkText = m.shrinkStd + " mm";
+                            if (m.shrinkMin != null && m.shrinkMax != null) {
+                                shrinkText += ` (${m.shrinkMin} - ${m.shrinkMax})`;
+                            }
+                        }
+                        stdPnjgEl.value = shrinkText; 
+                    }
                     
                     const qtyTargetInput = document.getElementById('disp-qty-target');
                     if(qtyTargetInput && qtyTargetInput.value == "0") qtyTargetInput.value = ""; // Let user type easily
@@ -2750,6 +2759,15 @@
                 return;
             }
 
+            // Tangkap data form yang masih belum di-Add sebelum saveCurrentData() membersihkan state
+            const _looseVinBeforeSave = document.getElementById('val-vin-kode')?.value.trim() || '';
+            const _looseActBeforeSave = document.getElementById('val-act-pnjg')?.value.trim() || '';
+            const _looseOkBeforeSave  = parseInt(document.getElementById('val-qty-ok')?.value || '0') || 0;
+            const _looseNgDBeforeSave = parseInt(document.getElementById('val-ng-dimensi')?.value || '0') || 0;
+            const _looseNgVBeforeSave = parseInt(document.getElementById('val-ng-visual')?.value || '0') || 0;
+            const _looseHasPendingData = (_looseVinBeforeSave !== '' || _looseActBeforeSave !== '' || _looseOkBeforeSave > 0 || _looseNgDBeforeSave > 0 || _looseNgVBeforeSave > 0);
+            const _looseCaptureSlotIdx = currentIndex;
+
             saveCurrentData();
             const btn = document.querySelector('.submit-btn');
             if(btn) btn.disabled = true;
@@ -2882,6 +2900,20 @@
                                 NgVisual: parseInt(s.ngV) || 0
                             });
                         });
+
+                        // Juga tangkap data yang MASIH di form (belum di-Add), jika slot ini adalah slot aktif
+                        if (slotIdx === _looseCaptureSlotIdx && _looseHasPendingData) {
+                            allSummaries.push({
+                                PartNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
+                                VinCode: _looseVinBeforeSave || '-',
+                                StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                ActualLength: _looseActBeforeSave,
+                                QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
+                                QtyOk: _looseOkBeforeSave,
+                                NgDimension: _looseNgDBeforeSave,
+                                NgVisual: _looseNgVBeforeSave
+                            });
+                        }
                     } else {
                         // Auto-capture loose inputs if user forgot to click "Add to List"
                         const looseVin = (m.data.vin || '').trim();
