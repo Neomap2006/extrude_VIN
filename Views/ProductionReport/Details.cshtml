@@ -1502,15 +1502,58 @@
         .no-print { display: none !important; }
         .glass-paper { background: white !important; border: 2px solid #000 !important; color: #000 !important; }
         
-        /* Force full width on print */
+        /* ============================================= */
+        /* PRINT FIX: Parameter Setting Portal (portal=1) */
+        /* Scale down the wide container to fit A4 landscape */
+        /* ============================================= */
+        #printArea {
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: auto !important;
+            overflow: visible !important;
+        }
         .paper-replica { 
             width: 100% !important; 
             max-width: none !important; 
+            min-width: unset !important;
             margin: 0 !important; 
-            padding: 5px !important;
+            padding: 4px !important;
             box-shadow: none !important; 
-            border: 2px solid #000 !important; 
+            border: 1.5px solid #000 !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
         }
+        .inner-border {
+            padding: 4px !important;
+        }
+        /* Shrink all text and cells aggressively */
+        .paper-replica td, .paper-replica th {
+            font-size: 7px !important;
+            padding: 1px 2px !important;
+            line-height: 1.1 !important;
+        }
+        .paper-replica .row { margin: 0 !important; }
+        .paper-replica .mb-2, .paper-replica .mb-3, .paper-replica .mb-4 { margin-bottom: 3px !important; }
+        .paper-replica h6 { font-size: 11px !important; margin: 0 !important; }
+        .paper-replica .border-form-bold { margin-bottom: 3px !important; }
+        /* Shrink input fields */
+        .paper-replica input, .paper-replica .input-transparent {
+            font-size: 7px !important;
+            height: auto !important;
+            padding: 0 1px !important;
+            border: none !important;
+            background: transparent !important;
+        }
+        /* Signature box */
+        .paper-replica tr[style*="height: 35px"] td,
+        .paper-replica tr[style*="height: 60px"] td { height: 20px !important; }
+        /* Checkbox visible */
+        .paper-replica input[type="checkbox"] { width: 10px !important; height: 10px !important; }
+        /* Rotated labels (MATERIAL, DIES, etc.) */
+        .paper-replica .text-vertical { font-size: 6px !important; }
+        /* Instrument table temperatures */
+        .paper-replica table table { page-break-inside: avoid; }
     }
 
     /* ============================================================ */
