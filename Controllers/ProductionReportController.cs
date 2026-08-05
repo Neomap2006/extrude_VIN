@@ -2795,7 +2795,6 @@ namespace VelastoProductionSystem.Controllers
             string sensorMachineCode = report.MachineName ?? "";
             if (sensorMachineCode.Contains("CHS2L")) sensorMachineCode = "CHS 2 Layer";
             else if (sensorMachineCode.Contains("CHS3L")) sensorMachineCode = "CHS 3 Layer";
-            else if (sensorMachineCode.Contains("DL")) sensorMachineCode = "Non-CHS (DL)";
 
             var logsQuery = _context.SensorIngestLogs
                 .Where(l => (l.MachineCode == report.MachineName || l.MachineCode == sensorMachineCode)

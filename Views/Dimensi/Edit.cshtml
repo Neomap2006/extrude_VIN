@@ -714,7 +714,7 @@
             <div class="m-row">
                 <span class="m-val" id="h-date" style="font-size: 11px;">@(Model?.CreatedDate.ToString("dd MMM yyyy").ToUpper() ?? DateTime.Now.ToString("dd MMM yyyy").ToUpper())</span>
                 <span class="m-divider"></span>
-                <span class="m-val m-accent" id="h-shift" onclick="toggleShift()" style="cursor: pointer;" title="CLICK TO TOGGLE SHIFT">@(Model?.Shift ?? "Shift 1")</span>
+                <span class="m-val m-accent" id="h-shift" style="cursor: default;">@(Model?.Shift ?? "Shift 1")</span>
             </div>
         </div>
         <!-- CLUSTER 4: OPERATOR & SPEC -->

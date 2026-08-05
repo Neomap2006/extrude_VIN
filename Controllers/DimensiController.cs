@@ -313,7 +313,10 @@ namespace VelastoProductionSystem.Controllers
             {
                 return RedirectToAction("Login", "Account");
             }
-            return View(new DimensionReport { Measurements = new List<DimensionMeasurement>() });
+            return View(new DimensionReport { 
+                Shift = GetCurrentShift(),
+                Measurements = new List<DimensionMeasurement>() 
+            });
         }
 
         public async Task<IActionResult> History(string? machineFilter = null)

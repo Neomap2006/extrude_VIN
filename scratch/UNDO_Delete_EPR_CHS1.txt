@@ -1,0 +1,9 @@
+-- CATATAN: Baris berikut DIHAPUS dari SpsNoDocs pada update ini.
+-- Untuk mengembalikan data, Anda perlu memasukkan ulang data ini secara manual
+-- atau restore dari backup database.
+
+-- DELETED: No=16, DocumentNumber=SOP/PROD/HOSE/EPR/24/10/16, Machine=CHS1
+-- DELETED: No=24, DocumentNumber=SOP/PROD/HOSE/EPR/24/10/24, Machine=CHS1
+-- DELETED: No=27, DocumentNumber=SOP/PROD/HOSE/EPR/24/10/27, Machine=CHS1
+-- DELETED: No=37, DocumentNumber=SOP/PROD/HOSE/EPR/24/10/37, Machine=CHS1
+-- DELETED: No=38, DocumentNumber=SOP/PROD/HOSE/EPR/24/12/38, Machine=CHS1

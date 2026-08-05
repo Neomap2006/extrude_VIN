@@ -1175,7 +1175,6 @@
                 let smc = currentEvalMachineName || currentEvalMachineCode || "";
                 if (smc.includes("CHS2L")) smc = "CHS 2 Layer";
                 else if (smc.includes("CHS3L")) smc = "CHS 3 Layer";
-                else if (smc.includes("DL")) smc = "Non-CHS (DL)";
 
                 const dataMC = (data.machineCode || "").toLowerCase();
                 const curMC = (currentEvalMachineCode || "").toLowerCase();

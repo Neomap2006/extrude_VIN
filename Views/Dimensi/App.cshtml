@@ -705,7 +705,7 @@
                 </div>
                 <div class="pcc-field-input" style="display:flex; justify-content:space-between;">
                     <span id="h-date" onclick="selectHUDDate()" style="cursor: pointer;" title="CLICK TO CHANGE DATE">@DateTime.Now.ToString("dd MMM yyyy").ToUpper()</span>
-                    <span id="h-shift" onclick="toggleShift()" style="color: #38bdf8; cursor: pointer;" title="CLICK TO TOGGLE SHIFT">@(Model.Shift ?? "Shift 1")</span>
+                    <span id="h-shift" style="color: #38bdf8; cursor: default;">@(Model.Shift ?? "Shift 1")</span>
                 </div>
             </div>
 
@@ -3147,9 +3147,9 @@
                 const time = now.getHours() + now.getMinutes() / 60;
                 let autoShift = 'Shift 1';
                 if (time >= 7.5 && time < 19.5) {
-                    autoShift = 'Shift 1'; // 07:30 - 19:30
+                    autoShift = 'Shift 2'; // 07:30 - 19:30
                 } else {
-                    autoShift = 'Shift 2'; // 19:30 - 07:30
+                    autoShift = 'Shift 1'; // 19:30 - 07:30
                 }
                 const shiftEl = document.getElementById('h-shift');
                 if (shiftEl) {

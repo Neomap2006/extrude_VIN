@@ -1,0 +1,3 @@
+-- Baris yang dihapus (untuk referensi):
+-- No=43, DocumentNumber=SOP/ENG/25/02/14, Machine=Non-CHS (DL)
+-- No=46, DocumentNumber=SOP/ENG/26/04/10, Machine=Non-CHS (SL)
