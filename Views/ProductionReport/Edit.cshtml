@@ -531,16 +531,31 @@
                                     <!-- Hidden full spec value for JS validation -->
                                     <div id="spec_@die.SpecKey" style="display:none;">--</div>
 
-                                    <!-- BOTTOM: Before + After centered -->
-                                    <div class="d-flex justify-content-center gap-3 mt-auto">
-                                        <div class="text-center" style="width: 130px;">
-                                            <label class="lbl-small mb-1 text-warning d-block" style="font-size: 0.55rem;">BEFORE</label>
-                                            <input name="@die.InitName" value="@die.InitVal" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2 w-100" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
+                                    <!-- BOTTOM: Quick-tap for Before & After -->
+                                    <div class="mt-auto">
+                                        <!-- Hidden actual inputs (sent to server) -->
+                                        <input type="hidden" name="@die.InitName" id="die_init_@die.SpecKey" value="@die.InitVal" />
+                                        <input type="hidden" name="@die.FinalName" id="die_final_@die.SpecKey" value="@die.FinalVal" />
+
+                                        <!-- Quick Buttons: satu set untuk isi keduanya -->
+                                        <div class="die-qt-btn-group" id="die_btns_@die.SpecKey">
+                                            <button type="button" class="die-qt-btn die-qt-min" onclick="quickFillDieDynamic('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', 'min')" title="Isi MIN">MIN</button>
+                                            <button type="button" class="die-qt-btn die-qt-std" onclick="quickFillDieDynamic('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', 'std')" title="Isi STD">STD</button>
+                                            <button type="button" class="die-qt-btn die-qt-max" onclick="quickFillDieDynamic('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', 'max')" title="Isi MAX">MAX</button>
+                                            <button type="button" class="die-qt-btn die-qt-ng" onclick="quickFillDieDynamic('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', 'ng')" title="Nilai NG">NG</button>
                                         </div>
-                                        <div class="text-center" style="width: 130px;">
-                                            <label class="lbl-small mb-1 text-warning d-block" style="font-size: 0.55rem;">AFTER</label>
-                                            <input name="@die.FinalName" value="@die.FinalVal" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2 w-100" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
+                                        <!-- Selected value display -->
+                                        <div class="die-qt-selected" id="die_val_@die.SpecKey" style="display:none;">
+                                            <span class="die-qt-val-text" id="die_val_text_@die.SpecKey"></span>
+                                            <button type="button" class="qt-clear-btn" onclick="quickClearDieDynamic('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')">&times;</button>
                                         </div>
+                                        <!-- Manual input (only when NG) -->
+                                        <input type="number" step="any"
+                                               id="die_manual_@die.SpecKey"
+                                               class="qt-manual-input mt-2"
+                                               placeholder="Ketik nilai aktual..."
+                                               style="display:none;"
+                                               oninput="dieManualInputDynamic('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', this.value)" />
                                     </div>
                                 </div>
                             </div>
@@ -616,7 +631,7 @@
                                                     <span class="badge rounded-pill super-small" style="background: @(mSec.Color)22; color: @mSec.Color; border: 1px solid @(mSec.Color)44;">@mSec.Rows[r, 1]</span>
                                                 </div>
                                                 
-                                                <div class="std-zone py-2 mb-2 rounded-2" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1);">
+                                                <div class="std-zone py-2 mb-2 rounded-2" style="display:none;">
                                                     <div class="d-flex justify-content-center gap-1">
                                                         <div class="text-center px-1" style="border-right: 1px solid rgba(255,255,255,0.1); width: 33%;">
                                                             <div style="font-size: 0.4rem; color: #94a3b8; text-transform: uppercase;">min</div>
@@ -634,12 +649,30 @@
                                                     <div id="spec_@key" style="display:none;">--</div>
                                                 </div>
                                                 
-                                                <div class="input-zone">
-                                                    <input id="input_@key"
-                                                           onchange="updateReadingData('@key', this.value)"
-                                                           class="vibrant-hud-input w-100" 
-                                                           placeholder="0.00" 
-                                                           style="--theme-color: @mSec.Color;" />
+                                                <!-- QUICK-TAP INPUT ZONE -->
+                                                <div class="qt-zone" id="qt_zone_@key">
+                                                    <!-- Hidden actual input (sent to server) -->
+                                                    <input type="hidden" id="input_@key" name="@key"
+                                                           onchange="updateReadingData('@key', this.value)" />
+                                                    <!-- Quick buttons: MIN / STD / MAX / NG -->
+                                                    <div class="qt-btn-group" id="qt_btns_@key">
+                                                        <button type="button" class="qt-btn qt-min" onclick="quickFillParamDynamic('@key', 'min', true, this)" title="Isi nilai MIN">MIN</button>
+                                                        <button type="button" class="qt-btn qt-std" onclick="quickFillParamDynamic('@key', 'std', true, this)" title="Isi nilai STD" style="--qt-color:@mSec.Color">STD</button>
+                                                        <button type="button" class="qt-btn qt-max" onclick="quickFillParamDynamic('@key', 'max', true, this)" title="Isi nilai MAX">MAX</button>
+                                                        <button type="button" class="qt-btn qt-ng" onclick="quickFillParamDynamic('@key', 'ng', true, this)" title="Nilai di luar standar">NG</button>
+                                                    </div>
+                                                    <!-- Selected value display -->
+                                                    <div class="qt-selected" id="qt_val_@key" style="display:none;">
+                                                        <span class="qt-val-text" id="qt_val_text_@key"></span>
+                                                        <button type="button" class="qt-clear-btn" onclick="quickClearParamDynamic('@key')" title="Reset">&times;</button>
+                                                    </div>
+                                                    <!-- Manual input (only shown when NG) -->
+                                                    <input type="number" step="any"
+                                                           id="qt_manual_@key"
+                                                           class="qt-manual-input"
+                                                           placeholder="Ketik nilai aktual..."
+                                                           style="display:none; --theme-color:@mSec.Color;"
+                                                           oninput="paramManualInputDynamic('@key', this.value)" />
                                                 </div>
                                             </div>
                                         </div>
@@ -883,6 +916,185 @@
     input[type="date"] { color-scheme: dark; }
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
+
+    /* ====== QUICK-TAP INPUT SYSTEM ====== */
+    .qt-zone { width: 100%; }
+
+    .qt-btn-group {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: center;
+        width: 100%;
+        align-content: flex-start;
+    }
+    .qt-btn-group > .qt-btn {
+        flex: 1 1 calc(33.333% - 4px);
+        padding: 10px 4px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.05);
+        color: #94a3b8;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        font-family: 'JetBrains Mono', monospace;
+        min-height: 48px;
+    }
+    .qt-btn-group > .qt-btn.qt-ng {
+        flex: 1 1 100%;
+    }
+    .qt-btn:hover { transform: translateY(-2px); filter: brightness(1.3); }
+    .qt-btn:active { transform: scale(0.94); }
+    .qt-btn.qt-std {
+        border-color: var(--qt-color, #38bdf8);
+        color: var(--qt-color, #38bdf8);
+        background: rgba(56,189,248,0.08);
+    }
+    .qt-btn.qt-min, .qt-btn.qt-max { color: #7dd3fc; }
+    .qt-btn.qt-ng {
+        border-color: rgba(239,68,68,0.5);
+        color: #f87171;
+        background: rgba(239,68,68,0.06);
+    }
+    .qt-btn.qt-active-std {
+        background: var(--qt-color, #38bdf8) !important;
+        color: #020617 !important;
+        border-color: var(--qt-color, #38bdf8) !important;
+        box-shadow: 0 0 12px var(--qt-color, #38bdf8);
+    }
+    .qt-btn.qt-active-min, .qt-btn.qt-active-max {
+        background: rgba(125,211,252,0.25) !important;
+        color: #fff !important;
+        border-color: #7dd3fc !important;
+    }
+    .qt-btn.qt-active-ng {
+        background: rgba(239,68,68,0.3) !important;
+        color: #fff !important;
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 12px rgba(239,68,68,0.5);
+    }
+    .qt-selected {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 6px;
+    }
+    .qt-val-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 900;
+        font-size: 1.6rem;
+        letter-spacing: 1px;
+    }
+    .qt-val-text.ok { color: #4ade80; }
+    .qt-val-text.ng { color: #f87171; }
+    .qt-clear-btn {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50%;
+        color: #94a3b8;
+        width: 22px; height: 22px;
+        font-size: 0.85rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        transition: all 0.15s;
+    }
+    .qt-clear-btn:hover { background: rgba(239,68,68,0.3); color: #f87171; }
+    .qt-manual-input {
+        width: 100%;
+        background: rgba(239,68,68,0.08);
+        border: 1px solid rgba(239,68,68,0.4);
+        border-radius: 8px;
+        color: #f87171;
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+        font-size: 1.1rem;
+        height: 42px;
+        outline: none;
+        margin-top: 6px;
+        padding: 4px 8px;
+        transition: all 0.2s;
+    }
+    .qt-manual-input:focus {
+        border-color: #ef4444;
+        box-shadow: 0 0 10px rgba(239,68,68,0.4);
+    }
+    .qt-manual-input::placeholder { color: rgba(248,113,113,0.5); font-size: 0.75rem; }
+    
+    .qt-manual-input[data-is-ok="true"] {
+        background: rgba(74,222,128,0.08);
+        border-color: rgba(74,222,128,0.4);
+        color: #4ade80;
+    }
+    .qt-manual-input[data-is-ok="true"]:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 10px rgba(74,222,128,0.4);
+    }
+    .qt-manual-input[data-is-ok="true"]::placeholder {
+        color: rgba(74,222,128,0.5);
+    }
+
+    /* ====== DIES QUICK-TAP ====== */
+    .die-qt-btn-group {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: center;
+        width: 100%;
+        align-content: flex-start;
+    }
+    .die-qt-btn-group > .die-qt-btn {
+        flex: 1 1 calc(33.333% - 4px);
+    }
+    .die-qt-btn-group > .die-qt-btn.die-qt-ng {
+        flex: 1 1 100%;
+    }
+    .die-qt-btn {
+        flex: 1;
+        padding: 8px 4px;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        border: 1px solid rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.05);
+        color: #94a3b8;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: 'JetBrains Mono', monospace;
+        min-height: 40px;
+    }
+    .die-qt-btn:hover { transform: translateY(-2px); filter: brightness(1.3); }
+    .die-qt-btn:active { transform: scale(0.94); }
+    .die-qt-btn.die-qt-std { border-color: rgba(56,189,248,0.5); color: #38bdf8; background: rgba(56,189,248,0.06); }
+    .die-qt-btn.die-qt-min, .die-qt-btn.die-qt-max { color: #7dd3fc; }
+    .die-qt-btn.die-qt-ng { border-color: rgba(239,68,68,0.5); color: #f87171; background: rgba(239,68,68,0.06); }
+    .die-qt-btn.die-qt-active-ok { background: #38bdf8 !important; color: #020617 !important; border-color: #38bdf8 !important; box-shadow: 0 0 10px #38bdf8; }
+    .die-qt-btn.die-qt-active-ng { background: rgba(239,68,68,0.3) !important; color: #fff !important; border-color: #ef4444 !important; box-shadow: 0 0 10px rgba(239,68,68,0.5); }
+    .die-qt-selected {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 5px;
+    }
+    .die-qt-val-text { font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 1rem; }
+    .die-qt-val-text.ok { color: #4ade80; }
+    .die-qt-val-text.ng { color: #f87171; }
+
+    /* Keep old style for any other use */
+    .param-tile-modern:hover {
+        background: rgba(255,255,255,0.07) !important;
+        border-color: rgba(255,255,255,0.2) !important;
+        transform: translateY(-5px);
+    }
 </style>
 
 @section Scripts {
@@ -890,6 +1102,431 @@
     <script src="~/lib/offline-cdn/html5-qrcode.min.js"></script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
+        // ====== QUICK-TAP PARAM ======
+        function quickFillParamDynamic(key, val, isStd, btnEl) {
+            const hiddenInput = document.getElementById('input_' + key);
+            const valDisplay  = document.getElementById('qt_val_' + key);
+            const valText     = document.getElementById('qt_val_text_' + key);
+            const btnsDiv     = document.getElementById('qt_btns_' + key);
+            const manualInput = document.getElementById('qt_manual_' + key);
+            if (!hiddenInput) return;
+
+            if (btnsDiv) btnsDiv.querySelectorAll('.qt-btn').forEach(b => {
+                b.classList.remove('qt-active-std', 'qt-active-min', 'qt-active-ng');
+            });
+
+            if (btnsDiv) btnsDiv.style.display = 'none';
+
+            if (val === 'ng' || val === 'ok_manual') {
+                hiddenInput.value = '';
+                if (valDisplay) valDisplay.style.display = 'flex';
+                if (valText) { 
+                    valText.textContent = (val === 'ok_manual') ? 'OK' : 'NG'; 
+                    valText.className = (val === 'ok_manual') ? 'qt-val-text ok' : 'qt-val-text ng'; 
+                }
+                if (manualInput) { 
+                    manualInput.style.display = 'block'; 
+                    manualInput.setAttribute('data-is-ok', val === 'ok_manual' ? 'true' : 'false');
+                    manualInput.focus(); 
+                }
+                if (btnEl) btnEl.classList.add(val === 'ok_manual' ? 'qt-active-std' : 'qt-active-ng');
+                updateReadingData(key, '');
+                return;
+            }
+
+            if (manualInput) { manualInput.style.display = 'none'; manualInput.value = ''; }
+            
+            hiddenInput.value = val;
+            updateReadingData(key, val);
+
+            const activeClass = isStd ? 'qt-active-std' : 'qt-active-min';
+            if (btnEl) btnEl.classList.add(activeClass);
+
+            if (valText) { valText.textContent = val; valText.className = 'qt-val-text ok'; }
+            if (valDisplay) valDisplay.style.display = 'flex';
+        }
+
+        function quickClearParamDynamic(key) {
+            const hiddenInput = document.getElementById('input_' + key);
+            const valDisplay  = document.getElementById('qt_val_' + key);
+            const btnsDiv     = document.getElementById('qt_btns_' + key);
+            const manualInput = document.getElementById('qt_manual_' + key);
+            if (hiddenInput) hiddenInput.value = '';
+            if (valDisplay) valDisplay.style.display = 'none';
+            if (manualInput) { manualInput.style.display = 'none'; manualInput.value = ''; }
+            if (btnsDiv) {
+                btnsDiv.style.display = 'flex';
+                btnsDiv.querySelectorAll('.qt-btn').forEach(b => {
+                    b.classList.remove('qt-active-std','qt-active-min','qt-active-max','qt-active-ng');
+                });
+            }
+            updateReadingData(key, '');
+        }
+
+        function paramManualInputDynamic(key, val) {
+            const hiddenInput = document.getElementById('input_' + key);
+            const valDisplay  = document.getElementById('qt_val_' + key);
+            const valText     = document.getElementById('qt_val_text_' + key);
+            const manualInput = document.getElementById('qt_manual_' + key);
+            
+            if (hiddenInput) hiddenInput.value = val;
+            
+            if (valText) { 
+                const isOk = manualInput && manualInput.getAttribute('data-is-ok') === 'true';
+                valText.textContent = val || (isOk ? 'OK' : 'NG'); 
+                valText.className = isOk ? 'qt-val-text ok' : 'qt-val-text ng'; 
+            }
+            if (valDisplay) valDisplay.style.display = 'flex';
+            updateReadingData(key, val);
+        }
+
+        // ====== QUICK-TAP DIES ======
+        function quickFillDieDynamic(specKey, radioField, initName, finalName, val, isStd, btnEl) {
+            const initInput  = document.getElementById('die_init_' + specKey);
+            const finalInput = document.getElementById('die_final_' + specKey);
+            const valDisplay = document.getElementById('die_val_' + specKey);
+            const valText    = document.getElementById('die_val_text_' + specKey);
+            const btnsDiv    = document.getElementById('die_btns_' + specKey);
+            const manualInput = document.getElementById('die_manual_' + specKey);
+
+            if (btnsDiv) btnsDiv.querySelectorAll('.die-qt-btn').forEach(b => {
+                b.classList.remove('die-qt-active-ok', 'die-qt-active-ng');
+            });
+
+            if (btnsDiv) btnsDiv.style.display = 'none';
+
+            if (val === 'ng') {
+                if (initInput)  initInput.value = '';
+                if (finalInput) finalInput.value = '';
+                if (valDisplay) valDisplay.style.display = 'flex';
+                if (valText) { valText.textContent = 'NG'; valText.className = 'die-qt-val-text ng'; }
+                if (manualInput) { manualInput.style.display = 'block'; manualInput.value = ''; manualInput.focus(); }
+                if (btnEl) btnEl.classList.add('die-qt-active-ng');
+                
+                const radios = document.getElementsByName(radioField);
+                for(let r of radios) { r.checked = (r.value === 'false'); }
+                return;
+            }
+
+            if (manualInput) { manualInput.style.display = 'none'; manualInput.value = ''; }
+
+            if (initInput)  initInput.value = val;
+            if (finalInput) finalInput.value = val;
+
+            const radios = document.getElementsByName(radioField);
+            for(let r of radios) { r.checked = (r.value === 'true'); }
+
+            if (btnEl) btnEl.classList.add('die-qt-active-ok');
+
+            if (valText) { valText.textContent = val; valText.className = 'die-qt-val-text ok'; }
+            if (valDisplay) valDisplay.style.display = 'flex';
+        }
+
+        function quickClearDieDynamic(specKey, radioField, initName, finalName) {
+            const initInput  = document.getElementById('die_init_' + specKey);
+            const finalInput = document.getElementById('die_final_' + specKey);
+            const valDisplay = document.getElementById('die_val_' + specKey);
+            const btnsDiv    = document.getElementById('die_btns_' + specKey);
+            const manualInput = document.getElementById('die_manual_' + specKey);
+            if (initInput)  initInput.value = '';
+            if (finalInput) finalInput.value = '';
+            if (valDisplay) valDisplay.style.display = 'none';
+            if (manualInput) { manualInput.style.display = 'none'; manualInput.value = ''; }
+            if (btnsDiv) {
+                btnsDiv.style.display = 'flex';
+                btnsDiv.querySelectorAll('.die-qt-btn').forEach(b => {
+                    b.classList.remove('die-qt-active-ok','die-qt-active-ng');
+                });
+            }
+            const radios = document.getElementsByName(radioField);
+            for(let r of radios) { r.checked = false; }
+        }
+
+        function generateSteps(minStr, stdStr, maxStr) {
+            const rangeMatch = stdStr && String(stdStr).trim().match(/^([\d,.]+)\s*[-?"~]\s*([\d,.]+)$/);
+            if (rangeMatch) {
+                const rangeMin = parseFloat(rangeMatch[1].replace(',', '.'));
+                const rangeMax = parseFloat(rangeMatch[2].replace(',', '.'));
+                if (!isNaN(rangeMin) && !isNaN(rangeMax) && rangeMin < rangeMax) {
+                    const part1Dec = (rangeMatch[1].includes(',') ? rangeMatch[1].split(',')[1] : (rangeMatch[1].includes('.') ? rangeMatch[1].split('.')[1] : '')).length;
+                    const part2Dec = (rangeMatch[2].includes(',') ? rangeMatch[2].split(',')[1] : (rangeMatch[2].includes('.') ? rangeMatch[2].split('.')[1] : '')).length;
+                    const decimalsToUse = Math.max(part1Dec, part2Dec);
+                    const diff = rangeMax - rangeMin;
+                    const stepSize = decimalsToUse === 0 ? 1 : (diff > 5 ? Math.ceil(diff / 10) : 0.5);
+                    const stepCount = Math.min(Math.round(diff / stepSize), 20);
+                    const stepValue = diff / stepCount;
+                    const values = [];
+                    for (let i = 0; i <= stepCount; i++) {
+                        values.push(rangeMin + stepValue * i);
+                    }
+                    const fmt = v => v.toFixed(decimalsToUse).replace('.', ',');
+                    const unique = [...new Set(values.map(v => Number(v.toFixed(3))))].sort((a, b) => a - b);
+                    return { steps: unique.map(v => fmt(v)), rangeMin: fmt(rangeMin), rangeMax: fmt(rangeMax), isRange: true };
+                }
+            }
+
+            const min = parseFloat((minStr || '').replace(',', '.'));
+            const std = parseFloat((stdStr || '').replace(',', '.'));
+            const max = parseFloat((maxStr || '').replace(',', '.'));
+            
+            if (isNaN(std)) return stdStr && stdStr !== '--' && stdStr !== '---' ? { steps: [stdStr], isRange: false } : { steps: [], isRange: false };
+            if (isNaN(min) || isNaN(max) || min === max) return { steps: [stdStr], isRange: false };
+            
+            const diff = max - min;
+            const intervals = 10;
+            const stepValue = diff / intervals;
+            
+            const values = [];
+            for (let i = 0; i <= intervals; i++) {
+                values.push(min + (stepValue * i));
+            }
+            values.push(std);
+            
+            const stdDecimals = (stdStr.split(/[.,]/)[1] || '').length;
+            const format = v => {
+                const decimalsToUse = stdDecimals > 0 ? stdDecimals + 1 : 1;
+                let s = v.toFixed(decimalsToUse);
+                if (s.endsWith('.0') && stdDecimals === 0) s = s.slice(0, -2);
+                else if (s.endsWith('0') && s.includes('.')) {
+                    if (s.split('.')[1].length > Math.max(1, stdDecimals)) {
+                       s = s.slice(0, -1);
+                    }
+                }
+                return s.replace('.', ',');
+            };
+            const unique = [...new Set(values.map(v => Number(v.toFixed(3))))].sort((a, b) => a - b);
+            return { steps: unique.map(v => format(v)), isRange: false };
+        }
+
+        function renderDynamicButtons(key, finalMin, finalStd, finalMax) {
+            const result = generateSteps(finalMin, finalStd, finalMax);
+            const steps = result.steps;
+            const isRange = result.isRange;
+            const rangeMin = result.rangeMin;
+            const rangeMax = result.rangeMax;
+
+            if (steps.length === 0) return;
+
+            const qtBtns = document.getElementById('qt_btns_' + key);
+            if (qtBtns) {
+                if (steps.length === 1 && !isRange) {
+                    const limitLabel = finalStd || steps[0];
+                    const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
+                    const html = `
+                        <div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">MAX: ${limitLabel}</div>
+                        <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
+                            <button type="button" class="qt-btn qt-std" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ok_manual', false, this)">OK (Manual Input)</button>
+                            <button type="button" class="qt-btn qt-ng" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ng', false, this)">NG (Manual Input)</button>
+                        </div>
+                    `;
+                    qtBtns.innerHTML = html;
+                    
+                    const themeColor = qtBtns.closest('.param-tile-modern')?.querySelector('.vibrant-hud-input')?.style.getPropertyValue('--theme-color');
+                    if(themeColor) qtBtns.style.setProperty('--qt-color', themeColor);
+                    
+                    return;
+                }
+
+                const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
+                
+                if (isRange) {
+                    qtBtns.insertAdjacentHTML('beforebegin', `<div id="rangelabel_${key}" style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">STD: ${rangeMin} \u2013 ${rangeMax}</div>`);
+                }
+
+                let html = '<div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center; width:100%;">';
+                steps.forEach(val => {
+                    let isStd = false;
+                    let btnClass = 'qt-btn qt-min';
+                    let label = '&nbsp;';
+
+                    if (isRange) {
+                        if (val === rangeMin) { label = 'MIN'; btnClass = 'qt-btn qt-min'; }
+                        else if (val === rangeMax) { label = 'MAX'; btnClass = 'qt-btn qt-max'; }
+                        else { btnClass = 'qt-btn qt-std'; }
+                    } else {
+                        isStd = (val === finalStd);
+                        btnClass = isStd ? 'qt-btn qt-std' : 'qt-btn qt-min';
+                        if (val === finalMin) label = 'MIN';
+                        else if (val === finalMax) label = 'MAX';
+                        else if (val === finalStd) label = 'STD';
+                    }
+                    
+                    html += `<button type="button" class="${btnClass}" style="${btnStyle} flex: 1 1 calc(33% - 4px); min-width: 50px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2;" onclick="quickFillParamDynamic('${key}', '${val}', ${isStd}, this)">
+                        <span style="font-size:0.5rem; opacity:0.6; font-weight:normal; letter-spacing:0.5px;">${label}</span>
+                        <span>${val}</span>
+                    </button>`;
+                });
+                html += `</div>`;
+                html += `<div style="margin-top:2px;"><button type="button" class="qt-btn qt-ng" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ng', false, this)">NG (Manual Input)</button></div>`;
+                qtBtns.innerHTML = html;
+                
+                const themeColor = qtBtns.closest('.param-tile-modern')?.querySelector('.vibrant-hud-input')?.style.getPropertyValue('--theme-color');
+                if(themeColor) qtBtns.style.setProperty('--qt-color', themeColor);
+            }
+
+            const dieBtns = document.getElementById('die_btns_' + key);
+            if (dieBtns) {
+                const dieRadios = {
+                    'NippleDie': { field: 'NippleDieOK', init: 'NippleDieInitial', final: 'NippleDieFinal' },
+                    'TubeDie': { field: 'TubeDieOK', init: 'TubeDieInitial', final: 'TubeDieFinal' },
+                    'MiddleDie': { field: 'MiddleDieOK', init: 'MiddleDieInitial', final: 'MiddleDieFinal' },
+                    'CoverDie': { field: 'CoverDieOK', init: 'CoverDieInitial', final: 'CoverDieFinal' },
+                    'SpacerDie': { field: 'SpacerDieOK', init: 'SpacerDieInitial', final: 'SpacerDieFinal' },
+                    'ToleranceDie': { field: 'ToleranceDieOK', init: 'ToleranceInitial', final: 'ToleranceFinal' }
+                };
+                const d = dieRadios[key];
+                if (d) {
+                    const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
+                    
+                    let html = '';
+                    if (isRange) {
+                        html += `<div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">STD: ${rangeMin} \u2013 ${rangeMax}</div>`;
+                    }
+                    html += '<div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center; width:100%;">';
+                    steps.forEach(val => {
+                        let isStd = false;
+                        let btnClass = 'die-qt-btn die-qt-min';
+                        let label = '&nbsp;';
+
+                        if (isRange) {
+                            if (val === rangeMin) { label = 'MIN'; btnClass = 'die-qt-btn die-qt-min'; }
+                            else if (val === rangeMax) { label = 'MAX'; btnClass = 'die-qt-btn die-qt-max'; }
+                            else { isStd = true; btnClass = 'die-qt-btn die-qt-std'; }
+                        } else {
+                            isStd = (val === finalStd);
+                            btnClass = isStd ? 'die-qt-btn die-qt-std' : 'die-qt-btn die-qt-min';
+                            if (val === finalMin) label = 'MIN';
+                            else if (val === finalMax) label = 'MAX';
+                            else if (val === finalStd) label = 'STD';
+                        }
+                        
+                        html += `<button type="button" class="${btnClass}" style="${btnStyle} flex: 1 1 calc(33% - 4px); min-width: 50px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2;" onclick="quickFillDieDynamic('${key}', '${d.field}', '${d.init}', '${d.final}', '${val}', ${isStd}, this)">
+                            <span style="font-size:0.45rem; opacity:0.6; font-weight:normal; letter-spacing:0.5px;">${label}</span>
+                            <span>${val}</span>
+                        </button>`;
+                    });
+                    html += `</div>`;
+                    html += `<div style="margin-top:2px;"><button type="button" class="die-qt-btn die-qt-ng" style="${btnStyle} width:100%;" onclick="quickFillDieDynamic('${key}', '${d.field}', '${d.init}', '${d.final}', 'ng', false, this)">NG</button></div>`;
+                    dieBtns.innerHTML = html;
+                }
+            }
+        }
+
+        function initAllDynamicButtons() {
+            // Parameter buttons
+            document.querySelectorAll('#parameterCardsContainer input[id^="input_"]').forEach(inp => {
+                const key = inp.id.replace('input_', '');
+                const minEl = document.getElementById('spec_min_' + key);
+                const stdEl = document.getElementById('spec_std_' + key);
+                const maxEl = document.getElementById('spec_max_' + key);
+                
+                const min = minEl ? minEl.textContent.trim() : '--';
+                const std = stdEl ? stdEl.textContent.trim() : '--';
+                const max = maxEl ? maxEl.textContent.trim() : '--';
+                
+                if (std !== '--' && std !== '---' && std !== '') {
+                    renderDynamicButtons(key, min, std, max);
+                }
+            });
+
+            // Dies Dimension buttons
+            document.querySelectorAll('input[id^="die_init_"]').forEach(inp => {
+                const key = inp.id.replace('die_init_', '');
+                const minEl = document.getElementById('spec_min_' + key);
+                const stdEl = document.getElementById('spec_std_' + key);
+                const maxEl = document.getElementById('spec_max_' + key);
+                
+                const min = minEl ? minEl.textContent.trim() : '--';
+                const std = stdEl ? stdEl.textContent.trim() : '--';
+                const max = maxEl ? maxEl.textContent.trim() : '--';
+                
+                if (std !== '--' && std !== '---' && std !== '') {
+                    renderDynamicButtons(key, min, std, max);
+                }
+            });
+        }
+
+
+        function syncAllModernUIs() {
+            // Sync Parameters
+            document.querySelectorAll('#parameterCardsContainer input[id^="input_"]').forEach(inp => {
+                const key = inp.id.replace('input_', '');
+                const val = inp.value.trim();
+                const btnsDiv = document.getElementById('qt_btns_' + key);
+                const valDisplay = document.getElementById('qt_val_' + key);
+                const valText = document.getElementById('qt_val_text_' + key);
+                const manualInput = document.getElementById('qt_manual_' + key);
+                
+                const minEl = document.getElementById('spec_min_' + key);
+                const maxEl = document.getElementById('spec_max_' + key);
+                let isOk = true;
+                if (val !== '' && minEl && maxEl) {
+                    const v = parseFloat(val.replace(',', '.'));
+                    const min = parseFloat(minEl.textContent.replace(',', '.'));
+                    const max = parseFloat(maxEl.textContent.replace(',', '.'));
+                    if (!isNaN(v) && !isNaN(min) && !isNaN(max)) {
+                        if (v < min || v > max) isOk = false;
+                    }
+                }
+
+                if (val !== '') {
+                    if (btnsDiv) btnsDiv.style.display = 'none';
+                    if (valDisplay) valDisplay.style.display = 'flex';
+                    if (valText) {
+                        valText.textContent = val;
+                        valText.className = isOk ? 'qt-val-text ok' : 'qt-val-text ng';
+                    }
+                    if (manualInput) manualInput.style.display = 'none';
+                } else {
+                    if (btnsDiv) {
+                        btnsDiv.style.display = 'flex';
+                        btnsDiv.querySelectorAll('.qt-btn').forEach(b => {
+                            b.classList.remove('qt-active-std', 'qt-active-min', 'qt-active-max', 'qt-active-ng');
+                        });
+                    }
+                    if (valDisplay) valDisplay.style.display = 'none';
+                    if (manualInput) {
+                        manualInput.style.display = 'none';
+                        manualInput.value = '';
+                    }
+                }
+            });
+
+            // Sync Dies
+            document.querySelectorAll('input[id^="die_init_"]').forEach(inp => {
+                const specKey = inp.id.replace('die_init_', '');
+                const val = inp.value.trim();
+                const btnsDiv = document.getElementById('die_btns_' + specKey);
+                const valDisplay = document.getElementById('die_val_' + specKey);
+                const valText = document.getElementById('die_val_text_' + specKey);
+                const manualInput = document.getElementById('die_manual_' + specKey);
+                
+                if (val !== '') {
+                    if (btnsDiv) btnsDiv.style.display = 'none';
+                    if (valDisplay) valDisplay.style.display = 'flex';
+                    if (valText) {
+                        valText.textContent = val;
+                        const radioOk = document.querySelector(`input[name="${specKey}OK"][value="true"]`);
+                        const isOk = radioOk && radioOk.checked;
+                        valText.className = isOk ? 'die-qt-val-text ok' : 'die-qt-val-text ng';
+                    }
+                    if (manualInput) manualInput.style.display = 'none';
+                } else {
+                    if (btnsDiv) {
+                        btnsDiv.style.display = 'flex';
+                        btnsDiv.querySelectorAll('.die-qt-btn').forEach(b => {
+                            b.classList.remove('die-qt-active-ok', 'die-qt-active-ng');
+                        });
+                    }
+                    if (valDisplay) valDisplay.style.display = 'none';
+                    if (manualInput) {
+                        manualInput.style.display = 'none';
+                        manualInput.value = '';
+                    }
+                }
+            });
+        }
+
         let html5QrCode;
         
         // === MATERIAL LOT TRACKING STATE ===
@@ -1254,7 +1891,10 @@
             // This ensures ItemCode matches the SPS protocol being applied
             const itemCodeEl = document.getElementById('ItemCode');
             if (itemCodeEl) {
-                itemCodeEl.value = sps.itemList || sps.ItemList || sps.productCode || sps.ProductCode || '';
+                const newCode = sps.itemList || sps.ItemList || sps.productCode || sps.ProductCode;
+                if (newCode) {
+                    itemCodeEl.value = newCode;
+                }
             }
 
             // Populate header inputs
@@ -1305,6 +1945,13 @@
                 if (minEl) minEl.textContent = minStr;
                 if (stdEl) stdEl.textContent = stdStr;
                 if (maxEl) maxEl.textContent = maxStr;
+                
+                // Show std-zone if standard exists
+                if (stdEl) {
+                    const stdZone = stdEl.closest('.std-zone');
+                    if (stdZone) stdZone.style.display = (stdStr !== '--') ? 'block' : 'none';
+                }
+
                 // Store pipe-range in hidden spec element for checkDieStatus validation
                 const specKey = specId || id;
                 const el = document.getElementById('spec_' + specKey);
@@ -1412,6 +2059,15 @@
 
             parseAndSet('HoseSpeed', sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Asli || sps.hoseSpeed_Asli || sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Min || sps.hoseSpeed_Min, sps.HoseSpeed_Max || sps.hoseSpeed_Max);
             parseAndSet('ConveyorRatio', sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Min || sps.conveyorRatio_Min, sps.ConveyorRatio_Max || sps.conveyorRatio_Max);
+            
+            // Missing parameter mappings
+            parseAndSet('PresetValue', sps.PresetValue || sps.presetValue, sps.PresetValue_Asli || sps.presetValue_Asli || sps.PresetValue || sps.presetValue, sps.PresetValue_Min || sps.presetValue_Min, sps.PresetValue_Max || sps.presetValue_Max);
+            parseAndSet('ControlValue', sps.ControlValue || sps.controlValue, sps.ControlValue_Asli || sps.controlValue_Asli || sps.ControlValue || sps.controlValue, sps.ControlValue_Min || sps.controlValue_Min, sps.ControlValue_Max || sps.controlValue_Max);
+            parseAndSet('TakeupConveyorSpeed', sps.TakeUpSpeed || sps.takeUpSpeed, sps.TakeUpSpeed_Asli || sps.takeUpSpeed_Asli || sps.TakeUpSpeed || sps.takeUpSpeed, sps.TakeUpSpeed_Min || sps.takeUpSpeed_Min, sps.TakeUpSpeed_Max || sps.takeUpSpeed_Max);
+            parseAndSet('CoolConveyorSpeed', sps.CoolSpeed || sps.coolSpeed, sps.CoolSpeed_Asli || sps.coolSpeed_Asli || sps.CoolSpeed || sps.coolSpeed, sps.CoolSpeed_Min || sps.coolSpeed_Min, sps.CoolSpeed_Max || sps.coolSpeed_Max);
+            parseAndSet('UnsmoothSurface', sps.SurfaceCondition || sps.surfaceCondition, sps.SurfaceCondition || sps.surfaceCondition, '--', '--');
+            parseAndSet('ChillerWaterTemp', sps.ChillerTemp || sps.chillerTemp, sps.ChillerTemp || sps.chillerTemp, '--', '--');
+            parseAndSet('CaterpillarGap', sps.CaterpillarGap || sps.caterpillarGap, sps.CaterpillarGap || sps.caterpillarGap, '--', '--');
 
             // Populate Emboss Marking Date if empty
             const dateEl = document.getElementById('EmbossMarkDate');
@@ -1455,6 +2111,9 @@
             const stdMarkingEl = document.getElementById('std_Marking');
             if (stdMarkingEl) stdMarkingEl.innerText = 'STD: ' + (markingStd || '--');
 
+            initAllDynamicButtons();
+            syncAllModernUIs();
+
             Swal.fire({
                 icon: 'success', title: 'SPS SYNC SUCCESS',
                 text: `Protokol ${sps.hoseType || sps.HoseType || ''} berhasil dimuat!`,
@@ -1476,40 +2135,130 @@
                 const row = document.getElementById('middleMaterialRow');
                 if (row) row.style.display = '';
             }
+
+            // ✅ FIX: Render tabs and load existing reading data into inputs on page load
+            renderTabs();
+            initAllDynamicButtons();
+            loadCurrentReadingToInputs();
+            syncAllModernUIs();
         });
 
         // Load existing readings from Model
-        const initialReadings = @Html.Raw(Json.Serialize((Model?.ProductionReadings ?? new List<ProductionReading>()).OrderBy(r => r.ReadingTime).Select(r => new {
-            HeadTempInner = r.HeadTempInner?.ToString(),
-            Cylinder1TempInner = r.Cylinder1TempInner?.ToString(),
-            Cylinder2TempInner = r.Cylinder2TempInner?.ToString(),
-            Cylinder3TempInner = r.Cylinder3TempInner?.ToString(),
-            ScrewTempInner = r.ScrewTempInner?.ToString(),
-            ScrewSpeedInner = r.ScrewSpeedInner?.ToString(),
-            FeedRollRatioInner = r.FeedRollRatioInner?.ToString(),
-            PressureInner = r.PressureInner?.ToString(),
-            HeadTempOuter = r.HeadTempOuter?.ToString(),
-            Cylinder1TempOuter = r.Cylinder1TempOuter?.ToString(),
-            Cylinder2TempOuter = r.Cylinder2TempOuter?.ToString(),
-            Cylinder3TempOuter = r.Cylinder3TempOuter?.ToString(),
-            ScrewTempOuter = r.ScrewTempOuter?.ToString(),
-            ScrewSpeedOuter = r.ScrewSpeedOuter?.ToString(),
-            FeedRollRatioOuter = r.FeedRollRatioOuter?.ToString(),
-            PressureOuter = r.PressureOuter?.ToString(),
-            SpiralSpeed = r.SpiralSpeed?.ToString(),
-            SpiralPitchSetting = r.SpiralPitchSetting?.ToString(),
-            SpiralPitchDisplay = r.SpiralPitchDisplay?.ToString(),
-            PresetValue = r.PresetValue?.ToString(),
-            ControlValue = r.ControlValue?.ToString(),
-            HoseSpeed = r.HoseSpeed?.ToString(),
-            TakeupConveyorSpeed = r.TakeupConveyorSpeed?.ToString(),
-            CoolConveyorSpeed = r.CoolConveyorSpeed?.ToString(),
-            ConveyorRatio = r.ConveyorRatio?.ToString(),
-            UnsmoothSurface = r.UnsmoothSurface?.ToString(),
-            ChillerWaterTemp = r.ChillerWaterTemp?.ToString(),
-            CaterpillarGap = r.CaterpillarGap?.ToString(),
-            ReadingTime = r.ReadingTime.ToString("yyyy-MM-ddTHH:mm:ss")
-        }).ToList()));
+        @{
+            var readingsList = (Model?.ProductionReadings ?? new List<ProductionReading>()).OrderBy(r => r.ReadingTime).ToList();
+            var readingData = new List<object>();
+
+            if (readingsList.Count == 0)
+            {
+                readingData.Add(new {
+                    HeadTempInner = Model?.InitHeadTempInner?.ToString(),
+                    Cylinder1TempInner = Model?.InitCylinder1TempInner?.ToString(),
+                    Cylinder2TempInner = Model?.InitCylinder2TempInner?.ToString(),
+                    Cylinder3TempInner = Model?.InitCylinder3TempInner?.ToString(),
+                    ScrewTempInner = Model?.InitScrewTempInner?.ToString(),
+                    ScrewSpeedInner = Model?.InitScrewSpeedInner?.ToString(),
+                    FeedRollRatioInner = Model?.InitFeedRollRatioInner?.ToString(),
+                    PressureInner = Model?.InitPressureInner?.ToString(),
+                    HeadTempOuter = Model?.InitHeadTempOuter?.ToString(),
+                    Cylinder1TempOuter = Model?.InitCylinder1TempOuter?.ToString(),
+                    Cylinder2TempOuter = Model?.InitCylinder2TempOuter?.ToString(),
+                    Cylinder3TempOuter = Model?.InitCylinder3TempOuter?.ToString(),
+                    ScrewTempOuter = Model?.InitScrewTempOuter?.ToString(),
+                    ScrewSpeedOuter = Model?.InitScrewSpeedOuter?.ToString(),
+                    FeedRollRatioOuter = Model?.InitFeedRollRatioOuter?.ToString(),
+                    PressureOuter = Model?.InitPressureOuter?.ToString(),
+                    SpiralSpeed = Model?.InitSpiralSpeed?.ToString(),
+                    SpiralPitchSetting = Model?.InitSpiralPitchSetting?.ToString(),
+                    SpiralPitchDisplay = Model?.InitSpiralPitchDisplay?.ToString(),
+                    PresetValue = Model?.InitPresetValue?.ToString(),
+                    ControlValue = Model?.InitControlValue?.ToString(),
+                    HoseSpeed = Model?.InitHoseSpeed?.ToString(),
+                    TakeupConveyorSpeed = Model?.InitTakeupConveyorSpeed?.ToString(),
+                    CoolConveyorSpeed = Model?.InitCoolConveyorSpeed?.ToString(),
+                    ConveyorRatio = Model?.InitConveyorRatio?.ToString(),
+                    UnsmoothSurface = Model?.InitUnsmoothSurface?.ToString(),
+                    ChillerWaterTemp = Model?.InitChillerWaterTemp?.ToString(),
+                    CaterpillarGap = Model?.InitCaterpillarGap?.ToString(),
+                    ReadingTime = (Model?.ProductionDate ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm:ss")
+                });
+            }
+            else
+            {
+                for (int i = 0; i < readingsList.Count; i++)
+                {
+                    var r = readingsList[i];
+                    if (i == 0)
+                    {
+                        readingData.Add(new {
+                            HeadTempInner = Model?.InitHeadTempInner?.ToString() ?? r.HeadTempInner?.ToString(),
+                            Cylinder1TempInner = Model?.InitCylinder1TempInner?.ToString() ?? r.Cylinder1TempInner?.ToString(),
+                            Cylinder2TempInner = Model?.InitCylinder2TempInner?.ToString() ?? r.Cylinder2TempInner?.ToString(),
+                            Cylinder3TempInner = Model?.InitCylinder3TempInner?.ToString() ?? r.Cylinder3TempInner?.ToString(),
+                            ScrewTempInner = Model?.InitScrewTempInner?.ToString() ?? r.ScrewTempInner?.ToString(),
+                            ScrewSpeedInner = Model?.InitScrewSpeedInner?.ToString() ?? r.ScrewSpeedInner?.ToString(),
+                            FeedRollRatioInner = Model?.InitFeedRollRatioInner?.ToString() ?? r.FeedRollRatioInner?.ToString(),
+                            PressureInner = Model?.InitPressureInner?.ToString() ?? r.PressureInner?.ToString(),
+                            HeadTempOuter = Model?.InitHeadTempOuter?.ToString() ?? r.HeadTempOuter?.ToString(),
+                            Cylinder1TempOuter = Model?.InitCylinder1TempOuter?.ToString() ?? r.Cylinder1TempOuter?.ToString(),
+                            Cylinder2TempOuter = Model?.InitCylinder2TempOuter?.ToString() ?? r.Cylinder2TempOuter?.ToString(),
+                            Cylinder3TempOuter = Model?.InitCylinder3TempOuter?.ToString() ?? r.Cylinder3TempOuter?.ToString(),
+                            ScrewTempOuter = Model?.InitScrewTempOuter?.ToString() ?? r.ScrewTempOuter?.ToString(),
+                            ScrewSpeedOuter = Model?.InitScrewSpeedOuter?.ToString() ?? r.ScrewSpeedOuter?.ToString(),
+                            FeedRollRatioOuter = Model?.InitFeedRollRatioOuter?.ToString() ?? r.FeedRollRatioOuter?.ToString(),
+                            PressureOuter = Model?.InitPressureOuter?.ToString() ?? r.PressureOuter?.ToString(),
+                            SpiralSpeed = Model?.InitSpiralSpeed?.ToString() ?? r.SpiralSpeed?.ToString(),
+                            SpiralPitchSetting = Model?.InitSpiralPitchSetting?.ToString() ?? r.SpiralPitchSetting?.ToString(),
+                            SpiralPitchDisplay = Model?.InitSpiralPitchDisplay?.ToString() ?? r.SpiralPitchDisplay?.ToString(),
+                            PresetValue = Model?.InitPresetValue?.ToString() ?? r.PresetValue?.ToString(),
+                            ControlValue = Model?.InitControlValue?.ToString() ?? r.ControlValue?.ToString(),
+                            HoseSpeed = Model?.InitHoseSpeed?.ToString() ?? r.HoseSpeed?.ToString(),
+                            TakeupConveyorSpeed = Model?.InitTakeupConveyorSpeed?.ToString() ?? r.TakeupConveyorSpeed?.ToString(),
+                            CoolConveyorSpeed = Model?.InitCoolConveyorSpeed?.ToString() ?? r.CoolConveyorSpeed?.ToString(),
+                            ConveyorRatio = Model?.InitConveyorRatio?.ToString() ?? r.ConveyorRatio?.ToString(),
+                            UnsmoothSurface = Model?.InitUnsmoothSurface?.ToString() ?? r.UnsmoothSurface?.ToString(),
+                            ChillerWaterTemp = Model?.InitChillerWaterTemp?.ToString() ?? r.ChillerWaterTemp?.ToString(),
+                            CaterpillarGap = Model?.InitCaterpillarGap?.ToString() ?? r.CaterpillarGap?.ToString(),
+                            ReadingTime = r.ReadingTime.ToString("yyyy-MM-ddTHH:mm:ss")
+                        });
+                    }
+                    else
+                    {
+                        readingData.Add(new {
+                            HeadTempInner = r.HeadTempInner?.ToString(),
+                            Cylinder1TempInner = r.Cylinder1TempInner?.ToString(),
+                            Cylinder2TempInner = r.Cylinder2TempInner?.ToString(),
+                            Cylinder3TempInner = r.Cylinder3TempInner?.ToString(),
+                            ScrewTempInner = r.ScrewTempInner?.ToString(),
+                            ScrewSpeedInner = r.ScrewSpeedInner?.ToString(),
+                            FeedRollRatioInner = r.FeedRollRatioInner?.ToString(),
+                            PressureInner = r.PressureInner?.ToString(),
+                            HeadTempOuter = r.HeadTempOuter?.ToString(),
+                            Cylinder1TempOuter = r.Cylinder1TempOuter?.ToString(),
+                            Cylinder2TempOuter = r.Cylinder2TempOuter?.ToString(),
+                            Cylinder3TempOuter = r.Cylinder3TempOuter?.ToString(),
+                            ScrewTempOuter = r.ScrewTempOuter?.ToString(),
+                            ScrewSpeedOuter = r.ScrewSpeedOuter?.ToString(),
+                            FeedRollRatioOuter = r.FeedRollRatioOuter?.ToString(),
+                            PressureOuter = r.PressureOuter?.ToString(),
+                            SpiralSpeed = r.SpiralSpeed?.ToString(),
+                            SpiralPitchSetting = r.SpiralPitchSetting?.ToString(),
+                            SpiralPitchDisplay = r.SpiralPitchDisplay?.ToString(),
+                            PresetValue = r.PresetValue?.ToString(),
+                            ControlValue = r.ControlValue?.ToString(),
+                            HoseSpeed = r.HoseSpeed?.ToString(),
+                            TakeupConveyorSpeed = r.TakeupConveyorSpeed?.ToString(),
+                            CoolConveyorSpeed = r.CoolConveyorSpeed?.ToString(),
+                            ConveyorRatio = r.ConveyorRatio?.ToString(),
+                            UnsmoothSurface = r.UnsmoothSurface?.ToString(),
+                            ChillerWaterTemp = r.ChillerWaterTemp?.ToString(),
+                            CaterpillarGap = r.CaterpillarGap?.ToString(),
+                            ReadingTime = r.ReadingTime.ToString("yyyy-MM-ddTHH:mm:ss")
+                        });
+                    }
+                }
+            }
+        }
+        const initialReadings = @Html.Raw(Json.Serialize(readingData));
 
         // Transform to match expected format { data: {...} }
         pReadings = initialReadings.length > 0 ? initialReadings.map(r => ({ data: r })) : [{ data: {} }];
@@ -1546,16 +2295,33 @@
             });
         }
 
+        function saveCurrentInputsToMemory() {
+            const data = pReadings[activeTabIndex].data;
+            // Query both hidden quick-tap inputs AND legacy visible inputs
+            document.querySelectorAll('#parameterCardsContainer input[id^="input_"]').forEach(input => {
+                const key = input.id.replace('input_', '');
+                if (!key) return;
+                const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
+                if (data[camelKey] !== undefined) {
+                    data[camelKey] = input.value;
+                } else {
+                    data[key] = input.value;
+                }
+            });
+        }
+
         function switchTab(idx) {
+            saveCurrentInputsToMemory(); // Save before switching
             activeTabIndex = idx;
             renderTabs();
+            initAllDynamicButtons();
             loadCurrentReadingToInputs();
         }
 
         function loadCurrentReadingToInputs() {
             const data = pReadings[activeTabIndex].data;
-            const inputs = document.querySelectorAll('.vibrant-hud-input');
-            inputs.forEach(input => {
+            // Query hidden quick-tap inputs
+            document.querySelectorAll('#parameterCardsContainer input[id^="input_"]').forEach(input => {
                 const key = input.id.replace('input_', '');
                 let val = data[key];
                 if (val === undefined) {
@@ -1564,15 +2330,23 @@
                 }
                 
                 if (val !== undefined && val !== null && val !== '') {
-                    // C# decimal serialization might keep trailing zeros (e.g. "6,1000" or "12.0000")
+                    // Clean up trailing zeros from C# decimal serialization
                     if (typeof val === 'string' && /^-?\d+([.,]\d+)?$/.test(val)) {
                         val = val.replace(/([.,]\d*?[1-9])0+$/, '$1').replace(/[.,]0+$/, '');
                     }
+                    // Normalize decimal format: replace comma with dot for comparison
+                    const normalized = String(val).replace(',', '.');
+                    input.value = normalized;
+                } else {
+                    input.value = '';
                 }
-                
-                input.value = (val !== undefined && val !== null) ? val : '';
+                // Trigger onchange so updateReadingData is called
+                input.dispatchEvent(new Event('change'));
             });
+            // Now sync the Quick-Tap UI to show selected values
+            syncAllModernUIs();
         }
+
 
         function updateReadingData(key, val) {
             const data = pReadings[activeTabIndex].data;
@@ -1755,6 +2529,7 @@
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
             renderTabs();
+            initAllDynamicButtons();
             loadCurrentReadingToInputs();
             loadExistingMaterialLots();
             
@@ -1917,10 +2692,24 @@
 
                 MaterialLots: getMaterialLotPayload(),
 
-                Readings: pReadings.map(p => ({
-                    ReadingTime: p.data.ReadingTime || new Date().toISOString(),
-                    ...p.data
-                }))
+                Readings: (() => {
+                    // ✅ FIX: Sync current hidden quick-tap input values into active tab's data
+                    document.querySelectorAll('#parameterCardsContainer input[id^="input_"]').forEach(input => {
+                        const key = input.id.replace('input_', '');
+                        if (!key) return;
+                        const data = pReadings[activeTabIndex].data;
+                        const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
+                        if (data[camelKey] !== undefined) {
+                            data[camelKey] = input.value;
+                        } else {
+                            data[key] = input.value;
+                        }
+                    });
+                    return pReadings.map(p => ({
+                        ReadingTime: p.data.ReadingTime || new Date().toISOString(),
+                        ...p.data
+                    }));
+                })()
             };
 
             Swal.fire({

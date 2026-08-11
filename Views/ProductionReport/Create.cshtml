@@ -920,7 +920,7 @@
                                     </div>
 
                                     <!-- MIDDLE: Standard min / std / max individual boxes -->
-                                    <div class="mb-3">
+                                    <div class="mb-3" style="display:none;">
                                         <div class="text-center mb-1">
                                             <span style="font-size: 0.48rem; font-weight: 900; letter-spacing: 2px; color: #94a3b8; text-transform: uppercase;">STANDARD</span>
                                         </div>
@@ -942,16 +942,31 @@
                                     <!-- Hidden full spec value for JS validation -->
                                     <div id="spec_@die.SpecKey" style="display:none;">@die.Std</div>
 
-                                    <!-- BOTTOM: Before + After centered -->
-                                    <div class="d-flex justify-content-center gap-3 mt-auto">
-                                        <div class="text-center" style="width: 130px;">
-                                            <label class="lbl-small mb-1 text-warning d-block" style="font-size: 0.55rem;">BEFORE</label>
-                                            <input name="@die.InitName" oninput="checkDieStatus('spec_@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2 w-100" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
+                                    <!-- BOTTOM: Quick-tap for Before & After -->
+                                    <div class="mt-auto">
+                                        <!-- Hidden actual inputs (sent to server) -->
+                                        <input type="hidden" name="@die.InitName" id="die_init_@die.SpecKey" />
+                                        <input type="hidden" name="@die.FinalName" id="die_final_@die.SpecKey" />
+
+                                        <!-- Quick Buttons: satu set untuk isi keduanya -->
+                                        <div class="die-qt-btn-group" id="die_btns_@die.SpecKey">
+                                            <button type="button" class="die-qt-btn die-qt-min" onclick="quickFillDie('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', 'min')" title="Isi MIN">MIN</button>
+                                            <button type="button" class="die-qt-btn die-qt-std" onclick="quickFillDie('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', 'std')" title="Isi STD">STD</button>
+                                            <button type="button" class="die-qt-btn die-qt-max" onclick="quickFillDie('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', 'max')" title="Isi MAX">MAX</button>
+                                            <button type="button" class="die-qt-btn die-qt-ng"  onclick="quickFillDie('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', 'ng')" title="Nilai NG">NG</button>
                                         </div>
-                                        <div class="text-center" style="width: 130px;">
-                                            <label class="lbl-small mb-1 text-warning d-block" style="font-size: 0.55rem;">AFTER</label>
-                                            <input name="@die.FinalName" oninput="checkDieStatus('spec_@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')" class="hud-input-underlined py-1 text-center font-monospace text-warning border-0 bg-white bg-opacity-5 rounded-2 w-100" placeholder="---" style="font-size: 0.9rem; min-height: 35px;" />
+                                        <!-- Selected value display -->
+                                        <div class="die-qt-selected" id="die_val_@die.SpecKey" style="display:none;">
+                                            <span class="die-qt-val-text" id="die_val_text_@die.SpecKey"></span>
+                                            <button type="button" class="qt-clear-btn" onclick="quickClearDie('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName')">&times;</button>
                                         </div>
+                                        <!-- Manual input (only when NG) -->
+                                        <input type="number" step="any"
+                                               id="die_manual_@die.SpecKey"
+                                               class="qt-manual-input mt-2"
+                                               placeholder="Ketik nilai aktual..."
+                                               style="display:none;"
+                                               oninput="dieManualInput('@die.SpecKey', '@die.Field', '@die.InitName', '@die.FinalName', this.value)" />
                                     </div>
                                 </div>
                             </div>
@@ -1107,7 +1122,7 @@
                                                     <span class="badge rounded-pill super-small" style="background: @(mSec.Color)22; color: @mSec.Color; border: 1px solid @(mSec.Color)44;">@mSec.Rows[r, 1]</span>
                                                 </div>
                                                 
-                                                <div class="std-zone py-2 mb-2 rounded-2" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1);">
+                                                <div class="std-zone py-2 mb-2 rounded-2" style="display:none;">
                                                     <div class="d-flex justify-content-center gap-1">
                                                         <div class="text-center px-1" style="border-right: 1px solid rgba(255,255,255,0.1); width: 33%;">
                                                             <div style="font-size: 0.4rem; color: #94a3b8; text-transform: uppercase;">min</div>
@@ -1125,13 +1140,30 @@
                                                     <div id="spec_@key" style="display:none;">--</div>
                                                 </div>
                                                 
-                                                <div class="input-zone">
-                                                    <input id="input_@key"
-                                                           onchange="updateReadingData('@key', this.value)"
-                                                           oninput="validateParam(this, 'spec_@key')"
-                                                           class="vibrant-hud-input w-100" 
-                                                           placeholder="0.00" 
-                                                           style="--theme-color: @mSec.Color;" />
+                                                <!-- QUICK-TAP INPUT ZONE -->
+                                                <div class="qt-zone" id="qt_zone_@key">
+                                                    <!-- Hidden actual input (sent to server) -->
+                                                    <input type="hidden" id="input_@key" name="@key"
+                                                           onchange="updateReadingData('@key', this.value)" />
+                                                    <!-- Quick buttons: MIN / STD / MAX / NG -->
+                                                    <div class="qt-btn-group" id="qt_btns_@key">
+                                                        <button type="button" class="qt-btn qt-min" onclick="quickFillParam('@key', 'min', '@mSec.Color')" title="Isi nilai MIN">MIN</button>
+                                                        <button type="button" class="qt-btn qt-std" onclick="quickFillParam('@key', 'std', '@mSec.Color')" title="Isi nilai STD" style="--qt-color:@mSec.Color">STD</button>
+                                                        <button type="button" class="qt-btn qt-max" onclick="quickFillParam('@key', 'max', '@mSec.Color')" title="Isi nilai MAX">MAX</button>
+                                                        <button type="button" class="qt-btn qt-ng" onclick="quickFillParam('@key', 'ng', '@mSec.Color')" title="Nilai di luar standar">NG</button>
+                                                    </div>
+                                                    <!-- Selected value display -->
+                                                    <div class="qt-selected" id="qt_val_@key" style="display:none;">
+                                                        <span class="qt-val-text" id="qt_val_text_@key"></span>
+                                                        <button type="button" class="qt-clear-btn" onclick="quickClearParam('@key')" title="Reset">&times;</button>
+                                                    </div>
+                                                    <!-- Manual input (only shown when NG) -->
+                                                    <input type="number" step="any"
+                                                           id="qt_manual_@key"
+                                                           class="qt-manual-input"
+                                                           placeholder="Ketik nilai aktual..."
+                                                           style="display:none; --theme-color:@mSec.Color;"
+                                                           oninput="quickManualInput('@key', this.value)" />
                                                 </div>
                                             </div>
                                         </div>
@@ -1144,26 +1176,171 @@
             </div>
 
             <style>
-                .vibrant-hud-input {
-                    background: rgba(255,255,255,0.05);
-                    border: 2px solid rgba(255,255,255,0.1);
+                /* ====== QUICK-TAP INPUT SYSTEM ====== */
+                .qt-zone { width: 100%; }
+
+                .qt-btn-group {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    gap: 4px;
+                    justify-content: center;
+                    width: 100%;
+                    align-content: flex-start;
+                }
+                .qt-btn-group > .qt-btn {
+                    flex: 1 1 calc(33.333% - 4px);
+                    padding: 10px 4px;
                     border-radius: 8px;
-                    color: white;
-                    text-align: center;
+                    font-size: 0.7rem;
+                    font-weight: 900;
+                    letter-spacing: 1px;
+                    border: 1px solid rgba(255,255,255,0.15);
+                    background: rgba(255,255,255,0.05);
+                    color: #94a3b8;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                    font-family: 'JetBrains Mono', monospace;
+                    min-height: 48px;
+                }
+                .qt-btn-group > .qt-btn.qt-ng {
+                    flex: 1 1 100%;
+                }
+                .qt-btn:hover { transform: translateY(-2px); filter: brightness(1.3); }
+                .qt-btn:active { transform: scale(0.94); }
+                .qt-btn.qt-std {
+                    border-color: var(--qt-color, #38bdf8);
+                    color: var(--qt-color, #38bdf8);
+                    background: rgba(56,189,248,0.08);
+                }
+                .qt-btn.qt-min, .qt-btn.qt-max { color: #7dd3fc; }
+                .qt-btn.qt-ng {
+                    border-color: rgba(239,68,68,0.5);
+                    color: #f87171;
+                    background: rgba(239,68,68,0.06);
+                }
+                .qt-btn.qt-active-std {
+                    background: var(--qt-color, #38bdf8) !important;
+                    color: #020617 !important;
+                    border-color: var(--qt-color, #38bdf8) !important;
+                    box-shadow: 0 0 12px var(--qt-color, #38bdf8);
+                }
+                .qt-btn.qt-active-min, .qt-btn.qt-active-max {
+                    background: rgba(125,211,252,0.25) !important;
+                    color: #fff !important;
+                    border-color: #7dd3fc !important;
+                }
+                .qt-btn.qt-active-ng {
+                    background: rgba(239,68,68,0.3) !important;
+                    color: #fff !important;
+                    border-color: #ef4444 !important;
+                    box-shadow: 0 0 12px rgba(239,68,68,0.5);
+                }
+                .qt-selected {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    margin-top: 6px;
+                }
+                .qt-val-text {
                     font-family: 'JetBrains Mono', monospace;
                     font-weight: 900;
-                    font-size: 1.8rem;
-                    height: 65px;
-                    width: 100%;
-                    outline: none;
-                    transition: all 0.3s;
+                    font-size: 1.6rem;
+                    letter-spacing: 1px;
                 }
-                .vibrant-hud-input:focus {
+                .qt-val-text.ok { color: #4ade80; }
+                .qt-val-text.ng { color: #f87171; }
+                .qt-clear-btn {
                     background: rgba(255,255,255,0.1);
-                    border-color: var(--theme-color);
-                    box-shadow: 0 0 20px var(--theme-color);
-                    transform: translateY(-2px);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 50%;
+                    color: #94a3b8;
+                    width: 22px; height: 22px;
+                    font-size: 0.85rem;
+                    line-height: 1;
+                    cursor: pointer;
+                    padding: 0;
+                    transition: all 0.15s;
                 }
+                .qt-clear-btn:hover { background: rgba(239,68,68,0.3); color: #f87171; }
+                .qt-manual-input {
+                    width: 100%;
+                    background: rgba(239,68,68,0.08);
+                    border: 1px solid rgba(239,68,68,0.4);
+                    border-radius: 8px;
+                    color: #f87171;
+                    text-align: center;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-weight: 700;
+                    font-size: 1.1rem;
+                    height: 42px;
+                    outline: none;
+                    margin-top: 6px;
+                    padding: 4px 8px;
+                    transition: all 0.2s;
+                }
+                .qt-manual-input:focus {
+                    border-color: #ef4444;
+                    box-shadow: 0 0 10px rgba(239,68,68,0.4);
+                }
+                .qt-manual-input::placeholder { color: rgba(248,113,113,0.5); font-size: 0.75rem; }
+                
+                .qt-manual-input[data-is-ok="true"] {
+                    background: rgba(74,222,128,0.08);
+                    border-color: rgba(74,222,128,0.4);
+                    color: #4ade80;
+                }
+                .qt-manual-input[data-is-ok="true"]:focus {
+                    border-color: #22c55e;
+                    box-shadow: 0 0 10px rgba(74,222,128,0.4);
+                }
+                .qt-manual-input[data-is-ok="true"]::placeholder {
+                    color: rgba(74,222,128,0.5);
+                }
+
+                /* ====== DIES QUICK-TAP ====== */
+                .die-qt-btn-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    justify-content: center;
+                    width: 100%;
+                }
+                .die-qt-btn {
+                    flex: 1;
+                    padding: 8px 4px;
+                    border-radius: 6px;
+                    font-size: 0.65rem;
+                    font-weight: 900;
+                    letter-spacing: 1px;
+                    border: 1px solid rgba(255,255,255,0.15);
+                    background: rgba(255,255,255,0.05);
+                    color: #94a3b8;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                    font-family: 'JetBrains Mono', monospace;
+                    min-height: 40px;
+                }
+                .die-qt-btn:hover { transform: translateY(-2px); filter: brightness(1.3); }
+                .die-qt-btn:active { transform: scale(0.94); }
+                .die-qt-btn.die-qt-std { border-color: rgba(56,189,248,0.5); color: #38bdf8; background: rgba(56,189,248,0.06); }
+                .die-qt-btn.die-qt-min, .die-qt-btn.die-qt-max { color: #7dd3fc; }
+                .die-qt-btn.die-qt-ng { border-color: rgba(239,68,68,0.5); color: #f87171; background: rgba(239,68,68,0.06); }
+                .die-qt-btn.die-qt-active-ok { background: #38bdf8 !important; color: #020617 !important; border-color: #38bdf8 !important; box-shadow: 0 0 10px #38bdf8; }
+                .die-qt-btn.die-qt-active-ng { background: rgba(239,68,68,0.3) !important; color: #fff !important; border-color: #ef4444 !important; box-shadow: 0 0 10px rgba(239,68,68,0.5); }
+                .die-qt-selected {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    margin-top: 5px;
+                }
+                .die-qt-val-text { font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 1rem; }
+                .die-qt-val-text.ok { color: #4ade80; }
+                .die-qt-val-text.ng { color: #f87171; }
+
+                /* Keep old style for any other use */
                 .param-tile-modern:hover {
                     background: rgba(255,255,255,0.07) !important;
                     border-color: rgba(255,255,255,0.2) !important;
@@ -1681,18 +1858,24 @@
                     const minEl = document.getElementById('spec_min_' + key);
                     const stdEl = document.getElementById('spec_std_' + key);
                     const maxEl = document.getElementById('spec_max_' + key);
+                    let finalMin = '', finalStd = '', finalMax = '';
                     if (minEl || stdEl || maxEl) {
                         const parts = val.split('|').map(s => s.trim());
                         if (parts.length === 1) {
+                            finalStd = parts[0];
                             if (minEl) minEl.textContent = '--';
                             if (stdEl) stdEl.textContent = parts[0] || '--';
                             if (maxEl) maxEl.textContent = '--';
                         } else {
+                            finalMin = parts[0]; finalStd = parts[1]; finalMax = parts[2];
                             if (minEl) minEl.textContent = parts[0] || '--';
                             if (stdEl) stdEl.textContent = parts[1] || (parts[0] || '--');
                             if (maxEl) maxEl.textContent = parts[2] || '--';
                         }
                     }
+                    
+                    renderDynamicButtons(key, finalMin, finalStd, finalMax);
+                    
                     el.classList.add('blink-once');
                     
                     // Logic to Disable/Lock inputs if no standard exists
@@ -1990,6 +2173,423 @@
             }
         }
 
+        // ====== QUICK-TAP DYNAMIC GENERATOR ======
+        function generateSteps(minStr, stdStr, maxStr) {
+            // --- RANGE FORMAT: "5-8" or "5,0-8,0" passed as stdStr ---
+            // Detect when stdStr itself contains a dash/tilde between two numbers
+            const rangeMatch = stdStr && String(stdStr).trim().match(/^([\d,.]+)\s*[-–~]\s*([\d,.]+)$/);
+            if (rangeMatch) {
+                const rangeMin = parseFloat(rangeMatch[1].replace(',', '.'));
+                const rangeMax = parseFloat(rangeMatch[2].replace(',', '.'));
+                if (!isNaN(rangeMin) && !isNaN(rangeMax) && rangeMin < rangeMax) {
+                    // Determine decimal places from the range string parts
+                    const part1Dec = (rangeMatch[1].includes(',') ? rangeMatch[1].split(',')[1] : (rangeMatch[1].includes('.') ? rangeMatch[1].split('.')[1] : '')).length;
+                    const part2Dec = (rangeMatch[2].includes(',') ? rangeMatch[2].split(',')[1] : (rangeMatch[2].includes('.') ? rangeMatch[2].split('.')[1] : '')).length;
+                    const decimalsToUse = Math.max(part1Dec, part2Dec);
+                    const diff = rangeMax - rangeMin;
+                    // For integer ranges (like 5-8), step by 1. For decimal ranges, step by 0.5 or smaller.
+                    const stepSize = decimalsToUse === 0 ? 1 : (diff > 5 ? Math.ceil(diff / 10) : 0.5);
+                    const stepCount = Math.min(Math.round(diff / stepSize), 20);
+                    const stepValue = diff / stepCount;
+                    const values = [];
+                    for (let i = 0; i <= stepCount; i++) {
+                        values.push(rangeMin + stepValue * i);
+                    }
+                    const fmt = v => v.toFixed(decimalsToUse).replace('.', ',');
+                    const unique = [...new Set(values.map(v => Number(v.toFixed(3))))].sort((a, b) => a - b);
+                    return { steps: unique.map(v => fmt(v)), rangeMin: fmt(rangeMin), rangeMax: fmt(rangeMax), isRange: true };
+                }
+            }
+
+            const min = parseFloat((minStr || '').replace(',', '.'));
+            const std = parseFloat((stdStr || '').replace(',', '.'));
+            const max = parseFloat((maxStr || '').replace(',', '.'));
+            
+            if (isNaN(std)) return stdStr && stdStr !== '--' && stdStr !== '---' ? { steps: [stdStr], isRange: false } : { steps: [], isRange: false };
+            if (isNaN(min) || isNaN(max) || min === max) return { steps: [stdStr], isRange: false };
+            
+            const diff = max - min;
+            // Generate up to 10 intervals (11 points) for finer control
+            const intervals = 10;
+            const stepValue = diff / intervals;
+            
+            const values = [];
+            for (let i = 0; i <= intervals; i++) {
+                values.push(min + (stepValue * i));
+            }
+            // Ensure STD is included exactly
+            values.push(std);
+            
+            // Determine display formatting based on std string
+            const stdDecimals = (stdStr.split(/[.,]/)[1] || '').length;
+            const format = v => {
+                const decimalsToUse = stdDecimals > 0 ? stdDecimals + 1 : 1;
+                let s = v.toFixed(decimalsToUse);
+                
+                // Trim trailing zero if unnecessary
+                if (s.endsWith('.0') && stdDecimals === 0) s = s.slice(0, -2);
+                else if (s.endsWith('0') && s.includes('.')) {
+                    if (s.split('.')[1].length > Math.max(1, stdDecimals)) {
+                       s = s.slice(0, -1);
+                    }
+                }
+                return s.replace('.', ',');
+            };
+            
+            // Filter unique values and format
+            const uniqueVals = [...new Set(values.map(v => Number(v.toFixed(3))))].sort((a, b) => a - b);
+            return { steps: uniqueVals.map(v => format(v)), isRange: false };
+        }
+
+        function renderDynamicButtons(key, finalMin, finalStd, finalMax) {
+            const result = generateSteps(finalMin, finalStd, finalMax);
+            const steps = result.steps;
+            const isRange = result.isRange;
+            const rangeMin = result.rangeMin;
+            const rangeMax = result.rangeMax;
+
+            if (steps.length === 0) return;
+
+            // Section 01-04
+            const qtBtns = document.getElementById('qt_btns_' + key);
+            if (qtBtns) {
+                // If only 1 step (max-only or min-only spec), render 2 buttons: OK (Manual Input) and NG (Manual Input)
+                if (steps.length === 1 && !isRange) {
+                    const limitLabel = finalStd || steps[0];
+                    const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
+                    const html = `
+                        <div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">MAX: ${limitLabel}</div>
+                        <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
+                            <button type="button" class="qt-btn qt-std" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ok_manual', false, this)">OK (Manual Input)</button>
+                            <button type="button" class="qt-btn qt-ng" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ng', false, this)">NG (Manual Input)</button>
+                        </div>
+                    `;
+                    qtBtns.innerHTML = html;
+                    
+                    const themeColor = qtBtns.closest('.param-tile-modern')?.querySelector('.vibrant-hud-input')?.style.getPropertyValue('--theme-color');
+                    if(themeColor) qtBtns.style.setProperty('--qt-color', themeColor);
+                    
+                    return;
+                }
+
+                const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
+                
+                // Header label for range specs
+                if (isRange) {
+                    qtBtns.insertAdjacentHTML('beforebegin', `<div id="rangelabel_${key}" style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">STD: ${rangeMin} – ${rangeMax}</div>`);
+                }
+
+                let html = '<div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center; width:100%;">';
+                steps.forEach(val => {
+                    let isStd = false;
+                    let btnClass = 'qt-btn qt-min';
+                    let label = '&nbsp;';
+
+                    if (isRange) {
+                        // In range mode: MIN and MAX label at edges, all are valid (qt-std color)
+                        if (val === rangeMin) { label = 'MIN'; btnClass = 'qt-btn qt-min'; }
+                        else if (val === rangeMax) { label = 'MAX'; btnClass = 'qt-btn qt-max'; }
+                        else { btnClass = 'qt-btn qt-std'; }
+                    } else {
+                        isStd = (val === finalStd);
+                        btnClass = isStd ? 'qt-btn qt-std' : 'qt-btn qt-min';
+                        if (val === finalMin) label = 'MIN';
+                        else if (val === finalMax) label = 'MAX';
+                        else if (val === finalStd) label = 'STD';
+                    }
+                    
+                    html += `<button type="button" class="${btnClass}" style="${btnStyle} flex: 1 1 calc(33% - 4px); min-width: 50px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2;" onclick="quickFillParamDynamic('${key}', '${val}', ${isStd}, this)">
+                        <span style="font-size:0.5rem; opacity:0.6; font-weight:normal; letter-spacing:0.5px;">${label}</span>
+                        <span>${val}</span>
+                    </button>`;
+                });
+                html += `</div>`;
+                html += `<div style="margin-top:2px;"><button type="button" class="qt-btn qt-ng" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ng', false, this)">NG (Manual Input)</button></div>`;
+                qtBtns.innerHTML = html;
+                
+                const themeColor = qtBtns.closest('.param-tile-modern')?.querySelector('.vibrant-hud-input')?.style.getPropertyValue('--theme-color');
+                if(themeColor) qtBtns.style.setProperty('--qt-color', themeColor);
+            }
+
+            // Dies Dimension
+            const dieBtns = document.getElementById('die_btns_' + key);
+            if (dieBtns) {
+                const dieRadios = {
+                    'NippleDie': { field: 'NippleDieOK', init: 'NippleDieInitial', final: 'NippleDieFinal' },
+                    'TubeDie': { field: 'TubeDieOK', init: 'TubeDieInitial', final: 'TubeDieFinal' },
+                    'MiddleDie': { field: 'MiddleDieOK', init: 'MiddleDieInitial', final: 'MiddleDieFinal' },
+                    'CoverDie': { field: 'CoverDieOK', init: 'CoverDieInitial', final: 'CoverDieFinal' },
+                    'SpacerDie': { field: 'SpacerDieOK', init: 'SpacerDieInitial', final: 'SpacerDieFinal' },
+                    'ToleranceDie': { field: 'ToleranceDieOK', init: 'ToleranceInitial', final: 'ToleranceFinal' }
+                };
+                const d = dieRadios[key];
+                if (d) {
+                    const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
+                    
+                    let html = '';
+                    // Header label for range specs
+                    if (isRange) {
+                        html += `<div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">STD: ${rangeMin} – ${rangeMax}</div>`;
+                    }
+                    html += '<div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center; width:100%;">';
+                    steps.forEach(val => {
+                        let isStd = false;
+                        let btnClass = 'die-qt-btn die-qt-min';
+                        let label = '&nbsp;';
+
+                        if (isRange) {
+                            if (val === rangeMin) { label = 'MIN'; btnClass = 'die-qt-btn die-qt-min'; }
+                            else if (val === rangeMax) { label = 'MAX'; btnClass = 'die-qt-btn die-qt-max'; }
+                            else { isStd = true; btnClass = 'die-qt-btn die-qt-std'; }
+                        } else {
+                            isStd = (val === finalStd);
+                            btnClass = isStd ? 'die-qt-btn die-qt-std' : 'die-qt-btn die-qt-min';
+                            if (val === finalMin) label = 'MIN';
+                            else if (val === finalMax) label = 'MAX';
+                            else if (val === finalStd) label = 'STD';
+                        }
+                        
+                        html += `<button type="button" class="${btnClass}" style="${btnStyle} flex: 1 1 calc(33% - 4px); min-width: 50px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2;" onclick="quickFillDieDynamic('${key}', '${d.field}', '${d.init}', '${d.final}', '${val}', ${isStd}, this)">
+                            <span style="font-size:0.45rem; opacity:0.6; font-weight:normal; letter-spacing:0.5px;">${label}</span>
+                            <span>${val}</span>
+                        </button>`;
+                    });
+                    html += `</div>`;
+                    html += `<div style="margin-top:2px;"><button type="button" class="die-qt-btn die-qt-ng" style="${btnStyle} width:100%;" onclick="quickFillDieDynamic('${key}', '${d.field}', '${d.init}', '${d.final}', 'ng', false, this)">NG</button></div>`;
+                    dieBtns.innerHTML = html;
+                }
+            }
+        }
+
+        // ====== QUICK-TAP PARAM (Section 01-04) ======
+        function quickFillParamDynamic(key, val, isStd, btnEl) {
+            const hiddenInput = document.getElementById('input_' + key);
+            const valDisplay  = document.getElementById('qt_val_' + key);
+            const valText     = document.getElementById('qt_val_text_' + key);
+            const btnsDiv     = document.getElementById('qt_btns_' + key);
+            const manualInput = document.getElementById('qt_manual_' + key);
+            if (!hiddenInput) return;
+
+            // Reset active states
+            if (btnsDiv) btnsDiv.querySelectorAll('.qt-btn').forEach(b => {
+                b.classList.remove('qt-active-std', 'qt-active-min', 'qt-active-ng');
+            });
+
+            // Hide the button grid because a selection was made
+            if (btnsDiv) btnsDiv.style.display = 'none';
+
+            if (val === 'ng' || val === 'ok_manual') {
+                hiddenInput.value = '';
+                if (valDisplay) valDisplay.style.display = 'flex'; // show for the X button
+                if (valText) { 
+                    valText.textContent = (val === 'ok_manual') ? 'OK' : 'NG'; 
+                    valText.className = (val === 'ok_manual') ? 'qt-val-text ok' : 'qt-val-text ng'; 
+                }
+                if (manualInput) { 
+                    manualInput.style.display = 'block'; 
+                    manualInput.setAttribute('data-is-ok', val === 'ok_manual' ? 'true' : 'false');
+                    manualInput.focus(); 
+                }
+                if (btnEl) btnEl.classList.add(val === 'ok_manual' ? 'qt-active-std' : 'qt-active-ng');
+                updateReadingData(key, '');
+                return;
+            }
+
+            if (manualInput) { manualInput.style.display = 'none'; manualInput.value = ''; }
+            
+            hiddenInput.value = val;
+            updateReadingData(key, val);
+
+            const activeClass = isStd ? 'qt-active-std' : 'qt-active-min';
+            if (btnEl) btnEl.classList.add(activeClass);
+
+            if (valText) { valText.textContent = val; valText.className = 'qt-val-text ok'; }
+            if (valDisplay) valDisplay.style.display = 'flex';
+        }
+
+        function quickClearParam(key) {
+            const hiddenInput = document.getElementById('input_' + key);
+            const valDisplay  = document.getElementById('qt_val_' + key);
+            const btnsDiv     = document.getElementById('qt_btns_' + key);
+            const manualInput = document.getElementById('qt_manual_' + key);
+            if (hiddenInput) hiddenInput.value = '';
+            if (valDisplay) valDisplay.style.display = 'none';
+            if (manualInput) { manualInput.style.display = 'none'; manualInput.value = ''; }
+            if (btnsDiv) {
+                btnsDiv.style.display = 'flex'; // show the grid again
+                btnsDiv.querySelectorAll('.qt-btn').forEach(b => {
+                    b.classList.remove('qt-active-std','qt-active-min','qt-active-max','qt-active-ng');
+                });
+            }
+            updateReadingData(key, '');
+        }
+
+        function quickManualInput(key, val) {
+            const hiddenInput = document.getElementById('input_' + key);
+            const valDisplay  = document.getElementById('qt_val_' + key);
+            const valText     = document.getElementById('qt_val_text_' + key);
+            const manualInput = document.getElementById('qt_manual_' + key);
+            
+            if (hiddenInput) hiddenInput.value = val;
+            
+            if (valText) { 
+                const isOk = manualInput && manualInput.getAttribute('data-is-ok') === 'true';
+                valText.textContent = val || (isOk ? 'OK' : 'NG'); 
+                valText.className = isOk ? 'qt-val-text ok' : 'qt-val-text ng'; 
+            }
+            if (valDisplay) valDisplay.style.display = 'flex';
+            updateReadingData(key, val);
+        }
+
+        // ====== QUICK-TAP DIES (Before & After shared) ======
+        function quickFillDieDynamic(specKey, radioField, initName, finalName, val, isStd, btnEl) {
+            const initInput  = document.getElementById('die_init_' + specKey);
+            const finalInput = document.getElementById('die_final_' + specKey);
+            const valDisplay = document.getElementById('die_val_' + specKey);
+            const valText    = document.getElementById('die_val_text_' + specKey);
+            const btnsDiv    = document.getElementById('die_btns_' + specKey);
+            const manualInput = document.getElementById('die_manual_' + specKey);
+
+            if (btnsDiv) btnsDiv.querySelectorAll('.die-qt-btn').forEach(b => {
+                b.classList.remove('die-qt-active-ok', 'die-qt-active-ng');
+            });
+
+            // Hide the button grid because a selection was made
+            if (btnsDiv) btnsDiv.style.display = 'none';
+
+            if (val === 'ng') {
+                if (initInput)  initInput.value = '';
+                if (finalInput) finalInput.value = '';
+                if (valDisplay) valDisplay.style.display = 'flex';
+                if (valText) { valText.textContent = 'NG'; valText.className = 'die-qt-val-text ng'; }
+                if (manualInput) { manualInput.style.display = 'block'; manualInput.value = ''; manualInput.focus(); }
+                if (btnEl) btnEl.classList.add('die-qt-active-ng');
+                
+                const radios = document.getElementsByName(radioField);
+                for(let r of radios) { r.checked = (r.value === 'false'); }
+                return;
+            }
+
+            if (manualInput) { manualInput.style.display = 'none'; manualInput.value = ''; }
+
+            if (initInput)  initInput.value = val;
+            if (finalInput) finalInput.value = val;
+
+            const radios = document.getElementsByName(radioField);
+            for(let r of radios) { r.checked = (r.value === 'true'); }
+
+            if (btnEl) btnEl.classList.add('die-qt-active-ok');
+
+            if (valText) { valText.textContent = val; valText.className = 'die-qt-val-text ok'; }
+            if (valDisplay) valDisplay.style.display = 'flex';
+            triggerAutoSave();
+        }
+
+        function dieManualInput(specKey, radioField, initName, finalName, val) {
+            const initInput  = document.getElementById('die_init_' + specKey);
+            const finalInput = document.getElementById('die_final_' + specKey);
+            const valDisplay = document.getElementById('die_val_' + specKey);
+            const valText    = document.getElementById('die_val_text_' + specKey);
+            if (initInput)  initInput.value = val;
+            if (finalInput) finalInput.value = val;
+            // Always NG when manually typed
+            const radios = document.getElementsByName(radioField);
+            for(let r of radios) { r.checked = (r.value === 'false'); }
+            if (valText) { valText.textContent = val || 'NG'; valText.className = 'die-qt-val-text ng'; }
+            if (valDisplay) valDisplay.style.display = 'flex';
+            triggerAutoSave();
+        }
+
+        function quickClearDie(specKey, radioField, initName, finalName) {
+            const initInput  = document.getElementById('die_init_' + specKey);
+            const finalInput = document.getElementById('die_final_' + specKey);
+            const valDisplay = document.getElementById('die_val_' + specKey);
+            const btnsDiv    = document.getElementById('die_btns_' + specKey);
+            const manualInput = document.getElementById('die_manual_' + specKey);
+            if (initInput)  initInput.value = '';
+            if (finalInput) finalInput.value = '';
+            if (valDisplay) valDisplay.style.display = 'none';
+            if (manualInput) { manualInput.style.display = 'none'; manualInput.value = ''; }
+            if (btnsDiv) {
+                btnsDiv.style.display = 'flex';
+                btnsDiv.querySelectorAll('.die-qt-btn').forEach(b => {
+                    b.classList.remove('die-qt-active-ok','die-qt-active-ng');
+                });
+            }
+            const radios = document.getElementsByName(radioField);
+            for(let r of radios) { r.checked = false; }
+            triggerAutoSave();
+        }
+
+        function syncAllModernUIs() {
+            // Sync Parameters
+            document.querySelectorAll('#parameterCardsContainer input[id^="input_"]').forEach(inp => {
+                const key = inp.id.replace('input_', '');
+                const val = inp.value.trim();
+                const btnsDiv = document.getElementById('qt_btns_' + key);
+                const valDisplay = document.getElementById('qt_val_' + key);
+                const valText = document.getElementById('qt_val_text_' + key);
+                const manualInput = document.getElementById('qt_manual_' + key);
+                
+                if (val !== '') {
+                    if (btnsDiv) btnsDiv.style.display = 'none';
+                    if (valDisplay) valDisplay.style.display = 'flex';
+                    if (valText) {
+                        valText.textContent = val;
+                        const isNg = inp.classList.contains('valid-error');
+                        valText.className = isNg ? 'qt-val-text ng' : 'qt-val-text ok';
+                    }
+                    if (manualInput) manualInput.style.display = 'none';
+                } else {
+                    if (btnsDiv) {
+                        btnsDiv.style.display = 'flex';
+                        btnsDiv.querySelectorAll('.qt-btn').forEach(b => {
+                            b.classList.remove('qt-active-std', 'qt-active-min', 'qt-active-max', 'qt-active-ng');
+                        });
+                    }
+                    if (valDisplay) valDisplay.style.display = 'none';
+                    if (manualInput) {
+                        manualInput.style.display = 'none';
+                        manualInput.value = '';
+                    }
+                }
+            });
+
+            // Sync Dies
+            document.querySelectorAll('input[id^="die_init_"]').forEach(inp => {
+                const specKey = inp.id.replace('die_init_', '');
+                const val = inp.value.trim();
+                const btnsDiv = document.getElementById('die_btns_' + specKey);
+                const valDisplay = document.getElementById('die_val_' + specKey);
+                const valText = document.getElementById('die_val_text_' + specKey);
+                const manualInput = document.getElementById('die_manual_' + specKey);
+                
+                if (val !== '') {
+                    if (btnsDiv) btnsDiv.style.display = 'none';
+                    if (valDisplay) valDisplay.style.display = 'flex';
+                    if (valText) {
+                        valText.textContent = val;
+                        const radioOk = document.querySelector(`input[name="${specKey}OK"][value="true"]`);
+                        const isOk = radioOk && radioOk.checked;
+                        valText.className = isOk ? 'die-qt-val-text ok' : 'die-qt-val-text ng';
+                    }
+                    if (manualInput) manualInput.style.display = 'none';
+                } else {
+                    if (btnsDiv) {
+                        btnsDiv.style.display = 'flex';
+                        btnsDiv.querySelectorAll('.die-qt-btn').forEach(b => {
+                            b.classList.remove('die-qt-active-ok', 'die-qt-active-ng');
+                        });
+                    }
+                    if (valDisplay) valDisplay.style.display = 'none';
+                    if (manualInput) {
+                        manualInput.style.display = 'none';
+                        manualInput.value = '';
+                    }
+                }
+            });
+        }
+
         function revalidateAllInputs() {
             // Re-trigger oninput on all inputs that have validators attached
             // This restores OK/NG coloring after a programmatic value restore (draft)
@@ -2003,6 +2603,7 @@
             form.querySelectorAll('select[onchange]').forEach(el => {
                 el.dispatchEvent(new Event('change', { bubbles: true }));
             });
+            syncAllModernUIs();
         }
 
         function checkDieStatus(specId, radioFieldName, initName, finalName) {
@@ -2114,6 +2715,7 @@
             });
             
             switchReadingTab(nextId);
+            triggerAutoSave();
         }
 
         function switchReadingTab(index) {
@@ -2121,6 +2723,7 @@
             currentReadingIndex = index;
             renderTabs();
             loadCurrentDataFromMemory();
+            triggerAutoSave();
         }
 
         function saveCurrentInputsToMemory() {
@@ -2142,6 +2745,7 @@
                 inp.value = activeData[key] || '';
                 validateParam(inp, 'spec_' + key);
             });
+            syncAllModernUIs();
         }
 
         function renderTabs() {
@@ -2242,13 +2846,20 @@
                     
                     renderTabs();
                     loadCurrentDataFromMemory();
+                    triggerAutoSave();
                 }
             });
+        }
+
+        function triggerAutoSave() {
+            const form = document.getElementById('mainFormContainer');
+            if (form) form.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         function updateReadingData(key, value) {
             if (pReadings[currentReadingIndex]) {
                 pReadings[currentReadingIndex].data[key] = value;
+                triggerAutoSave();
             }
         }
 
@@ -2343,6 +2954,7 @@
                 setTimeout(() => {
                     el.remove();
                     materialState[layer] = materialState[layer].filter(id => id !== rowId);
+                    triggerAutoSave();
                 }, 300);
             }
         }
@@ -2518,10 +3130,10 @@
                 ToleranceInitial: document.querySelector('input[name="ToleranceInitial"]')?.value,
                 ToleranceFinal: document.querySelector('input[name="ToleranceFinal"]')?.value,
 
-                MeshInner10Before: document.querySelector('input[name="MeshInner10Before"]:checked')?.value === 'true',
-                MeshInner40Before: document.querySelector('input[name="MeshInner40Before"]:checked')?.value === 'true',
-                MeshOuter10Before: document.querySelector('input[name="MeshOuter10Before"]:checked')?.value === 'true',
-                MeshOuter40Before: document.querySelector('input[name="MeshOuter40Before"]:checked')?.value === 'true',
+                MeshInner10Before: document.getElementById('MeshInner10Before')?.checked ?? false,
+                MeshInner40Before: document.getElementById('MeshInner40Before')?.checked ?? false,
+                MeshOuter10Before: document.getElementById('MeshOuter10Before')?.checked ?? false,
+                MeshOuter40Before: document.getElementById('MeshOuter40Before')?.checked ?? false,
                 MeshInnerCheck: document.querySelector('input[name="MeshInnerCheck"]:checked')?.value,
                 MeshOuterCheck: document.querySelector('input[name="MeshOuterCheck"]:checked')?.value,
 
@@ -2610,6 +3222,11 @@
                     // Capture dies dimension inputs (NippleDieInitial, etc) yang hanya punya name
                     fields['__name_' + el.name] = el.value;
                 }
+            });
+
+            // FIX: Capture hidden dies dimension inputs introduced by the modern UI
+            form.querySelectorAll('input[type="hidden"][id^="die_init_"], input[type="hidden"][id^="die_final_"]').forEach(el => {
+                fields[el.id] = el.value;
             });
             
             // Capture ALL radio buttons with their state (not just checked ones)

@@ -808,24 +808,22 @@
         (function() {
             let offlineSessionStr = localStorage.getItem('offline_session');
             
-            // Sync with Server Session if offline_session is missing
-            if (!offlineSessionStr) {
-                const serverUser = '@Html.Raw(Context.Session.GetString("UserName") ?? "")';
-                const serverRole = '@Html.Raw(Context.Session.GetString("UserRole") ?? "")';
-                const serverIsAdmin = '@Html.Raw(Context.Session.GetString("IsAdmin") ?? "false")';
-                const serverMachine = '@Html.Raw(Context.Session.GetString("MachineName") ?? "")';
-                
-                if (serverUser && serverRole) {
-                    const sessionData = {
-                        userName: serverUser,
-                        userRole: serverRole,
-                        isAdmin: serverIsAdmin,
-                        machineName: serverMachine,
-                        loginTime: new Date().getTime()
-                    };
-                    localStorage.setItem('offline_session', JSON.stringify(sessionData));
-                    offlineSessionStr = JSON.stringify(sessionData);
-                }
+            const serverUser = '@Html.Raw(Context.Session.GetString("UserName") ?? "")';
+            const serverRole = '@Html.Raw(Context.Session.GetString("UserRole") ?? "")';
+            const serverIsAdmin = '@Html.Raw(Context.Session.GetString("IsAdmin") ?? "false")';
+            const serverMachine = '@Html.Raw(Context.Session.GetString("MachineName") ?? "")';
+
+            // Selalu override offline_session jika server session tersedia (sedang online & berhasil login)
+            if (serverUser && serverRole) {
+                const sessionData = {
+                    userName: serverUser,
+                    userRole: serverRole,
+                    isAdmin: serverIsAdmin,
+                    machineName: serverMachine,
+                    loginTime: new Date().getTime()
+                };
+                localStorage.setItem('offline_session', JSON.stringify(sessionData));
+                offlineSessionStr = JSON.stringify(sessionData);
             }
 
             if (!offlineSessionStr) {
