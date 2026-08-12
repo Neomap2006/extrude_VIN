@@ -3624,6 +3624,13 @@
             searchInput.style.cursor = 'pointer';
             window._selectedPlanningLabel = displayText;   // store for restore on blur
             document.getElementById('planningResults').classList.add('d-none');
+
+            // ── RESET tab ADD CHECK dari planning sebelumnya ──────────────────
+            // Wajib direset agar tab P-1, P-2 dst dari item lain tidak terbawa
+            pReadings = [];
+            currentReadingIndex = -1;
+            renderTabs(); // Kosongkan tab sebelum data baru dimuat
+            // ─────────────────────────────────────────────────────────────────
             
             // Auto-sync Date
             if (item.DateProduction) {

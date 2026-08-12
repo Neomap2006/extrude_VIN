@@ -811,6 +811,12 @@ namespace VelastoProductionSystem.Controllers
                     ).ToList();
                 }
 
+                // Jangan tampilkan DANDORI di Planning Master form parameter
+                // (data tetap ada di database, hanya tidak ditampilkan di dropdown)
+                elwpRows = elwpRows
+                    .Where(x => !string.Equals(x.p.KodeItem?.Trim(), "DANDORI", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
                 // Batch-check SPS availability for all item codes
                 var elwpItemCodes = elwpRows
                     .Where(x => !string.IsNullOrEmpty(x.p.KodeItem))
