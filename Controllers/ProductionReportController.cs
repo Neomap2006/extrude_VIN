@@ -777,10 +777,17 @@ namespace VelastoProductionSystem.Controllers
             var start = date.Date;
             var end = start.AddDays(1);
 
+            // SELALU filter hanya mesin Extrude (AreaId == 1) - berlaku untuk Admin maupun Operator
+            var extrudeMachineIds = await _elwpContext.ElwpMachines
+                .Where(m => m.IsActive && m.AreaId == 1)
+                .Select(m => m.Id)
+                .ToListAsync();
+
             var elwpQuery = from p in _elwpContext.ElwpPlannings
                              join m in _elwpContext.ElwpMachines on p.MesinId equals m.Id into machineJoin
                              from m in machineJoin.DefaultIfEmpty()
                              where p.TanggalPlanning >= start && p.TanggalPlanning < end
+                                   && extrudeMachineIds.Contains(p.MesinId ?? 0)
                              select new { p, MachineName = m != null ? m.NamaMesin : "UNKNOWN", MachineCode = m != null ? m.KodeMesin : "" };
 
             var elwpRows = await elwpQuery.ToListAsync();
@@ -793,7 +800,7 @@ namespace VelastoProductionSystem.Controllers
                     elwpRows = elwpRows.Where(x => x.p.Shift != null && x.p.Shift.Equals(shift, StringComparison.OrdinalIgnoreCase)).ToList();
                 }
 
-                // Filter berdasarkan mesin - SELALU diapply untuk non-admin
+                // Filter berdasarkan mesin spesifik - hanya untuk non-admin
                 // jika operator memiliki session mesin, hanya tampilkan planning untuk mesin tersebut
                 if (!isAdmin && !string.IsNullOrEmpty(machineFilter))
                 {
