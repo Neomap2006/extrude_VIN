@@ -919,6 +919,27 @@
                                     return vStr + (string.IsNullOrEmpty(unit) ? "" : $" {unit}");
                                 }
 
+                                object? GetLastKnownValue(List<VelastoProductionSystem.Models.ProductionReading> rList, int currentIndex, string propName) {
+                                    var current = rList.Skip(currentIndex).FirstOrDefault();
+                                    if (current == null) return null; // No reading at this index yet
+
+                                    // 1. Try get from current
+                                    var val = current.GetType().GetProperty(propName)?.GetValue(current);
+                                    if (val != null && !string.IsNullOrWhiteSpace(val.ToString())) return val;
+
+                                    // 2. Try get from previous readings (going backwards)
+                                    for (int j = currentIndex - 1; j >= 0; j--) {
+                                        var prev = rList.Skip(j).FirstOrDefault();
+                                        if (prev != null) {
+                                            val = prev.GetType().GetProperty(propName)?.GetValue(prev);
+                                            if (val != null && !string.IsNullOrWhiteSpace(val.ToString())) return val;
+                                        }
+                                    }
+
+                                    // 3. Fallback to Init from model
+                                    return Model.GetType().GetProperty("Init" + propName)?.GetValue(Model);
+                                }
+
                                 var innerRows = new[] {
                                     new { L = "HEAD TEMP.", K = "HeadTempInner", S = StandardSpec(spsStd?.HeadTemp1_Asli, spsStd?.HeadTemp1_Min, spsStd?.HeadTemp1_Max, spsStd?.HeadTemp1, "±5"), U = "°C" },
                                     new { L = "CYLINDER 1", K = "Cylinder1TempInner", S = StandardSpec(spsStd?.Cylinder1_1_Asli, spsStd?.Cylinder1_1_Min, spsStd?.Cylinder1_1_Max, spsStd?.Cylinder1_1, "±5"), U = "°C" },
@@ -938,7 +959,7 @@
                                     <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + innerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.FirstOrDefault()), innerRows[r].U)" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
-                                            <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(innerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), innerRows[r].U)" />
+                                            <input type="text" class="input-transparent" value="@FormatVal(GetLastKnownValue(readings, i, innerRows[r].K), innerRows[r].U)" />
                                         </td>
                                     }
                                 </tr>
@@ -966,7 +987,7 @@
                                     <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + outerRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.FirstOrDefault()), outerRows[r].U)" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
-                                            <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(outerRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), outerRows[r].U)" />
+                                            <input type="text" class="input-transparent" value="@FormatVal(GetLastKnownValue(readings, i, outerRows[r].K), outerRows[r].U)" />
                                         </td>
                                     }
                                 </tr>
@@ -997,7 +1018,7 @@
                                     <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + otherRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.FirstOrDefault()), otherRows[r].U)" /></td>
                                     @for(int i=1; i<=7; i++) {
                                         <td class="p-0">
-                                            <input type="text" class="input-transparent" value="@FormatVal(readings.Skip(i).FirstOrDefault()?.GetType().GetProperty(otherRows[r].K)?.GetValue(readings.Skip(i).FirstOrDefault()), otherRows[r].U)" />
+                                            <input type="text" class="input-transparent" value="@FormatVal(GetLastKnownValue(readings, i, otherRows[r].K), otherRows[r].U)" />
                                         </td>
                                     }
                                 </tr>
