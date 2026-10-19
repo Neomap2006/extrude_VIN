@@ -160,6 +160,17 @@ namespace VelastoProductionSystem.Models
         public decimal? InitScrewSpeedInner { get; set; }
         public decimal? InitFeedRollRatioInner { get; set; }
         public decimal? InitPressureInner { get; set; }
+        public decimal? InitAmMeterInner { get; set; }
+
+        public decimal? InitHeadTempMiddle { get; set; }
+        public decimal? InitCylinder1TempMiddle { get; set; }
+        public decimal? InitCylinder2TempMiddle { get; set; }
+        public decimal? InitCylinder3TempMiddle { get; set; }
+        public decimal? InitScrewTempMiddle { get; set; }
+        public decimal? InitScrewSpeedMiddle { get; set; }
+        public decimal? InitFeedRollRatioMiddle { get; set; }
+        public decimal? InitPressureMiddle { get; set; }
+        public decimal? InitAmMeterMiddle { get; set; }
 
         public decimal? InitHeadTempOuter { get; set; }
         public decimal? InitCylinder1TempOuter { get; set; }
@@ -169,6 +180,7 @@ namespace VelastoProductionSystem.Models
         public decimal? InitScrewSpeedOuter { get; set; }
         public decimal? InitFeedRollRatioOuter { get; set; }
         public decimal? InitPressureOuter { get; set; }
+        public decimal? InitAmMeterOuter { get; set; }
         
         public DateTime? CheckedDate { get; set; }
         public DateTime? ApprovedDate { get; set; }
@@ -181,13 +193,30 @@ namespace VelastoProductionSystem.Models
 
         public decimal? InitPresetValue { get; set; }
         public decimal? InitControlValue { get; set; }
+        public decimal? InitOdSensor { get; set; }
         public decimal? InitHoseSpeed { get; set; }
         public decimal? InitTakeupConveyorSpeed { get; set; }
         public decimal? InitCoolConveyorSpeed { get; set; }
+        public decimal? InitCoolConveyorSpeed2 { get; set; }
         public decimal? InitConveyorRatio { get; set; }
         public decimal? InitUnsmoothSurface { get; set; }
         public decimal? InitChillerWaterTemp { get; set; }
         public decimal? InitCaterpillarGap { get; set; }
+        public decimal? InitCuttingSpeed { get; set; }
+
+        // ALARM CHECK
+        [Display(Name = "Cek Fungsi Alarm")]
+        public string? AlarmFunctionCheck { get; set; }
+
+        // ITEM LIST LENGTH STANDARDS & ACTUALS
+        public decimal? LengthShrinkMin { get; set; }
+        public decimal? LengthShrinkStd { get; set; }
+        public decimal? LengthShrinkMax { get; set; }
+        public decimal? LengthCuttingMin { get; set; }
+        public decimal? LengthCuttingStd { get; set; }
+        public decimal? LengthCuttingMax { get; set; }
+        public decimal? ActualLengthShrink { get; set; }
+        public decimal? ActualLengthCutting { get; set; }
 
         // DIES INITIAL/FINAL VALUES
         public string? NippleDieInitial { get; set; }

@@ -5,11 +5,70 @@
     Layout = "_Layout";
 }
 
+@functions {
+    string FormatVal(string? strVal, decimal? min, decimal? asli, decimal? max)
+    {
+        if (asli.HasValue && min.HasValue && max.HasValue)
+        {
+            var tolPlus = max.Value - asli.Value;
+            var tolMinus = asli.Value - min.Value;
+            if (tolPlus > 0 && Math.Abs(tolPlus - tolMinus) < 0.001m)
+            {
+                return $"{FormatNum(asli.Value)} ± {FormatNum(tolPlus)}";
+            }
+            else if (tolPlus > 0 || tolMinus > 0)
+            {
+                return $"{FormatNum(asli.Value)} (+{FormatNum(tolPlus)} / -{FormatNum(tolMinus)})";
+            }
+            return FormatNum(asli.Value);
+        }
+        
+        if (!string.IsNullOrWhiteSpace(strVal))
+        {
+            return strVal.Trim();
+        }
+
+        if (asli.HasValue) return FormatNum(asli.Value);
+        if (min.HasValue && max.HasValue) return $"{FormatNum(min.Value)} ~ {FormatNum(max.Value)}";
+        if (max.HasValue) return $"Max {FormatNum(max.Value)}";
+        if (min.HasValue) return $"Min {FormatNum(min.Value)}";
+
+        return "-";
+    }
+
+    string FormatNum(decimal val)
+    {
+        if (val == Math.Round(val)) return val.ToString("0");
+        return val.ToString("0.##");
+    }
+
+    string FormatTension(string? val)
+    {
+        if (string.IsNullOrWhiteSpace(val)) return "-";
+        val = val.Trim();
+        if (!val.EndsWith("g", StringComparison.OrdinalIgnoreCase))
+        {
+            val += " g";
+        }
+        return val;
+    }
+
+    string FormatMesh(string? dim, string? screen, decimal? dimAsli = null)
+    {
+        var d = !string.IsNullOrWhiteSpace(dim) ? dim.Trim() : (dimAsli.HasValue ? "Ø" + FormatNum(dimAsli.Value) : "");
+        var s = !string.IsNullOrWhiteSpace(screen) ? screen.Trim() : "";
+        if (!string.IsNullOrEmpty(d) && !string.IsNullOrEmpty(s)) return $"{d} {s}";
+        if (!string.IsNullOrEmpty(d)) return d;
+        if (!string.IsNullOrEmpty(s)) return s;
+        return "-";
+    }
+}
+
 <style>
-    /* SPS Document Styles - Scoped to avoid layout override */
+    /* SPS Standard Document Styles matching VI-SOP-PROD-131 */
     .sps-container {
         width: 100%;
-        background: #525252;
+        background: #4a4a4a;
         padding: 20px 0;
         min-height: 100vh;
     }
@@ -20,969 +79,962 @@
         width: 210mm;
         min-height: 297mm;
         margin: 0 auto;
-        padding: 10mm 12mm;
-        box-shadow: 0 0 15px rgba(0,0,0,0.2);
-        font-family: 'Arial', 'Helvetica', sans-serif;
-        font-size: 8pt;
-        line-height: 1.2;
+        padding: 8mm 10mm;
+        box-shadow: 0 0 15px rgba(0,0,0,0.3);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 7pt;
+        line-height: 1.15;
+        box-sizing: border-box;
     }
 
-    .sps-header {
+    /* HEADER */
+    .sps-header-wrap {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: stretch;
         border-bottom: 2px solid #000;
-        padding-bottom: 8px;
-        margin-bottom: 8px;
-        position: relative;
+        padding-bottom: 4px;
+        margin-bottom: 4px;
     }
 
     .sps-logo-section {
-        width: 110px;
-        flex-shrink: 0;
+        width: 120px;
+        display: flex;
+        align-items: center;
     }
 
     .sps-logo {
-        width: 100px;
+        max-width: 110px;
         height: auto;
         display: block;
     }
 
-    .sps-title {
+    .sps-title-center {
+        flex: 1;
         text-align: center;
-        flex: 1;
-        padding: 0 15px;
-    }
-
-    .sps-title h1 {
-        font-size: 14pt;
-        font-weight: bold;
-        margin: 0 0 4px 0;
-        text-decoration: underline;
-        line-height: 1.1;
-        letter-spacing: 0.2px;
-    }
-
-    .sps-title p {
-        font-size: 8.5pt;
-        margin: 0;
-        line-height: 1.2;
-    }
-
-    .info-section {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 8px;
-        font-size: 8pt;
-    }
-
-    .info-left {
-        flex: 0 0 240px;
-        display: grid;
-        grid-template-columns: 80px 1fr;
-        gap: 2px 8px;
-        align-items: center;
-    }
-
-    .info-right {
-        flex: 1;
-        border: 1px solid #000;
-        padding: 4px;
-    }
-
-    .signature-section {
-        width: 165px;
-        flex-shrink: 0;
+        padding: 0 10px;
         display: flex;
         flex-direction: column;
-        gap: 0;
+        justify-content: center;
     }
 
-    .signature-boxes {
+    .sps-title-center h1 {
+        font-size: 13pt;
+        font-weight: 900;
+        margin: 0 0 2px 0;
+        text-decoration: underline;
+        letter-spacing: 0.3px;
+        text-transform: none;
+    }
+
+    .sps-title-center p {
+        font-size: 8pt;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    /* SIGNATURE BOX */
+    .sps-sign-box {
+        width: 175px;
         border: 1px solid #000;
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
     }
 
-    .signature-box {
+    .sps-sign-grid {
+        display: flex;
+        height: 100%;
+    }
+
+    .sps-sign-col {
         flex: 1;
-        padding: 6px 3px;
-        text-align: center;
         border-right: 1px solid #000;
-        min-height: 55px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        text-align: center;
+        padding: 2px;
     }
 
-    .signature-box:last-child {
+    .sps-sign-col:last-child {
         border-right: none;
     }
 
-    .signature-box strong {
-        display: block;
-        font-size: 7pt;
+    .sps-sign-title {
+        font-size: 6.5pt;
         font-weight: bold;
-        margin-bottom: 22px;
+        border-bottom: 1px solid #000;
+        padding-bottom: 2px;
     }
 
-    .signature-box .sign-line {
+    .sps-sign-space {
+        height: 32px;
+    }
+
+    .sps-sign-name {
         font-size: 6pt;
-        margin-top: auto;
+        line-height: 1;
     }
 
-    .revision-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 0;
-        font-size: 7pt;
-    }
-
-    .revision-table th,
-    .revision-table td {
-        border: 1px solid #000;
-        padding: 2px 4px;
-        text-align: left;
-    }
-
-    .revision-table th {
-        background-color: #e8e8e8;
-        font-weight: bold;
-        text-align: center;
-    }
-
-    .hose-spec {
-        background-color: #f8f8f8;
-        border: 1px solid #000;
-        padding: 6px 8px;
-        margin: 8px 0;
+    /* INFO SECTION */
+    .sps-info-grid {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 4px;
         font-size: 7.5pt;
-        line-height: 1.4;
     }
 
-    .hose-spec strong {
+    .sps-info-left {
+        flex: 1.1;
+        display: grid;
+        grid-template-columns: 85px 12px 1fr;
+        row-gap: 1.5px;
+        align-items: center;
+    }
+
+    .sps-info-left .lbl {
         font-weight: bold;
     }
 
-    .param-table {
+    .sps-info-left .val {
+        font-weight: normal;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sps-info-right {
+        flex: 1;
+    }
+
+    .sps-rev-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 6px 0 0 0;
         font-size: 6.5pt;
     }
 
-    .param-table th,
-    .param-table td {
+    .sps-rev-table th, .sps-rev-table td {
         border: 1px solid #000;
-        padding: 2px 3px;
+        padding: 1.5px 3px;
         text-align: center;
+    }
+
+    .sps-rev-table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+
+    /* HOSE SPEC BOX */
+    .sps-hose-box {
+        border: 1px solid #000;
+        padding: 3px 6px;
+        margin-bottom: 5px;
+        font-size: 7pt;
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        line-height: 1.25;
+    }
+
+    .sps-hose-content {
+        flex: 1;
+    }
+
+    .sps-hose-legend {
+        border-left: 1px solid #000;
+        padding-left: 6px;
+        margin-left: 6px;
+        font-size: 6pt;
+        min-width: 110px;
+        line-height: 1.15;
+    }
+
+    .sps-hose-legend-title {
+        font-weight: bold;
+        text-decoration: underline;
+        margin-bottom: 1px;
+    }
+
+    /* MAIN PARAMETER TABLE */
+    .sps-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 6.2pt;
+        margin-bottom: 4px;
+    }
+
+    .sps-table th, .sps-table td {
+        border: 1px solid #000;
+        padding: 1.5px 2px;
         vertical-align: middle;
-    }
-
-    .param-table th {
-        background-color: #e0e0e0;
-        font-weight: bold;
-        font-size: 6pt;
-        line-height: 1.2;
-    }
-
-    .param-table td:first-child {
         text-align: center;
-        width: 22px;
-        font-weight: bold;
     }
 
-    .param-table td:nth-child(2) {
+    .sps-table thead th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+        line-height: 1.1;
+        font-size: 6pt;
+    }
+
+    .sps-table td.text-left {
         text-align: left;
-        min-width: 70px;
-        max-width: 90px;
-        font-weight: 600;
         padding-left: 4px;
-        font-size: 6.5pt;
     }
 
-    .param-table td:nth-child(3) {
-        width: 28px;
-    }
-
-    .param-table td:nth-child(4),
-    .param-table td:nth-child(5) {
-        min-width: 60px;
-        max-width: 75px;
-        font-size: 6pt;
-    }
-
-    .param-table td:nth-child(6),
-    .param-table td:nth-child(7),
-    .param-table td:nth-child(8) {
-        width: 32px;
-        font-size: 8pt;
-    }
-
-    .param-table td:nth-child(9) {
-        min-width: 50px;
-        max-width: 65px;
-        font-size: 6pt;
-    }
-
-    .param-table td:nth-child(10) {
-        width: 28px;
-    }
-
-    .param-table td:nth-child(11) {
-        min-width: 55px;
-        max-width: 70px;
-        font-size: 6pt;
-    }
-
-    .param-table .item-name {
+    .sps-table td.item-name {
         text-align: left;
         font-weight: bold;
+        padding-left: 3px;
     }
 
-    .field-label {
-        font-weight: bold;
-        padding: 2px 0;
-        font-size: 7.5pt;
+    .sps-table td.sub-item {
+        text-align: left;
+        padding-left: 4px;
     }
 
-    .field-value {
-        border-bottom: 1px solid #666;
-        min-height: 14px;
-        padding: 2px 4px;
-        font-size: 7.5pt;
-    }
-
-    .footer-note {
-        margin-top: 8px;
-        padding-top: 6px;
-        border-top: 1px solid #000;
+    .sps-table td.class-cell {
         font-size: 6pt;
-        line-height: 1.3;
+        font-weight: bold;
+        width: 18px;
     }
 
+    .sps-table td.rec-sheet {
+        font-size: 5.8pt;
+        line-height: 1.1;
+    }
+
+    .sps-table td.check-mark {
+        font-size: 7pt;
+    }
+
+    /* FOOTER */
+    .sps-footer-note {
+        font-size: 6pt;
+        margin-top: 3px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #000;
+        padding-top: 2px;
+    }
+
+    /* MEDIA PRINT */
     @@media print {
+        body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .no-print, header, nav, footer, .navbar, .sidebar {
+            display: none !important;
+        }
+
         .sps-container {
-            background: white;
-            padding: 0;
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: auto !important;
         }
 
         .sps-document {
-            width: 100%;
-            max-width: none;
-            margin: 0;
-            padding: 12mm 15mm;
-            box-shadow: none;
-            page-break-after: always;
-        }
-
-        .no-print {
-            display: none !important;
-        }
-
-        /* Hide navbar and sidebar when printing */
-        nav, .sidebar, .navbar, aside, header.main-header {
-            display: none !important;
+            width: 100% !important;
+            min-height: 100% !important;
+            margin: 0 !important;
+            padding: 4mm 6mm !important;
+            box-shadow: none !important;
+            page-break-after: avoid;
+            page-break-inside: avoid;
         }
 
         @@page {
             size: A4 portrait;
-            margin: 8mm;
-        }
-    }
-
-    @@media screen {
-        .sps-container {
-            background: #525252;
-            padding: 20px 0;
+            margin: 5mm;
         }
     }
 </style>
 
 <div class="sps-container">
-    <!-- Print Button -->
-    <div class="no-print" style="text-align: center; padding: 20px; background: transparent;">
-        <button onclick="window.print()" class="btn btn-primary me-2">
-            <i class="bi bi-printer me-2"></i>Print / Save as PDF
+    <!-- Action Bar -->
+    <div class="no-print text-center mb-3">
+        <button onclick="window.print()" class="btn btn-primary px-3 shadow-sm me-2">
+            <i class="bi bi-printer me-1"></i> Print / Save as PDF
         </button>
-        <a asp-action="Edit" asp-route-documentNumber="@Model.DocumentNumber" class="btn btn-warning me-2">
-            <i class="bi bi-pencil me-2"></i>Edit
+        <a asp-action="Edit" asp-route-documentNumber="@Model.DocumentNumber" class="btn btn-warning px-3 shadow-sm me-2 text-dark">
+            <i class="bi bi-pencil me-1"></i> Edit
         </a>
-        <a asp-action="Index" class="btn btn-secondary">
-            <i class="bi bi-arrow-left me-2"></i>Kembali
+        <a asp-action="Index" class="btn btn-secondary px-3 shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Kembali
         </a>
     </div>
 
-<!-- SPS Document -->
-<div class="sps-document">
-    <!-- Header -->
-    <div class="sps-header">
-        <div class="sps-logo-section">
-            <img src="~/images/velasto-logo-e1700056160273.png" alt="Velasto Logo" class="sps-logo" />
-        </div>
-        <div class="sps-title">
-            <h1>Standard Parameter Setting</h1>
-            <p>Extrusion Parameter Setting Conditions for @Model.HoseType</p>
-        </div>
-        <div class="signature-section">
-            <div class="signature-boxes">
-                <div class="signature-box">
-                    <strong>Disetujui</strong>
-                    <div class="sign-line">( )</div>
-                </div>
-                <div class="signature-box">
-                    <strong>Diketahui</strong>
-                    <div class="sign-line">( )</div>
-                </div>
-                <div class="signature-box">
-                    <strong>Dibuat</strong>
-                    <div class="sign-line">( )</div>
+    <!-- SPS Document Container -->
+    <div class="sps-document">
+        <!-- Document Header -->
+        <div class="sps-header-wrap">
+            <div class="sps-logo-section">
+                <img src="~/images/velasto-logo-e1700056160273.png" alt="Velasto Indonesia" class="sps-logo" />
+            </div>
+            <div class="sps-title-center">
+                <h1>Standard Parameter Setting</h1>
+                <p>Extrusion Parameter Setting Conditions For @(!string.IsNullOrWhiteSpace(Model.HoseType) ? Model.HoseType : "CHS 2 Layer")</p>
+            </div>
+            <div class="sps-sign-box">
+                <div class="sps-sign-grid">
+                    <div class="sps-sign-col">
+                        <div class="sps-sign-title">Disetujui</div>
+                        <div class="sps-sign-space"></div>
+                        <div class="sps-sign-name">( &nbsp; &nbsp; &nbsp; &nbsp; )</div>
+                    </div>
+                    <div class="sps-sign-col">
+                        <div class="sps-sign-title">Diperiksa</div>
+                        <div class="sps-sign-space"></div>
+                        <div class="sps-sign-name">( &nbsp; &nbsp; &nbsp; &nbsp; )</div>
+                    </div>
+                    <div class="sps-sign-col">
+                        <div class="sps-sign-title">Dibuat</div>
+                        <div class="sps-sign-space"></div>
+                        <div class="sps-sign-name">( &nbsp; &nbsp; &nbsp; &nbsp; )</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Info Section -->
-    <div class="info-section">
-        <div class="info-left">
-            <div class="field-label">Machine</div>
-            <div class="field-value">@Model.Machine</div>
+        <!-- Info Section -->
+        <div class="sps-info-grid">
+            <div class="sps-info-left">
+                <div class="lbl">Machine</div><div>:</div><div class="val">@(!string.IsNullOrWhiteSpace(Model.Machine) ? Model.Machine : (Model.MachineCode ?? "CHS 2 Layer"))</div>
+                <div class="lbl">Purpose</div><div>:</div><div class="val">@(!string.IsNullOrWhiteSpace(Model.HoseType) ? "Extrusion Parameter Setting Conditions For " + Model.HoseType : "Extrusion Parameter Setting Conditions For CHS 2 Layer")</div>
+                <div class="lbl">No. Document</div><div>:</div><div class="val fw-bold">@Model.DocumentNumber</div>
+                <div class="lbl">No. Revisi</div><div>:</div><div class="val">@(Model.RevisionNumber ?? "0")</div>
+                <div class="lbl">Customer</div><div>:</div><div class="val">@(!string.IsNullOrWhiteSpace(Model.Customer) ? Model.Customer : "PT. TMMIN")</div>
+            </div>
 
-            <div class="field-label">Purpose</div>
-            <div class="field-value">@Model.HoseType</div>
-
-            <div class="field-label">No. Document</div>
-            <div class="field-value">@Model.DocumentNumber</div>
-
-            <div class="field-label">No. Revisi</div>
-            <div class="field-value">@Model.RevisionNumber</div>
-
-            <div class="field-label">Customer</div>
-            <div class="field-value">@Model.Customer</div>
+            <div class="sps-info-right">
+                <table class="sps-rev-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25px;">No.</th>
+                            <th style="width: 55px;">Rev. No.</th>
+                            <th>Revision Record</th>
+                            <th style="width: 65px;">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>Dibuat</td>
+                            <td>@(!string.IsNullOrWhiteSpace(Model.RevisionDate) ? Model.RevisionDate : "-")</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>@(Model.RevisionNumber ?? "2")</td>
+                            <td>Revisi</td>
+                            <td>@(!string.IsNullOrWhiteSpace(Model.RevisionDate) ? Model.RevisionDate : "-")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="info-right">
-            <table class="revision-table" style="margin: 0;">
-                <thead>
-                    <tr>
-                        <th style="width: 30px;">No.</th>
-                        <th style="width: 60px;">Rev. No.</th>
-                        <th>Revision Record</th>
-                        <th style="width: 70px;">Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>@Model.RevisionNumber</td>
-                        <td>@(Model.HoseType ?? "-")</td>
-                        <td>@Model.RevisionDate</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Hose Spec Box -->
+        <div class="sps-hose-box">
+            <div class="sps-hose-content">
+                <div><strong>Hose Spec. :</strong> @(!string.IsNullOrWhiteSpace(Model.HoseType) ? Model.HoseType + "; " : "")@(!string.IsNullOrWhiteSpace(Model.Dimensi) ? "Ø " + Model.Dimensi + "; " : "")@(!string.IsNullOrWhiteSpace(Model.Formulasi) ? Model.Formulasi : "")</div>
+                <div style="margin-top: 2px;"><strong>Tujuan:</strong></div>
+                <div style="padding-left: 8px;">
+                    <div>• Menjelaskan kondisi parameter setting dari proses.</div>
+                    <div>• Mengandung parameter setting dan metode pengukuran dan pencatatan</div>
+                </div>
+                @if (Model.ItemLists != null && Model.ItemLists.Any())
+                {
+                    <div style="margin-top: 2px; font-size: 6.5pt; color: #333;">
+                        <strong>Item List:</strong> @string.Join(", ", Model.ItemLists.Select(i => i.ItemList))
+                    </div>
+                }
+            </div>
+            <div class="sps-hose-legend">
+                <div class="sps-hose-legend-title">Check's Condition of symbol:</div>
+                <div>○ : Operator</div>
+                <div>□ : Supervisor</div>
+                <div>☆ : Manager</div>
+            </div>
         </div>
-    </div>
 
-    <!-- Hose Specification -->
-    <div class="hose-spec">
-        <strong>Hose Spec.:</strong> @Model.Dimensi
-        <br />
-        <strong>Tujuan:</strong> Parameter setting dari proses extrusion
-        <br />
-        <strong>Item List:</strong> 
-        @if (Model.ItemLists != null && Model.ItemLists.Any())
-        {
-            @string.Join(", ", Model.ItemLists.Select(i => i.ItemList))
-        }
-        | <strong>Formulasi:</strong> @Model.Formulasi
-    </div>
+        <!-- Main Parameter Table (24 Standard Items) -->
+        <table class="sps-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 20px;">No.</th>
+                    <th rowspan="2" style="width: 110px;">Check item</th>
+                    <th rowspan="2" style="width: 20px;">Classi<br/>fication</th>
+                    <th colspan="2">Level of control</th>
+                    <th rowspan="2" style="width: 70px;">Confirmation<br/>methode</th>
+                    <th colspan="4">First/Finish Check</th>
+                    <th colspan="3">Routine check</th>
+                    <th rowspan="2" style="width: 105px;">Recording sheets</th>
+                </tr>
+                <tr>
+                    <th style="width: 75px;">Inner<br/>Tube</th>
+                    <th style="width: 75px;">Outer<br/>Cover</th>
+                    <th style="width: 22px;">First</th>
+                    <th style="width: 22px;">Finish</th>
+                    <th style="width: 22px;">Number</th>
+                    <th style="width: 22px;">Check</th>
+                    <th style="width: 65px;">Interval</th>
+                    <th style="width: 22px;">Number</th>
+                    <th style="width: 22px;">Check</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 1. Material -->
+                <tr>
+                    <td>1</td>
+                    <td class="item-name">Material</td>
+                    <td class="class-cell">im</td>
+                    <td>@(!string.IsNullOrWhiteSpace(Model.InnerTube) ? Model.InnerTube : "-")</td>
+                    <td>@(!string.IsNullOrWhiteSpace(Model.OuterCover) ? Model.OuterCover : "-")</td>
+                    <td>Visual</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="check-mark">○</td>
+                    <td>Tiap Batch</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">Now I'm Produce</td>
+                </tr>
 
-    <!-- Parameter Table -->
-    <table class="param-table">
-        <thead>
-            <tr>
-                <th rowspan="2">No.</th>
-                <th rowspan="2">Check Item</th>
-                <th rowspan="2">Unit</th>
-                <th colspan="2">Level of control</th>
-                <th colspan="3">First/Finish Check<br/>methode</th>
-                <th colspan="2">Routine check</th>
-                <th rowspan="2">Recording sheets</th>
-            </tr>
-            <tr>
-                <th>Inner<br/>Tube</th>
-                <th>Outer<br/>Tube</th>
-                <th>Visual</th>
-                <th>Caliper</th>
-                <th>Display</th>
-                <th>Interval</th>
-                <th>Check</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- 1. Material -->
-            <tr>
-                <td>1</td>
-                <td class="item-name">Material</td>
-                <td>-</td>
-                <td>@Model.InnerTube</td>
-                <td>@Model.OuterCover</td>
-                <td>✓</td>
-                <td></td>
-                <td></td>
-                <td>Tiap Batch</td>
-                <td>O</td>
-                <td>Awal Prn Produce</td>
-            </tr>
+                <!-- 2. Material Life Time -->
+                <tr>
+                    <td>2</td>
+                    <td class="item-name">Material Life Time</td>
+                    <td class="class-cell">re</td>
+                    <td style="font-size: 5.5pt;">@(!string.IsNullOrWhiteSpace(Model.UseLimitsInner) ? Model.UseLimitsInner : "14 hari dari proses mixing")</td>
+                    <td style="font-size: 5.5pt;">@(!string.IsNullOrWhiteSpace(Model.UseLimitsOuter) ? Model.UseLimitsOuter : "14 hari dari proses mixing")</td>
+                    <td>Visual</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Tiap Batch</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">Now I'm Produce</td>
+                </tr>
 
-            <!-- 2. Material Life Time -->
-            <tr>
-                <td>2</td>
-                <td class="item-name">Material Life Time</td>
-                <td>-</td>
-                <td>@Model.UseLimitsInner</td>
-                <td>@Model.UseLimitsOuter</td>
-                <td>✓</td>
-                <td></td>
-                <td></td>
-                <td>Tiap Batch</td>
-                <td>O</td>
-                <td>Awal Prn Produce</td>
-            </tr>
+                <!-- 3. Tipe Yarn -->
+                <tr>
+                    <td>3</td>
+                    <td class="item-name">Tipe Yarn</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@(!string.IsNullOrWhiteSpace(Model.Yarn) ? Model.Yarn : "-")</td>
+                    <td>Visual</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="check-mark">○</td>
+                    <td>Tiap Ganti Yarn</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 3. Tipe Yarn -->
-            <tr>
-                <td>3</td>
-                <td class="item-name">Tipe Yarn</td>
-                <td>-</td>
-                <td colspan="2">@Model.Yarn</td>
-                <td>✓</td>
-                <td></td>
-                <td></td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Preparation<br/>Equipement</td>
-            </tr>
+                <!-- 4. Pitch Yarn -->
+                <tr>
+                    <td>4</td>
+                    <td class="item-name">Pitch Yarn</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.PitchYarn, Model.PitchYarn_Min, Model.PitchYarn_Asli, Model.PitchYarn_Max)</td>
+                    <td>Caliper</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="check-mark">○</td>
+                    <td>Awal Process</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR* (Dimension)</td>
+                </tr>
 
-            <!-- 4. Pitch Yarn -->
-            <tr>
-                <td>4</td>
-                <td class="item-name">Pitch Yarn</td>
-                <td>mm</td>
-                <td colspan="2">@Model.PitchYarn</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>1x/Bulan</td>
-                <td>O</td>
-                <td>Preparation</td>
-            </tr>
+                <!-- 5. Tension Yarn -->
+                <tr>
+                    <td rowspan="2">5</td>
+                    <td class="item-name">Tension Yarn <span style="float: right; font-weight: normal;">Inner</span></td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatTension(Model.TensionYarnInner)</td>
+                    <td rowspan="2">Tension meter</td>
+                    <td rowspan="2">-</td>
+                    <td rowspan="2">-</td>
+                    <td rowspan="2">-</td>
+                    <td rowspan="2">-</td>
+                    <td rowspan="2">*1x/bulan</td>
+                    <td rowspan="2">1</td>
+                    <td rowspan="2" class="check-mark">○</td>
+                    <td rowspan="2" class="rec-sheet">Tension check sheet</td>
+                </tr>
+                <tr>
+                    <td class="item-name" style="text-align: right; font-weight: normal; padding-right: 4px;">Outer</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatTension(Model.TensionYarnOuter)</td>
+                </tr>
 
-            <!-- 5. Tension Yarn -->
-            <tr>
-                <td>5</td>
-                <td class="item-name">Tension Yarn</td>
-                <td>g</td>
-                <td>@Model.TensionYarnInner</td>
-                <td>@Model.TensionYarnOuter</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-                <td>1x/Bulan</td>
-                <td>O</td>
-                <td>Tension check sheet</td>
-            </tr>
+                <!-- 6. Dies Dimension -->
+                <tr>
+                    <td rowspan="6">6</td>
+                    <td class="item-name">Dies Dimension<br/><span style="font-weight: normal; font-size: 5.5pt;">Ø Nipple (mm)</span></td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.Nipple, Model.Nipple_Min, Model.Nipple_Asli, Model.Nipple_Max)</td>
+                    <td>Caliper</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td rowspan="4">1x / 2 Bulan</td>
+                    <td rowspan="4">1</td>
+                    <td rowspan="4" class="check-mark">□</td>
+                    <td rowspan="4" class="rec-sheet">Dies maintenance<br/>checksheet</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Ø Tube (mm)</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.TubeDie, Model.TubeDie_Min, Model.TubeDie_Asli, Model.TubeDie_Max)</td>
+                    <td>Tapper Gauge</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Ø Middle (mm)</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.MiddleDie, Model.MiddleDie_Min, Model.MiddleDie_Asli, Model.MiddleDie_Max)</td>
+                    <td>Tapper Gauge</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Ø Cover (mm)</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.CoverDie, Model.CoverDie_Min, Model.CoverDie_Asli, Model.CoverDie_Max)</td>
+                    <td>Tapper Gauge</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Ø Spacer (mm)</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.SpacerDie, Model.SpacerDie_Min, Model.SpacerDie_Asli, Model.SpacerDie_Max)</td>
+                    <td>Caliper</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">A Distance (mm)</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.ADistance, Model.ADistance_Min, Model.ADistance_Asli, Model.ADistance_Max)</td>
+                    <td>Caliper</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Tiap ganti material</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 6. Dies Dimension -->
-            <tr>
-                <td rowspan="4">6</td>
-                <td class="item-name">Dies<br/>Dimension</td>
-                <td>mm</td>
-                <td colspan="2">ø Tube (mm): @Model.TubeDie</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-                <td rowspan="4">1x / 3 Bulan</td>
-                <td rowspan="4">O</td>
-                <td rowspan="4">Dies<br/>maintenance<br/>schedule</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>mm</td>
-                <td colspan="2">ø Middle (mm): @Model.MiddleDie</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>mm</td>
-                <td colspan="2">ø Cover (mm): @Model.CoverDie</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>mm</td>
-                <td colspan="2">ø Spacer (mm): @Model.SpacerDie</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-            </tr>
+                <!-- 7. Mesh Screen -->
+                <tr>
+                    <td>7</td>
+                    <td class="item-name">Mesh Screen</td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatMesh(Model.MeshDim1, Model.MeshScreen1, Model.MeshDim1_Asli)</td>
+                    <td>@FormatMesh(Model.MeshDim2, Model.MeshScreen2, Model.MeshDim2_Asli)</td>
+                    <td>Visual</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Tiap ganti material</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 7. Mesh Screen -->
-            <tr>
-                <td>7</td>
-                <td class="item-name">Mesh Screen</td>
-                <td>mesh</td>
-                <td>@Model.MeshScreen1</td>
-                <td>@Model.MeshScreen2</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Preparation<br/>Equipment</td>
-            </tr>
+                <!-- 8. Temperature Setting -->
+                <tr>
+                    <td rowspan="5">8</td>
+                    <td class="item-name">Temperature Setting<br/><span style="font-weight: normal; font-size: 5.5pt;">Head (°C)</span></td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatVal(Model.HeadTemp1, Model.HeadTemp1_Min, Model.HeadTemp1_Asli, Model.HeadTemp1_Max)</td>
+                    <td>@FormatVal(Model.HeadTemp2, Model.HeadTemp2_Min, Model.HeadTemp2_Asli, Model.HeadTemp2_Max)</td>
+                    <td rowspan="5">Display</td>
+                    <td rowspan="5">-</td>
+                    <td rowspan="5">-</td>
+                    <td rowspan="5">-</td>
+                    <td rowspan="5">-</td>
+                    <td rowspan="5">Awal Process</td>
+                    <td rowspan="5">1</td>
+                    <td rowspan="5" class="check-mark">○</td>
+                    <td rowspan="5" class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Cylinder 1 (°C)</td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatVal(Model.Cylinder1_1, Model.Cylinder1_1_Min, Model.Cylinder1_1_Asli, Model.Cylinder1_1_Max)</td>
+                    <td>@FormatVal(Model.Cylinder1_2, Model.Cylinder1_2_Min, Model.Cylinder1_2_Asli, Model.Cylinder1_2_Max)</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Cylinder 2 (°C)</td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatVal(Model.Cylinder2_1, Model.Cylinder2_1_Min, Model.Cylinder2_1_Asli, Model.Cylinder2_1_Max)</td>
+                    <td>@FormatVal(Model.Cylinder2_2, Model.Cylinder2_2_Min, Model.Cylinder2_2_Asli, Model.Cylinder2_2_Max)</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Cylinder 3 (°C)</td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatVal(Model.Cylinder3_1, Model.Cylinder3_1_Min, Model.Cylinder3_1_Asli, Model.Cylinder3_1_Max)</td>
+                    <td>@FormatVal(Model.Cylinder3_2, Model.Cylinder3_2_Min, Model.Cylinder3_2_Asli, Model.Cylinder3_2_Max)</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Screw (°C)</td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatVal(Model.ScrewTemp1, Model.ScrewTemp1_Min, Model.ScrewTemp1_Asli, Model.ScrewTemp1_Max)</td>
+                    <td>@FormatVal(Model.ScrewTemp2, Model.ScrewTemp2_Min, Model.ScrewTemp2_Asli, Model.ScrewTemp2_Max)</td>
+                </tr>
 
-            <!-- 8. Temperature Setting -->
-            <tr>
-                <td rowspan="5">8</td>
-                <td class="item-name">Temperature<br/>Setting</td>
-                <td>°C</td>
-                <td>Head (°C): @Model.HeadTemp1</td>
-                <td>Head (°C): @Model.HeadTemp2</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td rowspan="5">Awal Proses</td>
-                <td rowspan="5">O</td>
-                <td rowspan="5">Awal Proses</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>°C</td>
-                <td>Cylinder 1 (°C): @Model.Cylinder1_1</td>
-                <td>Cylinder 1 (°C): @Model.Cylinder1_2</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>°C</td>
-                <td>Cylinder 2 (°C): @Model.Cylinder2_1</td>
-                <td>Cylinder 2 (°C): @Model.Cylinder2_2</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>°C</td>
-                <td>Cylinder 3 (°C): @Model.Cylinder3_1</td>
-                <td>Cylinder 3 (°C): @Model.Cylinder3_2</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>°C</td>
-                <td>Screw Temp (°C): @Model.ScrewTemp1</td>
-                <td>Screw Temp (°C): @Model.ScrewTemp2</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-            </tr>
+                <!-- 9. Screw Speed (rpm) -->
+                <tr>
+                    <td>9</td>
+                    <td class="item-name">Screw Speed (rpm)</td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatVal(Model.ScrewSpeed1, Model.ScrewSpeed1_Min, Model.ScrewSpeed1_Asli, Model.ScrewSpeed1_Max)</td>
+                    <td>@FormatVal(Model.ScrewSpeed2, Model.ScrewSpeed2_Min, Model.ScrewSpeed2_Asli, Model.ScrewSpeed2_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 9. Screw Speed -->
-            <tr>
-                <td>9</td>
-                <td class="item-name">Screw Speed (rpm)</td>
-                <td>rpm</td>
-                <td>@Model.ScrewSpeed1</td>
-                <td>@Model.ScrewSpeed2</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Awal Proses</td>
-            </tr>
+                <!-- 10. Feed Roll Ratio (%) -->
+                <tr>
+                    <td>10</td>
+                    <td class="item-name">Feed Roll Ratio (%)</td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatVal(Model.Feed1 ?? Model.FeedRollRatio1, Model.Feed1_Min ?? Model.FeedRollRatio1_Min, Model.Feed1_Asli ?? Model.FeedRollRatio1_Asli, Model.Feed1_Max ?? Model.FeedRollRatio1_Max)</td>
+                    <td>@FormatVal(Model.Feed2 ?? Model.FeedRollRatio2, Model.Feed2_Min ?? Model.FeedRollRatio2_Min, Model.Feed2_Asli ?? Model.FeedRollRatio2_Asli, Model.Feed2_Max ?? Model.FeedRollRatio2_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 10. Feed Roll Ratio -->
-            <tr>
-                <td>10</td>
-                <td class="item-name">Feed Roll Ratio (%)</td>
-                <td>%</td>
-                <td colspan="2">Inner: @Model.FeedRollRatio1 | Middle: @Model.FeedRollRatio2 | Outer: @Model.FeedRollRatio3</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Display</td>
-            </tr>
+                <!-- 11. Pressure (MPa) -->
+                <tr>
+                    <td>11</td>
+                    <td class="item-name">Pressure (MPa)</td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatVal(Model.Pressure1, Model.Pressure1_Min, Model.Pressure1_Asli, Model.Pressure1_Max)</td>
+                    <td>@FormatVal(Model.Pressure2, Model.Pressure2_Min, Model.Pressure2_Asli, Model.Pressure2_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 11. Pressure -->
-            <tr>
-                <td>11</td>
-                <td class="item-name">Pressure (MPa)</td>
-                <td>MPa</td>
-                <td>@Model.Pressure1</td>
-                <td>@Model.Pressure2</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Awal Proses</td>
-            </tr>
+                <!-- 12. Am meter (A) -->
+                <tr>
+                    <td>12</td>
+                    <td class="item-name">Am meter (A)</td>
+                    <td class="class-cell">re</td>
+                    <td>@FormatVal(Model.AmMeter, Model.AmMeter_Min, Model.AmMeter_Asli, Model.AmMeter_Max)</td>
+                    <td>@FormatVal(Model.AmMeter2, Model.AmMeter2_Min, Model.AmMeter2_Asli, Model.AmMeter2_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 12. Am meter -->
-            <tr>
-                <td>12</td>
-                <td class="item-name">Am meter (A)</td>
-                <td>A</td>
-                <td colspan="2">@Model.AmMeter @(Model.AmMeter2 != null ? " | " + Model.AmMeter2 : "")</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Display</td>
-            </tr>
+                <!-- 13. Ø Preset value (mm) -->
+                <tr>
+                    <td>13</td>
+                    <td class="item-name">Ø Preset value (mm)</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.PresetValue, Model.PresetValue_Min, Model.PresetValue_Asli, Model.PresetValue_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 13. OD sensor -->
-            <tr>
-                <td>13</td>
-                <td class="item-name">OD sensor (mm)</td>
-                <td>mm</td>
-                <td colspan="2">@Model.OdSensor</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Display</td>
-            </tr>
+                <!-- 14. Ø Control value (mm) -->
+                <tr>
+                    <td>14</td>
+                    <td class="item-name">Ø Control value (mm)</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.ControlValue, Model.ControlValue_Min, Model.ControlValue_Asli, Model.ControlValue_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 14. Tolerance -->
-            <tr>
-                <td>14</td>
-                <td class="item-name">Tolerance (mm)</td>
-                <td>mm</td>
-                <td>@Model.ToleranceInner</td>
-                <td>@Model.ToleranceOuter</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-                <td>Awal/Akhir</td>
-                <td>O</td>
-                <td>EPC<br/>Parameter setting</td>
-            </tr>
+                <!-- 15. Spiral Pitch : Setting -->
+                <tr>
+                    <td>15</td>
+                    <td class="item-name">Spiral Pitch : Setting</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.SpiralPitchSetting, Model.SpiralPitchSetting_Min, Model.SpiralPitchSetting_Asli, Model.SpiralPitchSetting_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="rec-sheet">-</td>
+                </tr>
 
-            <!-- 15. Spiral Pitch -->
-            <tr>
-                <td>15</td>
-                <td class="item-name">Spiral Pitch (mm)</td>
-                <td>mm</td>
-                <td colspan="2">@Model.ToleranceSpiralPitch</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Awal Proses</td>
-            </tr>
+                <!-- 16. Spiral Pitch : Display -->
+                <tr>
+                    <td>16</td>
+                    <td class="item-name">Spiral Pitch : Display</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.SpiralPitchDisplay ?? Model.ToleranceSpiralPitch, Model.SpiralPitchDisplay_Min ?? Model.ToleranceSpiralPitch_Min, Model.SpiralPitchDisplay_Asli ?? Model.ToleranceSpiralPitch_Asli, Model.SpiralPitchDisplay_Max ?? Model.ToleranceSpiralPitch_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 16. Spiral Speed Display -->
-            <tr>
-                <td>16</td>
-                <td class="item-name">Spiral Speed Display</td>
-                <td>rpm</td>
-                <td colspan="2">-</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Display</td>
-            </tr>
+                <!-- 17. Spiral Speed (rpm) -->
+                <tr>
+                    <td>17</td>
+                    <td class="item-name">Spiral Speed (rpm)</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.SpiralSpeed, Model.SpiralSpeed_Min, Model.SpiralSpeed_Asli, Model.SpiralSpeed_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 17. Spiral Speed (rpm) -->
-            <tr>
-                <td>17</td>
-                <td class="item-name">Spiral Speed (rpm)</td>
-                <td>rpm</td>
-                <td colspan="2">-</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>1x/Bulan</td>
-                <td>O</td>
-                <td>Display</td>
-            </tr>
+                <!-- 18. Hose Speed (m/min) -->
+                <tr>
+                    <td>18</td>
+                    <td class="item-name">Hose Speed (m/min)</td>
+                    <td class="class-cell">re</td>
+                    <td colspan="2">@FormatVal(Model.HoseSpeed, Model.HoseSpeed_Min, Model.HoseSpeed_Asli, Model.HoseSpeed_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 18. Hose smooth surface -->
-            <tr>
-                <td>18</td>
-                <td class="item-name">Hose smooth surface</td>
-                <td>-</td>
-                <td colspan="2">-</td>
-                <td>✓</td>
-                <td></td>
-                <td></td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>-</td>
-            </tr>
+                <!-- 19. Un smooth surface -->
+                <tr>
+                    <td>19</td>
+                    <td class="item-name">Un smooth surface</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@(!string.IsNullOrWhiteSpace(Model.UnsmoothSurface) ? Model.UnsmoothSurface : "0.5")</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 19. Cooling water temperature -->
-            <tr>
-                <td>19</td>
-                <td class="item-name">Cooling water temperature (°C)</td>
-                <td>°C</td>
-                <td colspan="2">@Model.ChillerWaterTemp</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>Display</td>
-            </tr>
+                <!-- 20. Chiller Water Temperature (°C) -->
+                <tr>
+                    <td>20</td>
+                    <td class="item-name">Chiller Water Temperature (°C)</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.ChillerWaterTemp, Model.ChillerWaterTemp_Min, Model.ChillerWaterTemp_Asli, Model.ChillerWaterTemp_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 20. Chiller Gap (mm) -->
-            <tr>
-                <td>20</td>
-                <td class="item-name">Chiller Gap (mm)</td>
-                <td>mm</td>
-                <td colspan="2">-</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-            </tr>
+                <!-- 21. Caterpillar Gap (mm) -->
+                <tr>
+                    <td>21</td>
+                    <td class="item-name">Caterpillar Gap (mm)</td>
+                    <td class="class-cell">re</td>
+                    <td colspan="2">@FormatVal(Model.CaterpillarGap, Model.CaterpillarGap_Min, Model.CaterpillarGap_Asli, Model.CaterpillarGap_Max)</td>
+                    <td>Display</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Awal Process</td>
+                    <td>1</td>
+                    <td class="check-mark">○</td>
+                    <td class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
 
-            <!-- 21. Conveyor Speed -->
-            <tr>
-                <td>21</td>
-                <td class="item-name">Conveyor</td>
-                <td>m/min</td>
-                <td colspan="2">Take up: @Model.TakeUpConveyorSpeed</td>
-                <td></td>
-                <td></td>
-                <td>✓</td>
-                <td>Awal Proses</td>
-                <td>O</td>
-                <td>EPC</td>
-            </tr>
+                <!-- 22. Conveyor Speed (m/min) -->
+                <tr>
+                    <td rowspan="3">22</td>
+                    <td class="item-name">Conveyor Speed (m/min)<br/><span style="font-weight: normal; font-size: 5.5pt;">Take up</span></td>
+                    <td class="class-cell">re</td>
+                    <td colspan="2">@FormatVal(Model.TakeUpConveyorSpeed, Model.TakeUpConveyorSpeed_Min, Model.TakeUpConveyorSpeed_Asli, Model.TakeUpConveyorSpeed_Max)</td>
+                    <td rowspan="3">Display</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">Awal Process</td>
+                    <td rowspan="3">1</td>
+                    <td rowspan="3" class="check-mark">○</td>
+                    <td rowspan="3" class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Cool Conveyor</td>
+                    <td class="class-cell">re</td>
+                    <td colspan="2">@FormatVal(Model.CoolConveyorSpeed, Model.CoolConveyorSpeed_Min, Model.CoolConveyorSpeed_Asli, Model.CoolConveyorSpeed_Max)</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Conveyor Ratio (Take up : Cool)</td>
+                    <td class="class-cell">re</td>
+                    <td colspan="2">@FormatVal(Model.ConveyorRatio, Model.ConveyorRatio_Min, Model.ConveyorRatio_Asli, Model.ConveyorRatio_Max)</td>
+                </tr>
 
-            <!-- 22. Marking Material -->
-            <tr>
-                <td rowspan="3">22</td>
-                <td class="item-name">Marking<br/>Material</td>
-                <td>-</td>
-                <td colspan="2">Sort: @Model.MarkingSort</td>
-                <td>✓</td>
-                <td></td>
-                <td></td>
-                <td rowspan="3">Awal Proses</td>
-                <td rowspan="3">O</td>
-                <td rowspan="3">EPC<br/>Parameter setting</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>-</td>
-                <td colspan="2">Colour: @Model.MarkingColour</td>
-                <td>✓</td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>-</td>
-                <td colspan="2">Rod Endless: @Model.TextMarkingMaterial</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-            </tr>
+                <!-- 23. Marking Material -->
+                <tr>
+                    <td rowspan="3">23</td>
+                    <td class="item-name">Marking Material<br/><span style="font-weight: normal; font-size: 5.5pt;">Text</span></td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2" style="font-size: 5.5pt;">@(!string.IsNullOrWhiteSpace(Model.TextMarkingMaterial) ? Model.TextMarkingMaterial : "-")</td>
+                    <td rowspan="3">Visual</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">Awal Process</td>
+                    <td rowspan="3">1</td>
+                    <td rowspan="3" class="check-mark">○</td>
+                    <td rowspan="3" class="rec-sheet">EPR*<br/>(Parameter Setting)</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Colour</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@(!string.IsNullOrWhiteSpace(Model.MarkingColour) ? Model.MarkingColour : "-")</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Sort</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@(!string.IsNullOrWhiteSpace(Model.MarkingSort) ? Model.MarkingSort : "Roll Emboss")</td>
+                </tr>
 
-            <!-- 23. Hose Dimension -->
-            <tr>
-                <td rowspan="3">23</td>
-                <td class="item-name">Hose<br/>Dimension</td>
-                <td>mm</td>
-                <td colspan="2">Inner (mm): @Model.TebalInner</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-                <td rowspan="3">-</td>
-                <td rowspan="3">-</td>
-                <td rowspan="3">-</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>mm</td>
-                <td colspan="2">Outer (mm): @Model.TebalOuter</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>mm</td>
-                <td colspan="2">Total: @Model.TebalTotal</td>
-                <td></td>
-                <td>✓</td>
-                <td></td>
-            </tr>
-        </tbody>
-    </table>
+                <!-- 24. Hose Dimension -->
+                <tr>
+                    <td rowspan="3">24</td>
+                    <td class="item-name">Hose Dimension<br/><span style="font-weight: normal; font-size: 5.5pt;">Inner (mm)</span></td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.ToleranceInner, Model.ToleranceInner_Min, Model.ToleranceInner_Asli, Model.ToleranceInner_Max)</td>
+                    <td>Tapper Gauge</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">-</td>
+                    <td rowspan="3">Every 30 Minutes</td>
+                    <td rowspan="3">1</td>
+                    <td rowspan="3" class="check-mark">○</td>
+                    <td rowspan="3" class="rec-sheet">EPR*<br/>(Dimension)</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Thickness (mm) Inner</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.TebalInner, Model.TebalInner_Min, Model.TebalInner_Asli, Model.TebalInner_Max)</td>
+                    <td>Caliper</td>
+                </tr>
+                <tr>
+                    <td class="sub-item">Thickness (mm) Total</td>
+                    <td class="class-cell">im</td>
+                    <td colspan="2">@FormatVal(Model.TebalTotal, Model.TebalTotal_Min, Model.TebalTotal_Asli, Model.TebalTotal_Max)</td>
+                    <td>Caliper</td>
+                </tr>
+            </tbody>
+        </table>
 
-    <!-- Footer Notes -->
-    <div class="footer-note">
-        <strong>Catatan:</strong> Dokumen ini adalah Standard Parameter Setting untuk produksi hose. 
-        Data diambil dari database SPS Master (Doc No: @Model.DocumentNumber).
+        <!-- Document Footer Notes -->
+        <div class="sps-footer-note">
+            <div>
+                <strong>* im :</strong> Important; &nbsp;<strong>re :</strong> reference; &nbsp;<strong>EPR :</strong> Extrusion Production Report
+            </div>
+            <div style="font-style: italic;">
+                Dokumen Standar Form VI-SOP-PROD-131 (Rev. @(Model.RevisionNumber ?? "0"))
+            </div>
+        </div>
     </div>
 </div>
-
-</div><!-- End .sps-container -->
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const table = document.querySelector(".param-table");
-    if (!table) return;
-
-    function isValueEmpty(text) {
-        text = text.trim();
-        // Basic empty checks
-        if (!text || text === "-" || text === "0" || text === "0.0" || text === "0.00") return true;
-        
-        // Single label with no data (e.g. "ø Tube (mm): ")
-        if (text.match(/:\s*$/)) return true;
-        
-        // Multiple labels separated by | (e.g. "Inner:  | Middle:  | Outer: ")
-        if (text.includes("|")) {
-            const parts = text.split("|");
-            let hasDataInParts = false;
-            for (let part of parts) {
-                part = part.trim();
-                // If a part has data, it won't end with a colon
-                if (!part.match(/:\s*$/) && part !== "") {
-                    hasDataInParts = true;
-                }
-            }
-            if (!hasDataInParts) return true;
-        }
-        
-        return false;
-    }
-
-    const tbody = table.querySelector("tbody");
-    if (!tbody) return;
-
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    let currentGroup = [];
-    let groups = [];
-    
-    // Group rows by the item number in the first column
-    rows.forEach(row => {
-        const firstCell = row.querySelector("td:first-child");
-        const isNewGroup = firstCell && !isNaN(parseInt(firstCell.textContent.trim())) && !firstCell.hasAttribute("colspan");
-        
-        if (isNewGroup) {
-            if (currentGroup.length > 0) groups.push(currentGroup);
-            currentGroup = [row];
-        } else {
-            currentGroup.push(row);
-        }
-    });
-    if (currentGroup.length > 0) groups.push(currentGroup);
-
-    groups.forEach(group => {
-        let visibleRows = [];
-        let hiddenRows = [];
-        
-        group.forEach((row, rowIndex) => {
-            const isFirstInGroup = (rowIndex === 0);
-            let hasData = false;
-            
-            const cells = Array.from(row.children);
-            
-            // Determine where the data columns start
-            let startIdx = isFirstInGroup ? 3 : 2;
-            if (!isFirstInGroup && cells.length > 0 && cells[0].textContent.trim() === "") {
-                startIdx = 2; 
-            }
-            
-            // Loop through data cells to check if there is any non-empty data
-            for (let i = startIdx; i < cells.length; i++) {
-                const cell = cells[i];
-                const txt = cell.textContent.trim();
-                const ignoreList = [
-                    "✓", "O", "Tiap Batch", "Awal Proses", "Preparation", 
-                    "Equipment", "Preparation Equipment", "1x/Bulan", 
-                    "Dies maintenance schedule", "1x / 3 Bulan", "Display", 
-                    "Awal/Akhir", "EPC Parameter setting", "Awal Prn Produce", 
-                    "Tension check sheet", "EPC"
-                ];
-                
-                // If it's not a fixed checkmark or schedule text, evaluate it
-                if (txt && !ignoreList.includes(txt) && !ignoreList.includes(txt.replace(/\n/g, ' '))) {
-                    if (!isValueEmpty(txt)) {
-                        hasData = true;
-                        break;
-                    }
-                }
-            }
-            
-            if (hasData) {
-                visibleRows.push(row);
-            } else {
-                hiddenRows.push(row);
-            }
-        });
-        
-        if (visibleRows.length === 0) {
-            // Hide the entire group if no rows have data
-            group.forEach(r => r.style.display = "none");
-        } else {
-            // Hide only the empty rows
-            hiddenRows.forEach(r => r.style.display = "none");
-            
-            const firstRow = group[0];
-            const firstVisibleRow = visibleRows[0];
-            
-            // Adjust rowspans so the table structure doesn't break
-            const rowspanCells = Array.from(firstRow.children).filter(c => parseInt(c.getAttribute('rowspan')) > 1 || c.rowSpan > 1);
-            
-            if (firstRow !== firstVisibleRow) {
-                // If the very first row was hidden, move its rowspan cells to the new first visible row
-                rowspanCells.forEach(c => {
-                    c.setAttribute('rowspan', visibleRows.length);
-                    // Place the 'No' cell at the beginning, and 'Schedule/Check' cells at the end
-                    if (c === firstRow.firstElementChild) {
-                        firstVisibleRow.insertBefore(c, firstVisibleRow.firstElementChild);
-                    } else {
-                        firstVisibleRow.appendChild(c);
-                    }
-                });
-            } else {
-                // Otherwise just update the rowspan value
-                rowspanCells.forEach(c => c.setAttribute('rowspan', visibleRows.length));
-            }
-        }
-    });
-});
-</script>

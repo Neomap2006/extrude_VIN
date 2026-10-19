@@ -1068,7 +1068,6 @@
                             <ol class="text-white mb-2" style="font-size: 0.9rem;">
                                 <li>Download <strong>Template Sps</strong> di bawah</li>
                                 <li>Isi kolom sesuai data — kolom MIN/STD/MAX bisa diisi manual</li>
-                                <li>Kolom <strong>Item List</strong> di ujung kanan bersifat <em>opsional</em> (bisa upload terpisah)</li>
                                 <li>Upload file Excel (.xlsx)</li>
                             </ol>
                             <div class="bg-white bg-opacity-10 rounded-3 p-2" style="font-size: 0.75rem;">
@@ -1100,7 +1099,7 @@
                         </div>
                         <small class="text-muted d-block mt-2">
                             <i class="bi bi-info-circle me-1"></i>
-                            <strong>Template Sps</strong> memuat seluruh kolom database lengkap dengan kolom <strong class="text-warning">MIN / STD / MAX</strong> terpisah untuk setiap parameter. Kolom <strong class="text-success">Item List</strong> opsional.
+                            <strong>Template Sps</strong> memuat seluruh kolom parameter setting proses extrusion lengkap dengan kolom <strong class="text-warning">MIN / STD / MAX</strong> terpisah untuk setiap parameter.
                         </small>
                     </div>
                     
@@ -1425,84 +1424,7 @@
             });
         }
 
-        // === AJAX HANDLER FOR IMPORT FORMS ===
-        $('#importItemListForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            var formData = new FormData(this);
-            var fileInput = $('#fileItemList')[0];
-            
-            if (!fileInput.files || fileInput.files.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'File Belum Dipilih',
-                    text: 'Silakan pilih file Excel terlebih dahulu',
-                    background: '#1a1d21',
-                    color: '#fff'
-                });
-                return;
-            }
-
-            Swal.fire({
-                title: 'Uploading...',
-                html: 'Sedang memproses import Item List.<br>Harap tunggu...',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
-
-            $.ajax({
-                url: '@Url.Action("ImportItemListOnly")',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    $('#importItemListModal').modal('hide');
-                    
-                    var status = (response.status || '').toLowerCase();
-                    var iconType = response.success ? 'success' : 'error';
-                    var titleText = response.success ? 'Import Berhasil!' : 'Import Gagal';
-                    if (status === 'approval_required') {
-                        iconType = 'info';
-                        titleText = 'Approval Diperlukan';
-                    }
-                    
-                    var errorHtml = '';
-                    if (response.errorDetails && response.errorDetails.length > 0) {
-                        errorHtml = '<hr><div class=\"text-start\" style=\"font-size: 0.85rem; max-height: 200px; overflow-y: auto;\"><strong>Detail Error:</strong><ul>';
-                        response.errorDetails.forEach(function(err) {
-                            errorHtml += '<li>' + err + '</li>';
-                        });
-                        errorHtml += '</ul></div>';
-                    }
-                    
-                    Swal.fire({
-                        icon: iconType,
-                        title: titleText,
-                        html: '<div style=\"font-size: 0.95rem;\">' + response.message + '</div>' + errorHtml,
-                        confirmButtonText: 'OK',
-                        background: '#1a1d21',
-                        color: '#fff',
-                        width: '600px'
-                    }).then(() => {
-                        if (response.success && response.imported > 0) {
-                            location.reload();
-                        }
-                    });
-                },
-                error: function(xhr, status, error) {
-                    $('#importItemListModal').modal('hide');
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: 'Terjadi kesalahan: ' + error,
-                        background: '#1a1d21',
-                        color: '#fff'
-                    });
-                }
-            });
-        });
-
+        // === AJAX HANDLER FOR IMPORT FORM ===
         $('#importForm').on('submit', function(e) {
             e.preventDefault();
             
@@ -1547,7 +1469,7 @@
                     
                     var errorHtml = '';
                     if (response.errorDetails && response.errorDetails.length > 0) {
-                        errorHtml = '<hr><div class=\"text-start\" style=\"font-size: 0.85rem; max-height: 250px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px; color: #333;\"><strong>Detail Error (Showing first 10):</strong><ul>';
+                        errorHtml = '<hr><div class="text-start" style="font-size: 0.85rem; max-height: 250px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px; color: #333;"><strong>Detail Error (Showing first 10):</strong><ul>';
                         response.errorDetails.forEach(function(err) {
                             errorHtml += '<li>' + err + '</li>';
                         });
@@ -1557,14 +1479,14 @@
                     Swal.fire({
                         icon: iconType,
                         title: titleText,
-                        html: '<div style=\"font-size: 0.95rem;\">' + response.message + '</div>' + errorHtml,
+                        html: '<div style="font-size: 0.95rem;">' + response.message + '</div>' + errorHtml,
                         confirmButtonText: 'OK',
                         background: '#1a1d21',
                         color: '#fff',
                         width: '700px'
                     }).then(() => {
-                        // Reload jika ada documents ATAU itemlists yang di-import
-                        if (response.success && (response.imported > 0 || response.importedDocs > 0)) {
+                        // Reload jika ada data dokumen yang berhasil diproses
+                        if (response.success && (response.importedDocs > 0 || response.updatedDocs > 0 || response.imported > 0)) {
                             location.reload();
                         }
                     });
@@ -1580,7 +1502,6 @@
                 }
             });
         });
-    </script>
     </script>
 }
 

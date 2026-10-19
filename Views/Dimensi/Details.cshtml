@@ -156,6 +156,7 @@
             }
         }
     }
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm shadow text-dark fw-bold">✏️ Edit / Revisi</a>
     <a href="@backUrl" class="btn btn-secondary btn-sm shadow">← @backLabel</a>
     <button onclick="window.print()" class="btn btn-primary btn-sm shadow">Cetak A4 Landscape</button>
 </div>
@@ -465,10 +466,11 @@
                     <th rowspan="2">PART NUMBER</th>
                     <th rowspan="2">VIN KODE</th>
                     <th rowspan="2">STD. PANJANG</th>
+                    <th rowspan="2">STD. SHRINK</th>
                     <th rowspan="2">ACT. PANJANG</th>
                     <th rowspan="2">QTY. TARGET</th>
                     <th colspan="3">QTY. ACTUAL</th>
-                    <th rowspan="2" width="80">REMARK</th>
+                    <th rowspan="2" width="70">REMARK</th>
                 </tr>
                 <tr>
                     <th width="25">OK</th>
@@ -479,23 +481,35 @@
                     bool hasSummaries = Model.Summaries != null && Model.Summaries.Any();
                     string partNum = Model.DimensionDisplay ?? Model.HoseType ?? "-";
 
-                    var shrinkEntry = ViewBag.ShrinkData as VelastoProductionSystem.Models.SpsItemList;
-                    string stdPnjg;
-                    if (shrinkEntry != null && shrinkEntry.LengthShrinkStd.HasValue)
+                    var itemMap = ViewBag.ItemMap as Dictionary<string, VelastoProductionSystem.Models.SpsItemList>;
+                    var defaultShrinkEntry = ViewBag.ShrinkData as VelastoProductionSystem.Models.SpsItemList;
+
+                    string FormatCutting(VelastoProductionSystem.Models.SpsItemList? item, string? fallback)
                     {
-                        stdPnjg = shrinkEntry.LengthShrinkStd.Value + " mm";
-                        if (shrinkEntry.LengthShrinkMin.HasValue && shrinkEntry.LengthShrinkMax.HasValue)
+                        if (item != null && item.LengthCuttingStd.HasValue)
                         {
-                            stdPnjg += $" ({shrinkEntry.LengthShrinkMin.Value} - {shrinkEntry.LengthShrinkMax.Value})";
+                            var txt = item.LengthCuttingStd.Value + " mm";
+                            if (item.LengthCuttingMin.HasValue && item.LengthCuttingMax.HasValue)
+                            {
+                                txt += $" ({item.LengthCuttingMin.Value} - {item.LengthCuttingMax.Value})";
+                            }
+                            return txt;
                         }
+                        return !string.IsNullOrEmpty(fallback) && fallback != "-" ? fallback : "-";
                     }
-                    else if (!string.IsNullOrEmpty(Model.StandardLength) && Model.StandardLength != "-")
+
+                    string FormatShrink(VelastoProductionSystem.Models.SpsItemList? item, string? fallback)
                     {
-                        stdPnjg = Model.StandardLength;
-                    }
-                    else
-                    {
-                        stdPnjg = "0";
+                        if (item != null && item.LengthShrinkStd.HasValue)
+                        {
+                            var txt = item.LengthShrinkStd.Value + " mm";
+                            if (item.LengthShrinkMin.HasValue && item.LengthShrinkMax.HasValue)
+                            {
+                                txt += $" ({item.LengthShrinkMin.Value} - {item.LengthShrinkMax.Value})";
+                            }
+                            return txt;
+                        }
+                        return !string.IsNullOrEmpty(fallback) && fallback != "-" ? fallback : "-";
                     }
 
                     int totalTarget = 0;
@@ -509,6 +523,21 @@
                         totalOk += s.QtyOk;
                         totalNgDim += s.NgDimension;
                         totalNgVis += s.NgVisual;
+
+                        VelastoProductionSystem.Models.SpsItemList? rowItem = null;
+                        var rawVin = (s.VinCode ?? "").Trim().Replace("-", "").Replace(" ", "").ToUpper();
+                        if (!string.IsNullOrEmpty(rawVin) && itemMap != null && itemMap.TryGetValue(rawVin, out var match))
+                        {
+                            rowItem = match;
+                        }
+                        else if (defaultShrinkEntry != null)
+                        {
+                            rowItem = defaultShrinkEntry;
+                        }
+
+                        string rowCutting = FormatCutting(rowItem, s.StandardLength ?? Model.StandardLength);
+                        string rowShrink = FormatShrink(rowItem, s.StandardShrink ?? Model.StandardShrink);
+
                         <tr>
                             @{
                                 var displayPart = s.PartNumber;
@@ -518,7 +547,8 @@
                             }
                             <td>@(displayPart ?? partNum)</td>
                             <td>@(s.VinCode ?? "-")</td>
-                            <td>@(stdPnjg != "0" ? stdPnjg : (s.StandardLength ?? "-"))</td>
+                            <td>@rowCutting</td>
+                            <td>@rowShrink</td>
                             <td>@(s.ActualLength ?? "-")</td>
                             <td>@(s.QtyTarget > 0 ? s.QtyTarget.ToString() : "-")</td>
                             <td>@s.QtyOk</td>
@@ -528,7 +558,7 @@
                         </tr>
                     }
                     @for (int i = Model.Summaries.Count; i < 22; i++) {
-                        <tr style="height:18px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr style="height:18px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
                     }
                 } else {
                     // Fallback: show report header (legacy single-row)
@@ -536,10 +566,15 @@
                     totalOk = Model.QtyOk;
                     totalNgDim = Model.NgDimension;
                     totalNgVis = Model.NgVisual;
+
+                    string rowCutting = FormatCutting(defaultShrinkEntry, Model.StandardLength);
+                    string rowShrink = FormatShrink(defaultShrinkEntry, Model.StandardShrink);
+
                     <tr>
                         <td>@partNum</td>
                         <td>@(Model.VinCode ?? "-")</td>
-                        <td>@stdPnjg</td>
+                        <td>@rowCutting</td>
+                        <td>@rowShrink</td>
                         <td>@(Model.ActualLength ?? "-")</td>
                         <td>@(Model.QtyTarget > 0 ? Model.QtyTarget.ToString() : "-")</td>
                         <td>@Model.QtyOk.ToString("G29")</td>
@@ -548,12 +583,12 @@
                         <td style="text-align:left;vertical-align:top;font-size:8px;">@Model.Remark</td>
                     </tr>
                     @for (int i = 0; i < 21; i++) {
-                        <tr style="height:18px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr style="height:18px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
                     }
                 }
                 <!-- TOTAL ROW -->
                 <tr style="background: #f1f5f9; font-weight: bold;">
-                    <td colspan="4" style="text-align: right; padding-right: 10px;">TOTAL</td>
+                    <td colspan="5" style="text-align: right; padding-right: 10px;">TOTAL</td>
                     <td>@totalTarget</td>
                     <td>@totalOk</td>
                     <td>@totalNgDim</td>

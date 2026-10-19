@@ -1,0 +1,64 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram name="Relasi Antar Tabel - prd_extrude_hose" id="erd1">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="e_title" parent="1" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#0f172a;" value="RELASI ANTAR TABEL (ERD) — prd_extrude_hose &amp; ELWP_PRD" vertex="1">
+          <mxGeometry height="40" width="800" x="400" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="t_spsdoc" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;SpsNoDocs&lt;/b&gt;&lt;hr size=1 color=&quot;#0284c7&quot;&gt;🔑 DocumentNumber : nvarchar(450) [PK]&lt;br&gt;• RevisionNumber : nvarchar(MAX)&lt;br&gt;• IsActive : bit (default 1)&lt;br&gt;• Customer : nvarchar(MAX)&lt;br&gt;• HoseType : nvarchar(MAX)&lt;br&gt;• Dimensi : nvarchar(MAX)&lt;br&gt;• InnerTube : nvarchar(MAX)&lt;br&gt;• OuterCover : nvarchar(MAX)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="240" x="320" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="t_spsitem" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;SpsItemLists&lt;/b&gt;&lt;hr size=1 color=&quot;#0284c7&quot;&gt;🔑 Id : int [PK]&lt;br&gt;🔗 DocumentNumber : nvarchar(450) [FK]&lt;br&gt;• ItemList : nvarchar(MAX)&lt;br&gt;• LengthShrinkMin : real&lt;br&gt;• LengthShrinkStd : real&lt;br&gt;• LengthShrinkMax : real&lt;br&gt;• LengthCuttingMin : real&lt;br&gt;• LengthCuttingStd : real&lt;br&gt;• LengthCuttingMax : real&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="240" x="320" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="t_appreq" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;ApprovalRequests&lt;/b&gt;&lt;hr size=1 color=&quot;#d97706&quot;&gt;🔑 Id : int [PK]&lt;br&gt;• RequestCode : nvarchar(40) [UQ]&lt;br&gt;• ActionType : int&lt;br&gt;• TargetKey : nvarchar(256)&lt;br&gt;• RequesterUserName : nvarchar(150)&lt;br&gt;• Status : int&lt;br&gt;• CreatedAt : datetime2&lt;/font&gt;" vertex="1">
+          <mxGeometry height="165" width="240" x="40" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="t_applog" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;ApprovalRequestLogs&lt;/b&gt;&lt;hr size=1 color=&quot;#d97706&quot;&gt;🔑 Id : int [PK]&lt;br&gt;🔗 ApprovalRequestId : int [FK]&lt;br&gt;• ToStatus : int&lt;br&gt;• Comment : nvarchar(1024)&lt;br&gt;• ActorUserName : nvarchar(150)&lt;br&gt;• CreatedAt : datetime2&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="240" x="40" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="t_plan" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#f8fafc;strokeColor=#475569;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;PlanningMasters&lt;/b&gt;&lt;hr size=1 color=&quot;#475569&quot;&gt;🔑 Id : int [PK]&lt;br&gt;• TanggalPlanning : datetime2&lt;br&gt;• KodeMesin : nvarchar(MAX)&lt;br&gt;• KodeItem : nvarchar(MAX)&lt;br&gt;• PartName : nvarchar(MAX)&lt;br&gt;• TargetPcs : int&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="240" x="620" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="t_prodrep" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;ProductionReports&lt;/b&gt;&lt;hr size=1 color=&quot;#16a34a&quot;&gt;🔑 Id : int [PK]&lt;br&gt;• ProductionDate : datetime2&lt;br&gt;• DocumentNumber : nvarchar(MAX)&lt;br&gt;• MachineName : nvarchar(MAX)&lt;br&gt;• Shift : nvarchar(MAX)&lt;br&gt;• Status : nvarchar(MAX)&lt;br&gt;• InnerLotNumber : nvarchar(MAX)&lt;br&gt;• OuterLotNumber : nvarchar(MAX)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="240" x="620" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="t_prodread" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;ProductionReadings&lt;/b&gt;&lt;hr size=1 color=&quot;#16a34a&quot;&gt;🔑 Id : int [PK]&lt;br&gt;🔗 ProductionReportId : int [FK]&lt;br&gt;• ReadingTime : datetime2&lt;br&gt;• ScrewSpeedInner : decimal(18,4)&lt;br&gt;• HeadTempInner : decimal(18,4)&lt;br&gt;• PressureInner : decimal(18,4)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="240" x="620" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="t_dimrep" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fce7f3;strokeColor=#db2777;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;DimensionReports&lt;/b&gt;&lt;hr size=1 color=&quot;#db2777&quot;&gt;🔑 Id : int [PK]&lt;br&gt;🔗 ProductionReportId : int [FK]&lt;br&gt;• InspectorName : nvarchar(MAX)&lt;br&gt;• CheckDate : datetime2&lt;br&gt;• QtyOk : int&lt;br&gt;• QtyNg : int&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="240" x="920" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="t_dimmeas" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fce7f3;strokeColor=#db2777;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;DimensionMeasurements&lt;/b&gt;&lt;hr size=1 color=&quot;#db2777&quot;&gt;🔑 Id : int [PK]&lt;br&gt;🔗 DimensionReportId : int [FK]&lt;br&gt;• SampleNo : int&lt;br&gt;• ParameterName : nvarchar(MAX)&lt;br&gt;• Value : decimal(18,4)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="240" x="920" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="t_dimsum" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fce7f3;strokeColor=#db2777;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;DimensionSummaries&lt;/b&gt;&lt;hr size=1 color=&quot;#db2777&quot;&gt;🔑 Id : int [PK]&lt;br&gt;🔗 DimensionReportId : int [FK]&lt;br&gt;• QtyOk : int&lt;br&gt;• QtyNg : int&lt;br&gt;• AvgInnerDiameter : decimal(18,4)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="240" x="1220" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="rel1" edge="1" parent="1" source="t_spsdoc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#0f172a;strokeWidth=1.5;fontColor=#0f172a;" target="t_spsitem" value="1 : N">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel2" edge="1" parent="1" source="t_appreq" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#0f172a;strokeWidth=1.5;fontColor=#0f172a;" target="t_applog" value="1 : N">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel3" edge="1" parent="1" source="t_plan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#0f172a;strokeWidth=1.5;fontColor=#0f172a;" target="t_prodrep" value="1 : N">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel4" edge="1" parent="1" source="t_prodrep" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#0f172a;strokeWidth=1.5;fontColor=#0f172a;" target="t_prodread" value="1 : N">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel5" edge="1" parent="1" source="t_prodrep" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERzeroToOne;endFill=0;startArrow=ERone;startFill=0;strokeColor=#0f172a;strokeWidth=1.5;fontColor=#0f172a;" target="t_dimrep" value="1 : 0..1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel6" edge="1" parent="1" source="t_dimrep" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;strokeColor=#0f172a;strokeWidth=1.5;fontColor=#0f172a;" target="t_dimmeas" value="1 : N">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel7" edge="1" parent="1" source="t_dimrep" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=ERone;endFill=0;startArrow=ERone;startFill=0;strokeColor=#0f172a;strokeWidth=1.5;fontColor=#0f172a;" target="t_dimsum" value="1 : 1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

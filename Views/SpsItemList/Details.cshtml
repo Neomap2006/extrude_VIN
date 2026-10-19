@@ -20,11 +20,20 @@
                 <dt class="col-sm-4 mt-2">Length Shrink MIN (mm)</dt>
                 <dd class="col-sm-8 mt-2">@(Model.LengthShrinkMin.HasValue ? Model.LengthShrinkMin.Value.ToString("0.#") : "-")</dd>
                 
-                <dt class="col-sm-4">Length Shrink STN (mm)</dt>
+                <dt class="col-sm-4">Length Shrink STD (mm)</dt>
                 <dd class="col-sm-8"><strong>@(Model.LengthShrinkStd.HasValue ? Model.LengthShrinkStd.Value.ToString("0.#") : "-")</strong></dd>
                 
                 <dt class="col-sm-4">Length Shrink MAX (mm)</dt>
                 <dd class="col-sm-8">@(Model.LengthShrinkMax.HasValue ? Model.LengthShrinkMax.Value.ToString("0.#") : "-")</dd>
+
+                <dt class="col-sm-4 mt-2">Length Cutting MIN (mm)</dt>
+                <dd class="col-sm-8 mt-2">@(Model.LengthCuttingMin.HasValue ? Model.LengthCuttingMin.Value.ToString("0.#") : "-")</dd>
+                
+                <dt class="col-sm-4">Length Cutting STD (mm)</dt>
+                <dd class="col-sm-8"><strong>@(Model.LengthCuttingStd.HasValue ? Model.LengthCuttingStd.Value.ToString("0.#") : "-")</strong></dd>
+                
+                <dt class="col-sm-4">Length Cutting MAX (mm)</dt>
+                <dd class="col-sm-8">@(Model.LengthCuttingMax.HasValue ? Model.LengthCuttingMax.Value.ToString("0.#") : "-")</dd>
             </dl>
             
             <hr />

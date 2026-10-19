@@ -1056,9 +1056,15 @@
                     <span class="field-label">PART NUMBER</span>
                     <div class="field-input-wrap"><div class="f-input" id="disp-part-no">-</div></div>
                 </div>
-                <div class="field-box">
-                    <span class="field-label">STD PNJG</span>
-                    <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="-"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="field-box">
+                        <span class="field-label">STD PNJG</span>
+                        <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="-"></div>
+                    </div>
+                    <div class="field-box">
+                        <span class="field-label">STD SHRINK</span>
+                        <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-shrink" value="-"></div>
+                    </div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">QTY TARGET</span>
@@ -1288,6 +1294,43 @@
             const inp = document.getElementById('val-vin-kode');
             if (inp) inp.value = code;
             hideVinDropdown();
+
+            // Auto-update STD PNJG & STD SHRINK for selected VIN
+            if (window._currentSpsItemLists && window._currentSpsItemLists.length > 0) {
+                const san = (code || '').replace(/[- ]/g, '').toUpperCase();
+                const matched = window._currentSpsItemLists.find(x => x.itemList && x.itemList.replace(/[- ]/g, '').toUpperCase() === san)
+                             || window._currentSpsItemLists.find(x => x.itemList && x.itemList.replace(/[- ]/g, '').toUpperCase().includes(san));
+                if (matched) {
+                    const stdPnjgEl = document.getElementById('disp-std-pnjg');
+                    if (stdPnjgEl) {
+                        let txt = "-";
+                        if (matched.cuttingStd != null) {
+                            txt = matched.cuttingStd + " mm";
+                            if (matched.cuttingMin != null && matched.cuttingMax != null) {
+                                txt += ` (${matched.cuttingMin} - ${matched.cuttingMax})`;
+                            }
+                        }
+                        stdPnjgEl.value = txt;
+                    }
+                    const stdShrinkEl = document.getElementById('disp-std-shrink');
+                    if (stdShrinkEl) {
+                        let shrinkTxt = "-";
+                        if (matched.shrinkStd != null) {
+                            shrinkTxt = matched.shrinkStd + " mm";
+                            if (matched.shrinkMin != null && matched.shrinkMax != null) {
+                                shrinkTxt += ` (${matched.shrinkMin} - ${matched.shrinkMax})`;
+                            }
+                        } else if (matched.shrinkMin != null || matched.shrinkMax != null) {
+                            // STD is null but Min/Max exist — show range
+                            const parts = [];
+                            if (matched.shrinkMin != null) parts.push(matched.shrinkMin);
+                            if (matched.shrinkMax != null) parts.push(matched.shrinkMax);
+                            shrinkTxt = parts.join(' - ') + ' mm';
+                        }
+                        stdShrinkEl.value = shrinkTxt;
+                    }
+                }
+            }
         }
         // ──────────────────────────────────────────────────────────────────────
 
@@ -2192,6 +2235,10 @@
             if (stdPnjgInput && (stdPnjgInput.value === '-' || stdPnjgInput.value === '')) {
                 stdPnjgInput.value = `@Html.Raw(Model?.StandardLength ?? "-")`;
             }
+            const stdShrinkInput = document.getElementById('disp-std-shrink');
+            if (stdShrinkInput && (stdShrinkInput.value === '-' || stdShrinkInput.value === '')) {
+                stdShrinkInput.value = `@Html.Raw(Model?.StandardShrink ?? "-")`;
+            }
             const targetInput = document.getElementById('disp-qty-target');
             if (targetInput && (targetInput.value === '0' || targetInput.value === '')) {
                 targetInput.value = '@(Model?.QtyTarget)' || '0';
@@ -2210,6 +2257,8 @@
         function addProductionRecord() {
             const vin = document.getElementById('val-vin-kode').value.trim();
             const act = document.getElementById('val-act-pnjg').value.trim();
+            const stdPnjg = document.getElementById('disp-std-pnjg')?.value.trim() || "";
+            const stdShrink = document.getElementById('disp-std-shrink')?.value.trim() || "";
             const ok = document.getElementById('val-qty-ok').value.trim() || "0";
             const ngD = document.getElementById('val-ng-dimensi').value.trim() || "0";
             const ngV = document.getElementById('val-ng-visual').value.trim() || "0";
@@ -2219,7 +2268,7 @@
                 return;
             }
 
-            const record = { vin, act, ok, ngD, ngV };
+            const record = { vin, act, stdPnjg, stdShrink, ok, ngD, ngV };
             
             if (!measurements[currentIndex].data.summaries) measurements[currentIndex].data.summaries = [];
             measurements[currentIndex].data.summaries.push(record);
@@ -2443,19 +2492,38 @@
                     }
 
                     // Populate Data Summary
+                    window._currentSpsItemLists = m.itemLists || [];
                     const partEl = document.getElementById('disp-part-no');
                     if(partEl) partEl.innerText = window._dimSelectedItemCode || m.itemList || m.hoseType || "---";
                     
                     const stdPnjgEl = document.getElementById('disp-std-pnjg');
                     if(stdPnjgEl) {
-                        let shrinkText = "0";
+                        let cuttingText = "-";
+                        if (m.cuttingStd != null) {
+                            cuttingText = m.cuttingStd + " mm";
+                            if (m.cuttingMin != null && m.cuttingMax != null) {
+                                cuttingText += ` (${m.cuttingMin} - ${m.cuttingMax})`;
+                            }
+                        }
+                        stdPnjgEl.value = cuttingText; 
+                    }
+
+                    const stdShrinkEl = document.getElementById('disp-std-shrink');
+                    if(stdShrinkEl) {
+                        let shrinkText = "-";
                         if (m.shrinkStd != null) {
                             shrinkText = m.shrinkStd + " mm";
                             if (m.shrinkMin != null && m.shrinkMax != null) {
                                 shrinkText += ` (${m.shrinkMin} - ${m.shrinkMax})`;
                             }
+                        } else if (m.shrinkMin != null || m.shrinkMax != null) {
+                            // STD is null but Min/Max exist — show range
+                            const parts = [];
+                            if (m.shrinkMin != null) parts.push(m.shrinkMin);
+                            if (m.shrinkMax != null) parts.push(m.shrinkMax);
+                            shrinkText = parts.join(' - ') + ' mm';
                         }
-                        stdPnjgEl.value = shrinkText; 
+                        stdShrinkEl.value = shrinkText;
                     }
                     
                     const qtyTargetInput = document.getElementById('disp-qty-target');
@@ -2892,7 +2960,8 @@
                             allSummaries.push({
                                 PartNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
                                 VinCode: s.vin,
-                                StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                StandardLength: s.stdPnjg || document.getElementById('disp-std-pnjg')?.value || '',
+                                StandardShrink: s.stdShrink || document.getElementById('disp-std-shrink')?.value || '',
                                 ActualLength: s.act,
                                 QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
                                 QtyOk: parseInt(s.ok) || 0,
@@ -2907,6 +2976,7 @@
                                 PartNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
                                 VinCode: _looseVinBeforeSave || '-',
                                 StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                StandardShrink: document.getElementById('disp-std-shrink')?.value || '',
                                 ActualLength: _looseActBeforeSave,
                                 QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
                                 QtyOk: _looseOkBeforeSave,
@@ -2927,6 +2997,7 @@
                                 PartNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
                                 VinCode: looseVin || '-',
                                 StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                StandardShrink: document.getElementById('disp-std-shrink')?.value || '',
                                 ActualLength: looseAct,
                                 QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
                                 QtyOk: looseOk,
@@ -2947,6 +3018,7 @@
                     DimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',
                     VinCode: lastVin,
                     StandardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                    StandardShrink: document.getElementById('disp-std-shrink')?.value || '',
                     ActualLength: lastActPnjg,
                     QtyTarget: parseInt(document.getElementById('disp-qty-target')?.value || '0'),
                     QtyOk: totalQtyOk,
@@ -3047,9 +3119,12 @@
             });
 
             // 4. Clear Static Labels
-            ['disp-part-no', 'disp-std-pnjg'].forEach(id => {
+            ['disp-part-no', 'disp-std-pnjg', 'disp-std-shrink'].forEach(id => {
                 const el = document.getElementById(id);
-                if(el) el.innerText = "-";
+                if(el) {
+                    if (el.tagName === 'INPUT') el.value = "-";
+                    else el.innerText = "-";
+                }
             });
             const qtyTargetEl = document.getElementById('disp-qty-target');
             if(qtyTargetEl) qtyTargetEl.value = "0";

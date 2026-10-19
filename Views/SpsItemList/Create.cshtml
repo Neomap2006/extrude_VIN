@@ -50,12 +50,28 @@
                         <input asp-for="LengthShrinkMin" type="number" step="0.1" class="form-control" placeholder="Contoh: 272" />
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">STN (mm)</label>
+                        <label class="form-label fw-bold">STD (mm)</label>
                         <input asp-for="LengthShrinkStd" type="number" step="0.1" class="form-control" placeholder="Contoh: 274" />
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">MAX (mm)</label>
                         <input asp-for="LengthShrinkMax" type="number" step="0.1" class="form-control" placeholder="Contoh: 276" />
+                    </div>
+                </div>
+
+                <h6 class="text-muted mb-3"><i class="bi bi-scissors me-1"></i> Length Cutting (mm)</h6>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">MIN (mm)</label>
+                        <input asp-for="LengthCuttingMin" type="number" step="0.1" class="form-control" placeholder="Contoh: 500" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">STD (mm)</label>
+                        <input asp-for="LengthCuttingStd" type="number" step="0.1" class="form-control" placeholder="Contoh: 505" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">MAX (mm)</label>
+                        <input asp-for="LengthCuttingMax" type="number" step="0.1" class="form-control" placeholder="Contoh: 510" />
                     </div>
                 </div>
 

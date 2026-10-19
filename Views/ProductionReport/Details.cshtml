@@ -44,18 +44,36 @@
 
     string StandardSpecMax(decimal? asli, decimal? min, decimal? max, string? text)
     {
+        if (asli.HasValue && asli.Value > 0)
+        {
+            if (min.HasValue && max.HasValue)
+            {
+                return $"{min.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} | {asli.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} | {max.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
+            }
+            return "MAX " + asli.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        if (max.HasValue && max.Value > 0)
+        {
+            if (min.HasValue && min.Value > 0)
+            {
+                return $"{min.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} ~ {max.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
+            }
+            return "MAX " + max.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         var baseVal = StandardSpec(asli, min, max, text, "");
         if (baseVal == "-") return "-";
-        if (baseVal.Contains("MAX", StringComparison.OrdinalIgnoreCase)) return baseVal;
+        if (baseVal.Contains("MAX", StringComparison.OrdinalIgnoreCase) || baseVal.Contains("|") || baseVal.Contains("±") || baseVal.Contains("~")) return baseVal;
         return "MAX " + baseVal;
     }
 }
 
 <div class="production-dashboard-sapphire fade-in">
-    <!-- PREMUIM ACTION TOOLBAR (No Print) -->
-    <div class="no-print sticky-top mb-4 p-2 p-md-3 bg-hud-navy-dark border-bottom border-primary border-opacity-25 shadow-lg fade-in" style="z-index: 1000; backdrop-filter: blur(15px); margin-top: 70px; border-radius: 0 0 20px 20px;">
-        <div class="container-fluid d-flex flex-column flex-xl-row align-items-center justify-content-between gap-3">
-            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 gap-md-3">
+    <!-- PREMIUM ACTION TOOLBAR (No Print) -->
+    <div class="no-print mb-4 p-2 p-md-3 bg-hud-navy-dark shadow-lg fade-in" style="position: sticky; top: calc(var(--navbar-height, 55px) + 8px); z-index: 100; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
                 @{
                     var backUrl = "/ProductionReport/Index";
                     var backLabel = "MONITOR";
@@ -81,11 +99,10 @@
                         backLabel = "HISTORY";
                     }
                 }
-                <a href="@backUrl" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25">
-                    <i class="bi bi-arrow-left me-1 me-md-2"></i> <span class="d-none d-sm-inline">KEMBALI KE @backLabel</span><span class="d-inline d-sm-none">KEMBALI</span>
+                <a href="@backUrl" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25 d-inline-flex align-items-center" style="background: rgba(255, 255, 255, 0.05);">
+                    <i class="bi bi-arrow-left me-1 me-md-2"></i> <span class="d-none d-sm-inline fw-semibold">KEMBALI KE @backLabel</span><span class="d-inline d-sm-none fw-semibold">KEMBALI</span>
                 </a>
-                <div class="vr bg-white opacity-25 d-none d-md-block" style="height: 24px;"></div>
-                <div class="btn-group btn-group-sm rounded-pill p-1 bg-black bg-opacity-25 border border-white border-opacity-10">
+                <div class="btn-group btn-group-sm rounded-pill p-1 bg-black bg-opacity-40 border border-white border-opacity-15 shadow-sm">
                     <a href="?id=@Model.Id&portal=dashboard" class="btn rounded-pill px-3 px-md-4 @(currentPortal != "identity" ? "btn-primary shadow-glow" : "btn-link text-white text-decoration-none opacity-50")">
                         <i class="bi bi-speedometer2 me-1"></i><span class="d-none d-sm-inline">DASHBOARD</span><span class="d-inline d-sm-none">DASH</span>
                     </a>
@@ -95,11 +112,14 @@
                 </div>
             </div>
 
-            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
-                <button onclick="downloadPDF()" class="btn btn-outline-info btn-sm px-3 px-md-4 rounded-pill fw-bold neon-glow-info">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm px-3 px-md-4 rounded-pill fw-bold text-dark shadow-sm d-inline-flex align-items-center" style="box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);">
+                    <i class="bi bi-pencil-square me-1"></i> <span class="d-none d-sm-inline">REVISI / EDIT DATA</span><span class="d-inline d-sm-none">EDIT</span>
+                </a>
+                <button onclick="downloadPDF()" class="btn btn-outline-info btn-sm px-3 px-md-4 rounded-pill fw-bold neon-glow-info d-inline-flex align-items-center">
                     <i class="bi bi-file-earmark-pdf me-1"></i> <span class="d-none d-sm-inline">DOWNLOAD PDF</span><span class="d-inline d-sm-none">PDF</span>
                 </button>
-                <button onclick="window.print()" class="btn btn-outline-primary btn-sm px-3 px-md-4 rounded-pill fw-bold">
+                <button onclick="window.print()" class="btn btn-outline-primary btn-sm px-3 px-md-4 rounded-pill fw-bold d-inline-flex align-items-center">
                     <i class="bi bi-printer me-1"></i> <span class="d-none d-sm-inline">PRINT REPORT</span><span class="d-inline d-sm-none">PRINT</span>
                 </button>
             </div>
@@ -643,10 +663,18 @@
                 <div class="row g-0 border-form mb-0">
                     <!-- MATERIAL & DIES -->
                     <div class="col-6 border-end-form">
-                         <table class="w-100 grid-form border-0">
+                        <table class="w-100 grid-form border-0">
                             <!-- MATERIAL SECTION -->
+                            @{
+                                var spsStdMat = ViewBag.Sps as VelastoProductionSystem.Models.SpsNoDoc ?? std;
+                                bool hasMiddleMaterial = (spsStdMat != null && (!string.IsNullOrEmpty(spsStdMat.MiddleTube) || (spsStdMat.Machine ?? "").Contains("3L", StringComparison.OrdinalIgnoreCase))) 
+                                                         || !string.IsNullOrWhiteSpace(Model.MiddleMaterial) 
+                                                         || !string.IsNullOrWhiteSpace(Model.MiddleMaterialActual)
+                                                         || Model.InitHeadTempMiddle.HasValue;
+                                int matRowspan = 1 + 2 + (hasMiddleMaterial ? 1 : 0) + 1; // Header + Inner + (Middle) + Outer + Yarn
+                            }
                             <tr>
-                                <th rowspan="4" class="align-middle text-center p-0" style="background:#f0f0f0; width: 30px;">
+                                <th rowspan="@matRowspan" class="align-middle text-center p-0" style="background:#f0f0f0; width: 30px;">
                                     <div style="font-size: 9px; line-height: 1.1; font-weight: 800; letter-spacing: 1px;">M<br/>A<br/>T<br/>E<br/>R<br/>I<br/>A<br/>L</div>
                                 </th>
                                 <th colspan="2" style="background:#f0f0f0; border-bottom: 0; width: 120px;"></th>
@@ -655,41 +683,58 @@
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">INNER(MATERIAL)</td>
-                                <td class="text-center">@(Model.InnerMaterial ?? "-")</td>
-                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? "")" /></td>
+                                <td class="text-center">@(Model.InnerMaterial ?? spsStdMat?.InnerTube ?? "-")</td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.InnerMaterialActual ?? Model.InnerMaterial ?? spsStdMat?.InnerTube ?? "")" /></td>
                             </tr>
+                            @if (hasMiddleMaterial) {
+                            <tr>
+                                <td colspan="2" class="text-start ps-2">MIDDLE(MATERIAL)</td>
+                                <td class="text-center">@(Model.MiddleMaterial ?? spsStdMat?.MiddleTube ?? "-")</td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.MiddleMaterialActual ?? Model.MiddleMaterial ?? spsStdMat?.MiddleTube ?? "")" /></td>
+                            </tr>
+                            }
                             <tr>
                                 <td colspan="2" class="text-start ps-2">OUTER(MATERIAL)</td>
-                                <td class="text-center">@(Model.OuterMaterial ?? "-")</td>
-                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? "")" /></td>
+                                <td class="text-center">@(Model.OuterMaterial ?? spsStdMat?.OuterCover ?? "-")</td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.OuterMaterialActual ?? Model.OuterMaterial ?? spsStdMat?.OuterCover ?? "")" /></td>
                             </tr>
                             <tr>
                                 <td colspan="2" class="text-start ps-2">YARN</td>
-                                <td class="text-center">ARAMID</td>
-                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.YarnActual ?? Model.Yarn ?? "ARAMID")" /></td>
+                                <td class="text-center">@(Model.Yarn ?? spsStdMat?.Yarn ?? "ARAMID")</td>
+                                <td colspan="3" class="p-0 border-end-0"><input type="text" class="input-transparent w-100 h-100 text-center fw-bold text-dark" value="@(Model.YarnActual ?? Model.Yarn ?? spsStdMat?.Yarn ?? "ARAMID")" /></td>
                             </tr>
                             
                             @{
                                 var mSps = ViewBag.Masterlist as VelastoProductionSystem.Models.SpsNoDoc;
-                                string FDie(string? fromSps, decimal stdVal, string hardcode) {
-                                    if (!string.IsNullOrEmpty(fromSps) && fromSps != "-" && fromSps != "0") return fromSps;
-                                    if (stdVal != 0) return stdVal.ToString();
+                                string FDie(string? fromSps, decimal stdVal, string hardcode, decimal? min = null, decimal? max = null, decimal? asli = null) {
+                                    string s = fromSps?.Trim() ?? "";
+                                    if (!string.IsNullOrEmpty(s) && s != "-" && s != "0" && s.ToLower() != "kosong") return s;
+                                    if (min.HasValue && max.HasValue) return $"{min.Value:0.#} ~ {max.Value:0.#}";
+                                    if (min.HasValue) return $">= {min.Value:0.#}";
+                                    if (max.HasValue) return $"<= {max.Value:0.#}";
+                                    if (asli.HasValue && asli.Value > 0) return $"{asli.Value:0.#}";
+                                    if (stdVal != 0) return stdVal.ToString("0.#");
                                     return hardcode;
                                 }
                             }
                             <!-- DIES DIMENSION SECTION -->
                             @{
-                                bool HasStd(string? spsStr, decimal stdDec) {
-                                    if (!string.IsNullOrWhiteSpace(spsStr) && spsStr != "-" && spsStr != "--" && spsStr != "0" && spsStr != "0.0") return true;
+                                bool isDL = (Model.MachineName ?? "").ToUpper().Contains("DL");
+                                bool HasStd(string? spsStr, decimal? asli, decimal? min, decimal? max, decimal stdDec, string? initVal, string? finalVal) {
+                                    if (!string.IsNullOrWhiteSpace(spsStr) && spsStr != "-" && spsStr != "--" && spsStr != "0" && spsStr != "0.0" && spsStr.ToLower() != "kosong") return true;
+                                    if (asli.HasValue && asli.Value > 0) return true;
+                                    if (min.HasValue || max.HasValue) return true;
                                     if (stdDec > 0) return true;
+                                    if (!string.IsNullOrWhiteSpace(initVal) && initVal != "0" && initVal != "-") return true;
+                                    if (!string.IsNullOrWhiteSpace(finalVal) && finalVal != "0" && finalVal != "-") return true;
                                     return false;
                                 }
-                                bool hNipple = HasStd(mSps?.Nipple, D(std?.InnerTarget, 0));
-                                bool hTube   = HasStd(mSps?.TubeDie, D(std?.ThickTarget, 0));
-                                bool hMiddle = HasStd(mSps?.MiddleDie, D(std?.InnerMidTarget, 0));
-                                bool hCover  = HasStd(mSps?.CoverDie, D(std?.TotalTarget, 0));
-                                bool hSpacer = HasStd(mSps?.SpacerDie, D(std?.SpacerDie, 0));
-                                bool hADist  = HasStd(mSps?.ADistance, D(std?.InnerTol, 0));
+                                bool hNipple = isDL || HasStd(mSps?.Nipple, mSps?.Nipple_Asli, mSps?.Nipple_Min, mSps?.Nipple_Max, D(std?.InnerTarget, 0), Model.NippleDieInitial, Model.NippleDieFinal);
+                                bool hTube   = isDL || HasStd(mSps?.TubeDie, mSps?.TubeDie_Asli, mSps?.TubeDie_Min, mSps?.TubeDie_Max, D(std?.ThickTarget, 0), Model.TubeDieInitial, Model.TubeDieFinal);
+                                bool hMiddle = !isDL && HasStd(mSps?.MiddleDie, mSps?.MiddleDie_Asli, mSps?.MiddleDie_Min, mSps?.MiddleDie_Max, D(std?.InnerMidTarget, 0), Model.MiddleDieInitial, Model.MiddleDieFinal);
+                                bool hCover  = isDL || HasStd(mSps?.CoverDie, mSps?.CoverDie_Asli, mSps?.CoverDie_Min, mSps?.CoverDie_Max, D(std?.TotalTarget, 0), Model.CoverDieInitial, Model.CoverDieFinal);
+                                bool hSpacer = !isDL && HasStd(mSps?.SpacerDie, mSps?.SpacerDie_Asli, mSps?.SpacerDie_Min, mSps?.SpacerDie_Max, D(std?.SpacerDie, 0), Model.SpacerDieInitial, Model.SpacerDieFinal);
+                                bool hADist  = !isDL && HasStd(mSps?.ADistance, mSps?.ADistance_Asli, mSps?.ADistance_Min, mSps?.ADistance_Max, D(std?.InnerTol, 0), Model.ToleranceInitial, Model.ToleranceFinal);
                                 int diesRowspan = 1 + (hNipple?1:0) + (hTube?1:0) + (hMiddle?1:0) + (hCover?1:0) + (hSpacer?1:0) + (hADist?1:0);
                             }
                             <tr class="border-top-form">
@@ -711,7 +756,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.NippleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(mSps?.Nipple, D(std?.InnerTarget, 0), "8.8±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.Nipple, D(std?.InnerTarget, 0), "8.8±0.1", mSps?.Nipple_Min, mSps?.Nipple_Max, mSps?.Nipple_Asli)</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.NippleDieInitial == "0" ? "" : Model.NippleDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.NippleDieFinal" placeholder="" /></td>
                             </tr>
@@ -725,7 +770,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.TubeDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(mSps?.TubeDie, D(std?.ThickTarget, 0), "11.1±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.TubeDie, D(std?.ThickTarget, 0), "11.1±0.1", mSps?.TubeDie_Min, mSps?.TubeDie_Max, mSps?.TubeDie_Asli)</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.TubeDieInitial == "0" ? "" : Model.TubeDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.TubeDieFinal" placeholder="" /></td>
                             </tr>
@@ -739,7 +784,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.MiddleDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(mSps?.MiddleDie, D(std?.InnerMidTarget, 0), "14.2±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.MiddleDie, D(std?.InnerMidTarget, 0), "14.2±0.1", mSps?.MiddleDie_Min, mSps?.MiddleDie_Max, mSps?.MiddleDie_Asli)</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.MiddleDieInitial == "0" ? "" : Model.MiddleDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.MiddleDieFinal" placeholder="" /></td>
                             </tr>
@@ -753,7 +798,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.CoverDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(mSps?.CoverDie, D(std?.TotalTarget, 0), "15.1±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.CoverDie, D(std?.TotalTarget, 0), "15.1±0.1", mSps?.CoverDie_Min, mSps?.CoverDie_Max, mSps?.CoverDie_Asli)</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.CoverDieInitial == "0" ? "" : Model.CoverDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.CoverDieFinal" placeholder="" /></td>
                             </tr>
@@ -767,7 +812,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.SpacerDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(mSps?.SpacerDie, D(std?.SpacerDie, 0), "7.3±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.SpacerDie, D(std?.SpacerDie, 0), "7.3±0.1", mSps?.SpacerDie_Min, mSps?.SpacerDie_Max, mSps?.SpacerDie_Asli)</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.SpacerDieInitial == "0" ? "" : Model.SpacerDieInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.SpacerDieFinal" placeholder="" /></td>
                             </tr>
@@ -781,7 +826,7 @@
                                         <label class="mb-0 d-flex align-items-center gap-1">NG <input type="checkbox" class="form-check-input m-0 rounded-0 border-dark" @(!Model.ToleranceDieOK ? "checked" : "") style="width:14px; height:14px; margin-top:-1px!important;"></label>
                                     </div>
                                 </td>
-                                <td class="text-center">@FDie(mSps?.ADistance, D(std?.InnerTol, 0), "0.4±0.1")</td>
+                                <td class="text-center">@FDie(mSps?.ADistance, D(std?.InnerTol, 0), "0.4±0.1", mSps?.ADistance_Min, mSps?.ADistance_Max, mSps?.ADistance_Asli)</td>
                                 <td colspan="2" class="p-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@(Model.ToleranceInitial == "0" ? "" : Model.ToleranceInitial)" placeholder="" /></td>
                                 <td class="p-0 border-end-0"><input type="text" class="input-transparent w-100 text-center text-dark" value="@Model.ToleranceFinal" placeholder="" /></td>
                             </tr>
@@ -908,6 +953,7 @@
                             <!-- INNER SECTION -->
                             @{
                                 var spsStd = ViewBag.Sps as VelastoProductionSystem.Models.SpsNoDoc ?? std;
+                                bool hasMiddle = (spsStd != null && (!string.IsNullOrEmpty(spsStd.MiddleTube) || !string.IsNullOrEmpty(spsStd.HeadTemp3) || spsStd.HeadTemp3_Asli.HasValue || (spsStd.Machine ?? "").Contains("3L", StringComparison.OrdinalIgnoreCase))) || Model.InitHeadTempMiddle.HasValue || readings.Any(r => r.HeadTempMiddle.HasValue);
 
                                 string FormatVal(object? val, string unit) {
                                     if (val == null) return "";
@@ -948,7 +994,8 @@
                                     new { L = "SCREW TEMP.", K = "ScrewTempInner", S = StandardSpec(spsStd?.ScrewTemp1_Asli, spsStd?.ScrewTemp1_Min, spsStd?.ScrewTemp1_Max, spsStd?.ScrewTemp1, "±5"), U = "°C" },
                                     new { L = "SCREW SPEED", K = "ScrewSpeedInner", S = StandardSpec(spsStd?.ScrewSpeed1_Asli, spsStd?.ScrewSpeed1_Min, spsStd?.ScrewSpeed1_Max, spsStd?.ScrewSpeed1, "±2.5"), U = "rpm" },
                                     new { L = "FEED ROLL", K = "FeedRollRatioInner", S = StandardSpecMax(spsStd?.FeedRollRatio1_Asli, spsStd?.FeedRollRatio1_Min, spsStd?.FeedRollRatio1_Max, !string.IsNullOrEmpty(spsStd?.FeedRollRatio1) ? spsStd!.FeedRollRatio1 : spsStd?.Feed1), U = "%" },
-                                    new { L = "PRESSURE", K = "PressureInner", S = StandardSpecMax(spsStd?.Pressure1_Asli, spsStd?.Pressure1_Min, spsStd?.Pressure1_Max, spsStd?.Pressure1), U = "MPa" }
+                                    new { L = "PRESSURE", K = "PressureInner", S = StandardSpecMax(spsStd?.Pressure1_Asli, spsStd?.Pressure1_Min, spsStd?.Pressure1_Max, spsStd?.Pressure1), U = "MPa" },
+                                    new { L = "AM METER", K = "AmMeterInner", S = StandardSpec(spsStd?.AmMeter_Asli, spsStd?.AmMeter_Min, spsStd?.AmMeter_Max, spsStd?.AmMeter), U = "A" }
                                 };
                             }
                             @for(int r = 0; r < innerRows.Length; r++) {
@@ -965,6 +1012,35 @@
                                 </tr>
                             }
 
+                            @if (hasMiddle) {
+                                <!-- MIDDLE SECTION -->
+                                <tr class="bg-secondary text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
+                                var middleRows = new[] {
+                                    new { L = "HEAD TEMP.", K = "HeadTempMiddle", S = StandardSpec(spsStd?.HeadTemp3_Asli, spsStd?.HeadTemp3_Min, spsStd?.HeadTemp3_Max, spsStd?.HeadTemp3, "±5"), U = "°C" },
+                                    new { L = "CYLINDER 1", K = "Cylinder1TempMiddle", S = StandardSpec(spsStd?.Cylinder1_3_Asli, spsStd?.Cylinder1_3_Min, spsStd?.Cylinder1_3_Max, spsStd?.Cylinder1_3, "±5"), U = "°C" },
+                                    new { L = "CYLINDER 2", K = "Cylinder2TempMiddle", S = StandardSpec(spsStd?.Cylinder2_3_Asli, spsStd?.Cylinder2_3_Min, spsStd?.Cylinder2_3_Max, spsStd?.Cylinder2_3, "±5"), U = "°C" },
+                                    new { L = "CYLINDER 3", K = "Cylinder3TempMiddle", S = StandardSpec(spsStd?.Cylinder3_3_Asli, spsStd?.Cylinder3_3_Min, spsStd?.Cylinder3_3_Max, spsStd?.Cylinder3_3, "±5"), U = "°C" },
+                                    new { L = "SCREW TEMP.", K = "ScrewTempMiddle", S = StandardSpec(spsStd?.ScrewTemp3_Asli, spsStd?.ScrewTemp3_Min, spsStd?.ScrewTemp3_Max, spsStd?.ScrewTemp3, "±5"), U = "°C" },
+                                    new { L = "SCREW SPEED", K = "ScrewSpeedMiddle", S = StandardSpec(spsStd?.ScrewSpeed3_Asli, spsStd?.ScrewSpeed3_Min, spsStd?.ScrewSpeed3_Max, spsStd?.ScrewSpeed3, "±2.5"), U = "rpm" },
+                                    new { L = "FEED ROLL", K = "FeedRollRatioMiddle", S = StandardSpecMax(spsStd?.FeedRollRatio3_Asli, spsStd?.FeedRollRatio3_Min, spsStd?.FeedRollRatio3_Max, !string.IsNullOrEmpty(spsStd?.FeedRollRatio3) ? spsStd!.FeedRollRatio3 : spsStd?.Feed3), U = "%" },
+                                    new { L = "PRESSURE", K = "PressureMiddle", S = StandardSpecMax(spsStd?.Pressure3_Asli, spsStd?.Pressure3_Min, spsStd?.Pressure3_Max, spsStd?.Pressure3), U = "MPa" },
+                                    new { L = "AM METER", K = "AmMeterMiddle", S = StandardSpec(spsStd?.AmMeter3_Asli, spsStd?.AmMeter3_Min, spsStd?.AmMeter3_Max, spsStd?.AmMeter3), U = "A" }
+                                };
+                                @for(int r = 0; r < middleRows.Length; r++) {
+                                    <tr>
+                                        @if(r == 0) { <td rowspan="@middleRows.Length" class="hud-vertical-label">MIDDLE TUBE</td> }
+                                        <td class="text-start ps-2 pe-1 py-1 fw-bold">@middleRows[r].L @(string.IsNullOrEmpty(middleRows[r].U) ? "" : $"({middleRows[r].U})")</td>
+                                        <td class="small opacity-50 fw-bold">@middleRows[r].S</td>
+                                        <td class="p-0 bg-light"><input type="text" class="input-transparent text-dark fw-bold" value="@FormatVal(Model.GetType().GetProperty("Init" + middleRows[r].K)?.GetValue(Model) ?? readings.FirstOrDefault()?.GetType().GetProperty(middleRows[r].K)?.GetValue(readings.FirstOrDefault()), middleRows[r].U)" /></td>
+                                        @for(int i=1; i<=7; i++) {
+                                            <td class="p-0">
+                                                <input type="text" class="input-transparent" value="@FormatVal(GetLastKnownValue(readings, i, middleRows[r].K), middleRows[r].U)" />
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            }
+
                             <!-- OUTER SECTION -->
                             <tr class="bg-dark text-white"><td colspan="11" style="height: 4px; padding: 0;"></td></tr>
                             @{
@@ -976,7 +1052,8 @@
                                     new { L = "SCREW TEMP.", K = "ScrewTempOuter", S = StandardSpec(spsStd?.ScrewTemp2_Asli, spsStd?.ScrewTemp2_Min, spsStd?.ScrewTemp2_Max, spsStd?.ScrewTemp2, "±5"), U = "°C" },
                                     new { L = "SCREW SPEED", K = "ScrewSpeedOuter", S = StandardSpec(spsStd?.ScrewSpeed2_Asli, spsStd?.ScrewSpeed2_Min, spsStd?.ScrewSpeed2_Max, spsStd?.ScrewSpeed2, "±2.5"), U = "rpm" },
                                     new { L = "FEED ROLL", K = "FeedRollRatioOuter", S = StandardSpecMax(spsStd?.FeedRollRatio2_Asli, spsStd?.FeedRollRatio2_Min, spsStd?.FeedRollRatio2_Max, !string.IsNullOrEmpty(spsStd?.FeedRollRatio2) ? spsStd!.FeedRollRatio2 : spsStd?.Feed2), U = "%" },
-                                    new { L = "PRESSURE", K = "PressureOuter", S = StandardSpecMax(spsStd?.Pressure2_Asli, spsStd?.Pressure2_Min, spsStd?.Pressure2_Max, spsStd?.Pressure2), U = "MPa" }
+                                    new { L = "PRESSURE", K = "PressureOuter", S = StandardSpecMax(spsStd?.Pressure2_Asli, spsStd?.Pressure2_Min, spsStd?.Pressure2_Max, spsStd?.Pressure2), U = "MPa" },
+                                    new { L = "AM METER", K = "AmMeterOuter", S = StandardSpec(spsStd?.AmMeter2_Asli, spsStd?.AmMeter2_Min, spsStd?.AmMeter2_Max, spsStd?.AmMeter2), U = "A" }
                                 };
                             }
                             @for(int r = 0; r < outerRows.Length; r++) {
@@ -999,14 +1076,17 @@
                                 var otherRows = new[] {
                                     new { L = "SPIRAL SPEED", K = "SpiralSpeed", S = StandardSpec(spsStd?.SpiralSpeed_Asli, spsStd?.SpiralSpeed_Min, spsStd?.SpiralSpeed_Max, spsStd?.SpiralSpeed, "±20"), U = "rpm" },
                                     new { L = "SPIRAL PITCH", K = "SpiralPitchSetting", S = StandardSpec(spsStd?.SpiralPitchSetting_Asli, spsStd?.SpiralPitchSetting_Min, spsStd?.SpiralPitchSetting_Max, !string.IsNullOrEmpty(spsStd?.SpiralPitchSetting) ? spsStd!.SpiralPitchSetting : spsStd?.ToleranceSpiralPitch, "±5"), U = "mm" },
-                                    new { L = "PRESET VALVE", K = "PresetValue", S = StandardSpec(spsStd?.PresetValue_Asli, spsStd?.PresetValue_Min, spsStd?.PresetValue_Max, spsStd?.PresetValue), U = "mm" },
+                                    new { L = "OD SENSOR", K = "OdSensor", S = StandardSpec(spsStd?.OdSensor_Asli, spsStd?.OdSensor_Min, spsStd?.OdSensor_Max, spsStd?.OdSensor), U = "Ø mm" },
+                                    new { L = "PRESET VALUE", K = "PresetValue", S = StandardSpec(spsStd?.PresetValue_Asli, spsStd?.PresetValue_Min, spsStd?.PresetValue_Max, spsStd?.PresetValue), U = "mm" },
                                     new { L = "CONTROL VAL.", K = "ControlValue", S = StandardSpec(spsStd?.ControlValue_Asli, spsStd?.ControlValue_Min, spsStd?.ControlValue_Max, spsStd?.ControlValue), U = "mm" },
                                     new { L = "HOSE SPEED", K = "HoseSpeed", S = StandardSpec(spsStd?.HoseSpeed_Asli, spsStd?.HoseSpeed_Min, spsStd?.HoseSpeed_Max, spsStd?.HoseSpeed), U = "m/min" },
                                     new { L = "TAKEUP SPEED", K = "TakeupConveyorSpeed", S = StandardSpec(spsStd?.TakeUpConveyorSpeed_Asli, spsStd?.TakeUpConveyorSpeed_Min, spsStd?.TakeUpConveyorSpeed_Max, spsStd?.TakeUpConveyorSpeed), U = "m/min" },
-                                    new { L = "COOL SPEED", K = "CoolConveyorSpeed", S = StandardSpec(spsStd?.CoolConveyorSpeed_Asli, spsStd?.CoolConveyorSpeed_Min, spsStd?.CoolConveyorSpeed_Max, spsStd?.CoolConveyorSpeed), U = "m/min" },
+                                    new { L = "COOL SPEED 1", K = "CoolConveyorSpeed", S = StandardSpec(spsStd?.CoolConveyorSpeed_Asli, spsStd?.CoolConveyorSpeed_Min, spsStd?.CoolConveyorSpeed_Max, spsStd?.CoolConveyorSpeed), U = "m/min" },
+                                    new { L = "COOL SPEED 2", K = "CoolConveyorSpeed2", S = StandardSpec(spsStd?.CoolConveyorSpeed2_Asli, spsStd?.CoolConveyorSpeed2_Min, spsStd?.CoolConveyorSpeed2_Max, spsStd?.CoolConveyorSpeed2), U = "m/min" },
                                     new { L = "CONV. RATIO", K = "ConveyorRatio", S = StandardSpec(spsStd?.ConveyorRatio_Asli, spsStd?.ConveyorRatio_Min, spsStd?.ConveyorRatio_Max, spsStd?.ConveyorRatio, "%"), U = "%" },
                                     new { L = "CHILLER TEMP", K = "ChillerWaterTemp", S = StandardSpecMax(spsStd?.ChillerWaterTemp_Asli, spsStd?.ChillerWaterTemp_Min, spsStd?.ChillerWaterTemp_Max, spsStd?.ChillerWaterTemp), U = "°C" },
                                     new { L = "CATERPIL. GAP", K = "CaterpillarGap", S = StandardSpec(spsStd?.CaterpillarGap_Asli, spsStd?.CaterpillarGap_Min, spsStd?.CaterpillarGap_Max, spsStd?.CaterpillarGap), U = "mm" },
+                                    new { L = "CUTTING SPEED", K = "CuttingSpeed", S = StandardSpec(spsStd?.CuttingSpeed_Asli, spsStd?.CuttingSpeed_Min, spsStd?.CuttingSpeed_Max, spsStd?.CuttingSpeed), U = "m/min" },
                                     new { L = "SURFACE", K = "UnsmoothSurface", S = (!string.IsNullOrWhiteSpace(spsStd?.UnsmoothSurface) ? spsStd!.UnsmoothSurface : "OK"), U = "" }
                                 };
                             }
@@ -1339,12 +1419,18 @@
 
     .production-dashboard-sapphire {
         min-height: 100vh;
-        padding: 2rem;
+        padding: 0.75rem 1.25rem 2rem 1.25rem;
         background-color: #020617;
         background-image: 
             radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0, transparent 50%), 
             radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.1) 0, transparent 50%);
         position: relative;
+    }
+
+    @@media (max-width: 768px) {
+        .production-dashboard-sapphire {
+            padding: 0.5rem 0.5rem 1.5rem 0.5rem;
+        }
     }
 
     .header-sapphire-glass {

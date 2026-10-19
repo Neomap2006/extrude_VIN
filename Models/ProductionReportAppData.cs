@@ -21,6 +21,7 @@ namespace VelastoProductionSystem.Models
         public string? Yarn { get; set; }
         public string? VinCode { get; set; }
         public string? StandardLength { get; set; }
+        public string? StandardShrink { get; set; }
         public string? ActualLength { get; set; }
         public int? QtyTarget { get; set; }
         public int? QtyOk { get; set; }
@@ -45,6 +46,7 @@ namespace VelastoProductionSystem.Models
         public string? PartNumber { get; set; }
         public string? VinCode { get; set; }
         public string? StandardLength { get; set; }
+        public string? StandardShrink { get; set; }
         public string? ActualLength { get; set; }
         public int? QtyTarget { get; set; }
         public int? QtyOk { get; set; }
@@ -155,6 +157,17 @@ namespace VelastoProductionSystem.Models
         public string? QcCond { get; set; }
         public string? QcSurf { get; set; }
         public string? QcRes { get; set; }
+        public string? AlarmFunctionCheck { get; set; }
+
+        // Item List Lengths
+        public decimal? LengthShrinkMin { get; set; }
+        public decimal? LengthShrinkStd { get; set; }
+        public decimal? LengthShrinkMax { get; set; }
+        public decimal? LengthCuttingMin { get; set; }
+        public decimal? LengthCuttingStd { get; set; }
+        public decimal? LengthCuttingMax { get; set; }
+        public decimal? ActualLengthShrink { get; set; }
+        public decimal? ActualLengthCutting { get; set; }
 
         public List<ProductionReadingSaveDto> Readings { get; set; } = new List<ProductionReadingSaveDto>();
         public List<ProductionMaterialLotDto> MaterialLots { get; set; } = new List<ProductionMaterialLotDto>();
@@ -172,6 +185,20 @@ namespace VelastoProductionSystem.Models
         public string? ScrewSpeedInner { get; set; }
         public string? FeedRollRatioInner { get; set; }
         public string? PressureInner { get; set; }
+        public string? AmMeterInner { get; set; }
+
+        // Middle (Tube 2)
+        public string? HeadTempMiddle { get; set; }
+        public string? Cylinder1TempMiddle { get; set; }
+        public string? Cylinder2TempMiddle { get; set; }
+        public string? Cylinder3TempMiddle { get; set; }
+        public string? ScrewTempMiddle { get; set; }
+        public string? ScrewSpeedMiddle { get; set; }
+        public string? FeedRollRatioMiddle { get; set; }
+        public string? PressureMiddle { get; set; }
+        public string? AmMeterMiddle { get; set; }
+
+        // Outer
         public string? HeadTempOuter { get; set; }
         public string? Cylinder1TempOuter { get; set; }
         public string? Cylinder2TempOuter { get; set; }
@@ -180,17 +207,25 @@ namespace VelastoProductionSystem.Models
         public string? ScrewSpeedOuter { get; set; }
         public string? FeedRollRatioOuter { get; set; }
         public string? PressureOuter { get; set; }
+        public string? AmMeterOuter { get; set; }
+
+        // Spiral
         public string? SpiralSpeed { get; set; }
         public string? SpiralPitchSetting { get; set; }
         public string? SpiralPitchDisplay { get; set; }
+
+        // Infra & Utility
         public string? PresetValue { get; set; }
         public string? ControlValue { get; set; }
+        public string? OdSensor { get; set; }
         public string? HoseSpeed { get; set; }
         public string? TakeupConveyorSpeed { get; set; }
         public string? CoolConveyorSpeed { get; set; }
+        public string? CoolConveyorSpeed2 { get; set; }
         public string? ConveyorRatio { get; set; }
         public string? UnsmoothSurface { get; set; }
         public string? ChillerWaterTemp { get; set; }
         public string? CaterpillarGap { get; set; }
+        public string? CuttingSpeed { get; set; }
     }
 }

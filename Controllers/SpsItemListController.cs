@@ -102,7 +102,8 @@ namespace VelastoProductionSystem.Controllers
             var worksheet = package.Workbook.Worksheets.Add("SPS Item List");
 
             var headers = new[] { "No", "ID", "Item List", "No. Document", "Machine", "Hose Type",
-                                  "Length Shrink MIN (mm)", "Length Shrink STN (mm)", "Length Shrink MAX (mm)" };
+                                  "Length Shrink MIN (mm)", "Length Shrink STD (mm)", "Length Shrink MAX (mm)",
+                                  "Length Cutting MIN (mm)", "Length Cutting STD (mm)", "Length Cutting MAX (mm)" };
             for (var i = 0; i < headers.Length; i++)
             {
                 worksheet.Cells[1, i + 1].Value = headers[i];
@@ -129,6 +130,9 @@ namespace VelastoProductionSystem.Controllers
                 worksheet.Cells[rowIndex, 7].Value = item.LengthShrinkMin.HasValue ? (object)item.LengthShrinkMin.Value : null;
                 worksheet.Cells[rowIndex, 8].Value = item.LengthShrinkStd.HasValue ? (object)item.LengthShrinkStd.Value : null;
                 worksheet.Cells[rowIndex, 9].Value = item.LengthShrinkMax.HasValue ? (object)item.LengthShrinkMax.Value : null;
+                worksheet.Cells[rowIndex, 10].Value = item.LengthCuttingMin.HasValue ? (object)item.LengthCuttingMin.Value : null;
+                worksheet.Cells[rowIndex, 11].Value = item.LengthCuttingStd.HasValue ? (object)item.LengthCuttingStd.Value : null;
+                worksheet.Cells[rowIndex, 12].Value = item.LengthCuttingMax.HasValue ? (object)item.LengthCuttingMax.Value : null;
                 rowIndex++;
                 runningNo++;
             }
@@ -198,7 +202,7 @@ namespace VelastoProductionSystem.Controllers
         // POST: SpsItemList/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,ItemList,DocumentNumber,LengthShrinkMin,LengthShrinkStd,LengthShrinkMax")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
+        public async Task<IActionResult> Create([Bind("Id,ItemList,DocumentNumber,LengthShrinkMin,LengthShrinkStd,LengthShrinkMax,LengthCuttingMin,LengthCuttingStd,LengthCuttingMax")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
         {
             spsItemList.ItemList = NormalizeItemListCode(spsItemList.ItemList);
 
@@ -304,6 +308,12 @@ namespace VelastoProductionSystem.Controllers
                         {
                             spsItemList.ItemList = modelFromRequest.ItemList;
                             spsItemList.DocumentNumber = modelFromRequest.DocumentNumber;
+                            spsItemList.LengthShrinkMin = modelFromRequest.LengthShrinkMin;
+                            spsItemList.LengthShrinkStd = modelFromRequest.LengthShrinkStd;
+                            spsItemList.LengthShrinkMax = modelFromRequest.LengthShrinkMax;
+                            spsItemList.LengthCuttingMin = modelFromRequest.LengthCuttingMin;
+                            spsItemList.LengthCuttingStd = modelFromRequest.LengthCuttingStd;
+                            spsItemList.LengthCuttingMax = modelFromRequest.LengthCuttingMax;
                             ViewBag.SourceRequestId = request.Id;
                         }
                     }
@@ -321,7 +331,7 @@ namespace VelastoProductionSystem.Controllers
         // POST: SpsItemList/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ItemList,DocumentNumber,LengthShrinkMin,LengthShrinkStd,LengthShrinkMax")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ItemList,DocumentNumber,LengthShrinkMin,LengthShrinkStd,LengthShrinkMax,LengthCuttingMin,LengthCuttingStd,LengthCuttingMax")] SpsItemList spsItemList, bool saveAsDraft = false, int? sourceRequestId = null)
         {
             if (id != spsItemList.Id)
             {
@@ -494,10 +504,13 @@ namespace VelastoProductionSystem.Controllers
                 worksheet.Cells[1, 1].Value = "ITEM LIST";
                 worksheet.Cells[1, 2].Value = "NO.DOC";
                 worksheet.Cells[1, 3].Value = "LENGTH SHRINK MIN (mm)";
-                worksheet.Cells[1, 4].Value = "LENGTH SHRINK STN (mm)";
+                worksheet.Cells[1, 4].Value = "LENGTH SHRINK STD (mm)";
                 worksheet.Cells[1, 5].Value = "LENGTH SHRINK MAX (mm)";
+                worksheet.Cells[1, 6].Value = "LENGTH CUTTING MIN (mm)";
+                worksheet.Cells[1, 7].Value = "LENGTH CUTTING STD (mm)";
+                worksheet.Cells[1, 8].Value = "LENGTH CUTTING MAX (mm)";
                 
-                using (var range = worksheet.Cells[1, 1, 1, 5])
+                using (var range = worksheet.Cells[1, 1, 1, 8])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
@@ -512,14 +525,17 @@ namespace VelastoProductionSystem.Controllers
                 worksheet.Cells[2, 3].Value = 272;
                 worksheet.Cells[2, 4].Value = 274;
                 worksheet.Cells[2, 5].Value = 276;
+                worksheet.Cells[2, 6].Value = 500;
+                worksheet.Cells[2, 7].Value = 505;
+                worksheet.Cells[2, 8].Value = 510;
                 
                 worksheet.Cells[4, 1].Value = "Contoh Pengisian:";
                 worksheet.Cells[4, 1].Style.Font.Italic = true;
                 worksheet.Cells[4, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
-                worksheet.Cells[5, 1].Value = "Row 2: HN3040 | SOP/PROD/HOSE/24/10/030 | 121 | 123 | 125";
+                worksheet.Cells[5, 1].Value = "Row 2: NA5030 | SOP/PROD/HOSE/24/10/038 | 272 | 274 | 276 | 500 | 505 | 510";
                 worksheet.Cells[5, 1].Style.Font.Size = 9;
                 worksheet.Cells[5, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
-                worksheet.Cells[6, 1].Value = "Kolom Length Shrink boleh dikosongkan";
+                worksheet.Cells[6, 1].Value = "Kolom Length Shrink dan Length Cutting boleh dikosongkan jika tidak ada standard.";
                 worksheet.Cells[6, 1].Style.Font.Size = 9;
                 worksheet.Cells[6, 1].Style.Font.Color.SetColor(System.Drawing.Color.Gray);
                 
@@ -582,6 +598,7 @@ namespace VelastoProductionSystem.Controllers
 
                 int rowCount = worksheet.Dimension?.Rows ?? 0;
                 int importedCount = 0;
+                int updatedCount = 0;
                 int errorCount = 0;
                 int duplicateCount = 0;
                 int missingDocumentCount = 0;
@@ -590,35 +607,159 @@ namespace VelastoProductionSystem.Controllers
                 var missingDocuments = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 var header1 = worksheet.Cells[1, 1].Text?.Trim().ToUpper() ?? "";
-                var header2 = worksheet.Cells[1, 2].Text?.Trim().ToUpper() ?? "";
-                
-                bool isNewFormat = header1.Contains("ITEM") && (header2.Contains("DOC") || header2.Contains("NO"));
                 int startRow = 2;
+                int itemCol = 0;
+                int docCol = 0;
+                int shrinkMinCol = 0, shrinkStdCol = 0, shrinkMaxCol = 0;
+                int cuttingMinCol = 0, cuttingStdCol = 0, cuttingMaxCol = 0;
+                int singleShrinkCol = 0, singleCuttingCol = 0;
+
+                // Scan rows 1 to 4 for header detection
+                for (int r = 1; r <= Math.Min(rowCount, 4); r++)
+                {
+                    bool foundHeaders = false;
+                    for (int c = 1; c <= Math.Min(worksheet.Dimension?.Columns ?? 8, 30); c++)
+                    {
+                        var text = worksheet.Cells[r, c].Text?.Trim().ToUpper() ?? "";
+                        if (string.IsNullOrEmpty(text)) continue;
+
+                        var norm = text.Replace(".", "").Replace(" ", "").Replace("_", "").Replace("-", "");
+
+                        if (norm == "ITEM" || norm == "ITEMLIST" || norm == "ITEMCODE" || norm == "KODEITEM") { itemCol = c; foundHeaders = true; }
+                        else if (norm == "NODOC" || norm == "DOC" || norm == "DOCUMENT" || norm == "DOCUMENTNUMBER" || norm == "NOMORDOKUMEN" || norm == "NODOKUMEN") { docCol = c; foundHeaders = true; }
+                        else if (norm.Contains("SHRINK") && norm.Contains("MIN")) { shrinkMinCol = c; foundHeaders = true; }
+                        else if (norm.Contains("SHRINK") && (norm.Contains("STD") || norm.Contains("STN"))) { shrinkStdCol = c; foundHeaders = true; }
+                        else if (norm.Contains("SHRINK") && norm.Contains("MAX")) { shrinkMaxCol = c; foundHeaders = true; }
+                        else if (norm.Contains("CUT") && norm.Contains("MIN")) { cuttingMinCol = c; foundHeaders = true; }
+                        else if (norm.Contains("CUT") && (norm.Contains("STD") || norm.Contains("STN"))) { cuttingStdCol = c; foundHeaders = true; }
+                        else if (norm.Contains("CUT") && norm.Contains("MAX")) { cuttingMaxCol = c; foundHeaders = true; }
+                        else if (norm.Contains("SHRINK") || norm.Contains("SHRINKAGE")) { singleShrinkCol = c; foundHeaders = true; }
+                        else if (norm.Contains("CUT") || norm.Contains("CUTTING")) { singleCuttingCol = c; foundHeaders = true; }
+                    }
+
+                    if (foundHeaders && itemCol > 0)
+                    {
+                        startRow = r + 1;
+                        // Skip sub-header rows like "(mm)" or empty item cells with notes
+                        while (startRow <= rowCount)
+                        {
+                            var checkItem = worksheet.Cells[startRow, itemCol].Text?.Trim() ?? "";
+                            var checkCol2 = worksheet.Cells[startRow, 2].Text?.Trim() ?? "";
+                            if (checkItem.StartsWith("(") || checkCol2.StartsWith("(") || (string.IsNullOrWhiteSpace(checkItem) && !string.IsNullOrWhiteSpace(checkCol2)))
+                            {
+                                startRow++;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                // Fallback default columns if no header was detected
+                if (itemCol == 0)
+                {
+                    itemCol = 1;
+                    docCol = 2;
+                    shrinkMinCol = 3; shrinkStdCol = 4; shrinkMaxCol = 5;
+                    cuttingMinCol = 6; cuttingStdCol = 7; cuttingMaxCol = 8;
+                }
+
+                float? ParseCleanFloat(string? val)
+                {
+                    if (string.IsNullOrWhiteSpace(val) || val.Trim() == "-" || val.Trim().Contains("#N/A", StringComparison.OrdinalIgnoreCase)) return null;
+                    var cleaned = val.Trim().Replace(" ", "").Replace(",", ".");
+                    return float.TryParse(cleaned, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var f) ? f : (float?)null;
+                }
+
+                (float? min, float? std, float? max) ParseToleranceOrManual(string? raw, string? minStr = null, string? stdStr = null, string? maxStr = null)
+                {
+                    float? minVal = ParseCleanFloat(minStr);
+                    float? stdVal = ParseCleanFloat(stdStr);
+                    float? maxVal = ParseCleanFloat(maxStr);
+
+                    if (!string.IsNullOrWhiteSpace(raw) && !raw.Contains("#N/A", StringComparison.OrdinalIgnoreCase) && raw.Trim() != "-")
+                    {
+                        var cleaned = raw.Trim().Replace(" ", "").Replace(",", ".");
+                        
+                        // Check for asymmetric tolerance format: e.g. "10.5+0.1/-0.2"
+                        var asymMatch = System.Text.RegularExpressions.Regex.Match(cleaned,
+                            @"^([0-9]+(?:\.[0-9]+)?)\s*(?:\()?[\+]+\s*([0-9]+(?:\.[0-9]+)?)\s*[\/\-]+\s*[\-]?\s*([0-9]+(?:\.[0-9]+)?)(?:\))?$",
+                            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                        if (asymMatch.Success &&
+                            float.TryParse(asymMatch.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float baseVal) &&
+                            float.TryParse(asymMatch.Groups[2].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float plusVal) &&
+                            float.TryParse(asymMatch.Groups[3].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float minusVal))
+                        {
+                            return (baseVal - minusVal, baseVal, baseVal + plusVal);
+                        }
+
+                        // Check for symmetric tolerance format: e.g. "788±2" or "788+-2"
+                        var symMatch = System.Text.RegularExpressions.Regex.Match(cleaned,
+                            @"^([0-9]+(?:\.[0-9]+)?)\s*(?:[±\+\-\/]|(?:\+\/\-))\s*([0-9]+(?:\.[0-9]+)?)$",
+                            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                        if (symMatch.Success &&
+                            float.TryParse(symMatch.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float bVal) &&
+                            float.TryParse(symMatch.Groups[2].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float tolVal))
+                        {
+                            return (bVal - tolVal, bVal, bVal + tolVal);
+                        }
+
+                        // If single raw number
+                        if (stdVal == null && float.TryParse(cleaned, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float singleVal))
+                        {
+                            stdVal = singleVal;
+                        }
+                    }
+
+                    return (minVal, stdVal, maxVal);
+                }
 
                 for (int row = startRow; row <= rowCount; row++)
                 {
                     try
                     {
-                        var col1Value = worksheet.Cells[row, 1].Text?.Trim();
-                        var col2Value = worksheet.Cells[row, 2].Text?.Trim();
-                        var col3Value = worksheet.Cells[row, 3].Text?.Trim(); // Length Shrink MIN
-                        var col4Value = worksheet.Cells[row, 4].Text?.Trim(); // Length Shrink STN
-                        var col5Value = worksheet.Cells[row, 5].Text?.Trim(); // Length Shrink MAX
+                        var itemVal = worksheet.Cells[row, itemCol].Text?.Trim();
+                        var docVal = docCol > 0 ? worksheet.Cells[row, docCol].Text?.Trim() : "";
 
-                        if (string.IsNullOrWhiteSpace(col1Value) || string.IsNullOrWhiteSpace(col2Value))
+                        if (string.IsNullOrWhiteSpace(itemVal))
                         {
                             emptyRowCount++;
                             continue;
                         }
 
-                        string itemList = NormalizeItemListCode(isNewFormat ? col1Value : col2Value);
-                        string documentNumber = isNewFormat ? col2Value : col1Value;
+                        // Ignore header-like or template instruction rows that might repeat
+                        if (itemVal.Equals("ITEM", StringComparison.OrdinalIgnoreCase) || 
+                            itemVal.Equals("ITEM LIST", StringComparison.OrdinalIgnoreCase) ||
+                            itemVal.StartsWith("Contoh", StringComparison.OrdinalIgnoreCase) ||
+                            itemVal.StartsWith("Row ", StringComparison.OrdinalIgnoreCase) ||
+                            itemVal.StartsWith("Kolom ", StringComparison.OrdinalIgnoreCase) ||
+                            itemVal.StartsWith("Catatan", StringComparison.OrdinalIgnoreCase) ||
+                            itemVal.StartsWith("Note", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
 
-                        // Parse Length Shrink values (optional)
-                        float? shrinkMin = null, shrinkStd = null, shrinkMax = null;
-                        if (!string.IsNullOrWhiteSpace(col3Value) && float.TryParse(col3Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsedMin)) shrinkMin = parsedMin;
-                        if (!string.IsNullOrWhiteSpace(col4Value) && float.TryParse(col4Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsedStd)) shrinkStd = parsedStd;
-                        if (!string.IsNullOrWhiteSpace(col5Value) && float.TryParse(col5Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsedMax)) shrinkMax = parsedMax;
+                        string itemList = NormalizeItemListCode(itemVal);
+                        string documentNumber = docVal ?? "";
+
+                        // Parse Shrink
+                        var rawShrink = singleShrinkCol > 0 ? worksheet.Cells[row, singleShrinkCol].Text?.Trim() : null;
+                        var shrinkMinStr = shrinkMinCol > 0 ? worksheet.Cells[row, shrinkMinCol].Text?.Trim() : null;
+                        var shrinkStdStr = shrinkStdCol > 0 ? worksheet.Cells[row, shrinkStdCol].Text?.Trim() : null;
+                        var shrinkMaxStr = shrinkMaxCol > 0 ? worksheet.Cells[row, shrinkMaxCol].Text?.Trim() : null;
+                        var (shrinkMin, shrinkStd, shrinkMax) = ParseToleranceOrManual(rawShrink ?? shrinkStdStr, shrinkMinStr, shrinkStdStr, shrinkMaxStr);
+
+                        // Parse Cutting
+                        var rawCutting = singleCuttingCol > 0 ? worksheet.Cells[row, singleCuttingCol].Text?.Trim() : null;
+                        var cuttingMinStr = cuttingMinCol > 0 ? worksheet.Cells[row, cuttingMinCol].Text?.Trim() : null;
+                        var cuttingStdStr = cuttingStdCol > 0 ? worksheet.Cells[row, cuttingStdCol].Text?.Trim() : null;
+                        var cuttingMaxStr = cuttingMaxCol > 0 ? worksheet.Cells[row, cuttingMaxCol].Text?.Trim() : null;
+                        var (cuttingMin, cuttingStd, cuttingMax) = ParseToleranceOrManual(rawCutting ?? cuttingStdStr, cuttingMinStr, cuttingStdStr, cuttingMaxStr);
 
                         if (string.IsNullOrWhiteSpace(itemList))
                         {
@@ -627,36 +768,100 @@ namespace VelastoProductionSystem.Controllers
                             continue;
                         }
 
-                        var spsNoDoc = await _context.SpsNoDocs.FirstOrDefaultAsync(s => s.DocumentNumber == documentNumber);
-                        if (spsNoDoc != null)
+                        var normalizedItem = itemList.ToUpper();
+
+                        // Case 1: Document number is provided
+                        if (!string.IsNullOrWhiteSpace(documentNumber))
                         {
-                            var normalizedItem = itemList.ToUpper();
-                            var existingItem = await _context.SpsItemLists
-                                .FirstOrDefaultAsync(i => i.DocumentNumber == spsNoDoc.DocumentNumber && i.ItemList != null && i.ItemList.Replace("-", "").ToUpper() == normalizedItem);
-                            
-                            if (existingItem == null)
+                            var spsNoDoc = await _context.SpsNoDocs.FirstOrDefaultAsync(s => s.DocumentNumber == documentNumber);
+                            if (spsNoDoc != null)
                             {
-                                _context.SpsItemLists.Add(new SpsItemList
+                                var existingItem = await _context.SpsItemLists
+                                    .FirstOrDefaultAsync(i => i.DocumentNumber == spsNoDoc.DocumentNumber && i.ItemList != null && i.ItemList.Replace("-", "").ToUpper() == normalizedItem);
+                                
+                                if (existingItem == null)
                                 {
-                                    DocumentNumber = spsNoDoc.DocumentNumber,
-                                    ItemList = itemList,
-                                    LengthShrinkMin = shrinkMin,
-                                    LengthShrinkStd = shrinkStd,
-                                    LengthShrinkMax = shrinkMax
-                                });
-                                importedCount++;
+                                    _context.SpsItemLists.Add(new SpsItemList
+                                    {
+                                        DocumentNumber = spsNoDoc.DocumentNumber,
+                                        ItemList = itemList,
+                                        LengthShrinkMin = shrinkMin,
+                                        LengthShrinkStd = shrinkStd,
+                                        LengthShrinkMax = shrinkMax,
+                                        LengthCuttingMin = cuttingMin,
+                                        LengthCuttingStd = cuttingStd,
+                                        LengthCuttingMax = cuttingMax
+                                    });
+                                    importedCount++;
+                                }
+                                else
+                                {
+                                    bool modified = false;
+                                    if (shrinkMin.HasValue) { existingItem.LengthShrinkMin = shrinkMin; modified = true; }
+                                    if (shrinkStd.HasValue) { existingItem.LengthShrinkStd = shrinkStd; modified = true; }
+                                    if (shrinkMax.HasValue) { existingItem.LengthShrinkMax = shrinkMax; modified = true; }
+                                    if (cuttingMin.HasValue) { existingItem.LengthCuttingMin = cuttingMin; modified = true; }
+                                    if (cuttingStd.HasValue) { existingItem.LengthCuttingStd = cuttingStd; modified = true; }
+                                    if (cuttingMax.HasValue) { existingItem.LengthCuttingMax = cuttingMax; modified = true; }
+                                    
+                                    if (modified)
+                                    {
+                                        _context.SpsItemLists.Update(existingItem);
+                                        updatedCount++;
+                                    }
+                                    else
+                                    {
+                                        duplicateCount++;
+                                    }
+                                }
                             }
                             else
                             {
-                                duplicateCount++;
+                                errors.Add($"Row {row}: Document '{documentNumber}' tidak ditemukan");
+                                missingDocuments.Add(documentNumber);
+                                errorCount++;
+                                missingDocumentCount++;
                             }
                         }
                         else
                         {
-                            errors.Add($"Row {row}: Document '{documentNumber}' tidak ditemukan");
-                            missingDocuments.Add(documentNumber);
-                            errorCount++;
-                            missingDocumentCount++;
+                            // Case 2: Document number is omitted in file, update existing item(s) by Item code
+                            var existingItems = await _context.SpsItemLists
+                                .Where(i => i.ItemList != null && i.ItemList.Replace("-", "").ToUpper() == normalizedItem)
+                                .ToListAsync();
+
+                            if (existingItems.Any())
+                            {
+                                bool anyMod = false;
+                                foreach (var existingItem in existingItems)
+                                {
+                                    if (shrinkMin.HasValue) { existingItem.LengthShrinkMin = shrinkMin; anyMod = true; }
+                                    if (shrinkStd.HasValue) { existingItem.LengthShrinkStd = shrinkStd; anyMod = true; }
+                                    if (shrinkMax.HasValue) { existingItem.LengthShrinkMax = shrinkMax; anyMod = true; }
+                                    if (cuttingMin.HasValue) { existingItem.LengthCuttingMin = cuttingMin; anyMod = true; }
+                                    if (cuttingStd.HasValue) { existingItem.LengthCuttingStd = cuttingStd; anyMod = true; }
+                                    if (cuttingMax.HasValue) { existingItem.LengthCuttingMax = cuttingMax; anyMod = true; }
+
+                                    if (anyMod)
+                                    {
+                                        _context.SpsItemLists.Update(existingItem);
+                                    }
+                                }
+
+                                if (anyMod)
+                                {
+                                    updatedCount += existingItems.Count;
+                                }
+                                else
+                                {
+                                    duplicateCount++;
+                                }
+                            }
+                            else
+                            {
+                                errors.Add($"Row {row}: Item '{itemList}' belum terdaftar pada dokumen manapun (kolom NO.DOC kosong)");
+                                errorCount++;
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -666,40 +871,45 @@ namespace VelastoProductionSystem.Controllers
                     }
                 }
 
-                if (importedCount > 0)
+                if (importedCount > 0 || updatedCount > 0)
                 {
                     await _context.SaveChangesAsync();
                 }
 
                 await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsItemImportTemplate, fileApprovalKey);
 
-                if (importedCount > 0 && errorCount == 0)
+                if ((importedCount > 0 || updatedCount > 0) && errorCount == 0)
                 {
                     return Json(new
                     {
                         success = true,
                         status = "success",
-                        message = $"Berhasil import {importedCount} Item List baru." +
+                        message = $"Berhasil import {importedCount} Item List baru" +
+                                  (updatedCount > 0 ? $", {updatedCount} data diperbarui." : ".") +
                                   (duplicateCount > 0 ? $" {duplicateCount} data duplikat dilewati." : "") +
                                   (emptyRowCount > 0 ? $" {emptyRowCount} baris kosong diabaikan." : ""),
                         imported = importedCount,
+                        updated = updatedCount,
                         duplicates = duplicateCount,
                         errors = errorCount,
                         emptyRows = emptyRowCount
                     });
                 }
 
-                if (importedCount > 0 && errorCount > 0)
+                if ((importedCount > 0 || updatedCount > 0) && errorCount > 0)
                 {
                     return Json(new
                     {
                         success = true,
                         status = "partial",
-                        message = $"Import selesai sebagian. Berhasil: {importedCount}, Gagal: {errorCount}." +
+                        message = $"Import selesai sebagian. Berhasil: {importedCount}" +
+                                  (updatedCount > 0 ? $", Diperbarui: {updatedCount}" : "") +
+                                  $", Gagal: {errorCount}." +
                                   (missingDocumentCount > 0 ? $" {missingDocumentCount} baris gagal karena No.Doc belum terdaftar." : "") +
                                   (duplicateCount > 0 ? $" {duplicateCount} data duplikat dilewati." : "") +
                                   (emptyRowCount > 0 ? $" {emptyRowCount} baris kosong diabaikan." : ""),
                         imported = importedCount,
+                        updated = updatedCount,
                         duplicates = duplicateCount,
                         errors = errorCount,
                         missingDocuments = missingDocuments.Take(10).ToList(),

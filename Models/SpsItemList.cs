@@ -24,5 +24,12 @@ namespace VelastoProductionSystem.Models
         public float? LengthShrinkStd { get; set; }
         
         public float? LengthShrinkMax { get; set; }
+
+        public float? LengthCuttingMin { get; set; }
+        
+        [Display(Name = "Length Cutting (mm)")]
+        public float? LengthCuttingStd { get; set; }
+        
+        public float? LengthCuttingMax { get; set; }
     }
 }

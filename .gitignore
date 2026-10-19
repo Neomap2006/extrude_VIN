@@ -11,3 +11,9 @@ node_modules/
 .DS_Store
 wwwroot/lib/*
 !wwwroot/lib/.gitkeep
+EXTRUDE_Hose/
+scratch/
+scratch_*.py
+*.bkp
+*.sqlite
+*.db

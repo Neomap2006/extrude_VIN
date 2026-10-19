@@ -997,9 +997,15 @@
                     <span class="field-label">PART NUMBER</span>
                     <div class="field-input-wrap"><div class="f-input" id="disp-part-no">@(Model?.DimensionDisplay ?? "")</div></div>
                 </div>
-                <div class="field-box">
-                    <span class="field-label">STD PNJG</span>
-                    <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="@(Model?.StandardLength ?? "")"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="field-box">
+                        <span class="field-label">STD PNJG</span>
+                        <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-pnjg" value="@(Model?.StandardLength ?? "")"></div>
+                    </div>
+                    <div class="field-box">
+                        <span class="field-label">STD SHRINK</span>
+                        <div class="field-input-wrap"><input type="text" class="f-input" id="disp-std-shrink" value="@(Model?.StandardShrink ?? "")"></div>
+                    </div>
                 </div>
                 <div class="field-box">
                     <span class="field-label">QTY TARGET</span>
@@ -2465,6 +2471,9 @@
             // 4. Header / Fixed Inputs
             const stdPnjgInput = document.getElementById('disp-std-pnjg');
             if (stdPnjgInput) stdPnjgInput.value = `@Html.Raw(Model?.StandardLength ?? "-")`;
+
+            const stdShrinkInput = document.getElementById('disp-std-shrink');
+            if (stdShrinkInput) stdShrinkInput.value = `@Html.Raw(Model?.StandardShrink ?? "-")`;
             
             const targetInput = document.getElementById('disp-qty-target');
             if (targetInput) targetInput.value = "@(Model?.QtyTarget ?? 0)";
@@ -2558,19 +2567,38 @@
                         if(hoseEl) hoseEl.innerText = m.hoseType || "---";
                         if(docEl) docEl.innerText = m.docNo || "---";
 
+                        window._currentSpsItemLists = m.itemLists || [];
                         const partEl = document.getElementById('disp-part-no');
                         if(partEl) partEl.innerText = window._dimSelectedItemCode || m.itemList || "---";
                         
                         const stdPnjgEl = document.getElementById('disp-std-pnjg');
                         if(stdPnjgEl) {
-                            let shrinkText = "0";
+                            let cuttingText = "-";
+                            if (m.cuttingStd != null) {
+                                cuttingText = m.cuttingStd + " mm";
+                                if (m.cuttingMin != null && m.cuttingMax != null) {
+                                    cuttingText += ` (${m.cuttingMin} - ${m.cuttingMax})`;
+                                }
+                            }
+                            stdPnjgEl.value = cuttingText;
+                        }
+
+                        const stdShrinkEl = document.getElementById('disp-std-shrink');
+                        if(stdShrinkEl) {
+                            let shrinkText = "-";
                             if (m.shrinkStd != null) {
                                 shrinkText = m.shrinkStd + " mm";
                                 if (m.shrinkMin != null && m.shrinkMax != null) {
                                     shrinkText += ` (${m.shrinkMin} - ${m.shrinkMax})`;
                                 }
+                            } else if (m.shrinkMin != null || m.shrinkMax != null) {
+                                // STD is null but Min/Max exist — show range
+                                const parts = [];
+                                if (m.shrinkMin != null) parts.push(m.shrinkMin);
+                                if (m.shrinkMax != null) parts.push(m.shrinkMax);
+                                shrinkText = parts.join(' - ') + ' mm';
                             }
-                            stdPnjgEl.value = shrinkText;
+                            stdShrinkEl.value = shrinkText;
                         }
                         
                         const qtyTargetInput = document.getElementById('disp-qty-target');
@@ -2930,7 +2958,8 @@
                             allSummaries.push({
                                 partNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
                                 vinCode: s.vin,
-                                standardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                standardLength: s.stdPnjg || document.getElementById('disp-std-pnjg')?.value || '',
+                                standardShrink: s.stdShrink || document.getElementById('disp-std-shrink')?.value || '',
                                 actualLength: s.act,
                                 qtyTarget: safeInt('disp-qty-target'),
                                 qtyOk: parseInt(s.ok) || 0,
@@ -2951,6 +2980,7 @@
                                 partNumber: (document.getElementById('disp-part-no')?.innerText || '') + '#' + slotIdx,
                                 vinCode: looseVin || '-',
                                 standardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                                standardShrink: document.getElementById('disp-std-shrink')?.value || '',
                                 actualLength: looseAct,
                                 qtyTarget: safeInt('disp-qty-target'),
                                 qtyOk: looseOk,
@@ -2992,6 +3022,7 @@
                     dimensionDisplay: document.getElementById('disp-part-no')?.innerText || '',
                     vinCode: lastVin,
                     standardLength: document.getElementById('disp-std-pnjg')?.value || '',
+                    standardShrink: document.getElementById('disp-std-shrink')?.value || '',
                     actualLength: lastActPnjg,
                     qtyTarget: safeInt('disp-qty-target'),
                     qtyOk: totalQtyOk,

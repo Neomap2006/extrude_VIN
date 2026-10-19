@@ -69,7 +69,10 @@
 
     <div class="form-glass-card">
         <form asp-action="Create" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+            {
+                <div asp-validation-summary="All" class="alert alert-danger py-3 px-4 mb-4 rounded-3" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5;"></div>
+            }
             <input type="hidden" asp-for="AreaId" />
             <input type="hidden" asp-for="PlantId" />
 

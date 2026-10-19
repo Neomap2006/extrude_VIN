@@ -99,6 +99,10 @@ body {
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .sidebar-toggle:hover {
@@ -734,12 +738,13 @@ textarea.form-control:focus {
 
     .sidebar {
         transform: translateX(-100%);
-        z-index: 2000;
+        z-index: 10002 !important;
         box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .sidebar.show {
-        transform: translateX(0);
+        transform: translateX(0) !important;
     }
     
     .main-content {
@@ -781,14 +786,14 @@ textarea.form-control:focus {
         position: fixed;
         top: 0; left: 0;
         width: 100vw; height: 100vh;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.65);
         backdrop-filter: blur(8px);
-        z-index: 1999;
+        z-index: 10000 !important;
         display: none;
     }
 
     .sidebar-backdrop.show {
-        display: block;
+        display: block !important;
     }
 }
 

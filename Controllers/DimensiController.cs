@@ -168,6 +168,9 @@ namespace VelastoProductionSystem.Controllers
 
                 // Populate Length Shrink from SpsItemList if available
                 float? shrinkMin = null, shrinkStd = null, shrinkMax = null;
+                float? cuttingMin = null, cuttingStd = null, cuttingMax = null;
+                var itemListsObj = new List<object>();
+
                 if (sps.ItemLists != null && sps.ItemLists.Any())
                 {
                     var matchedList = sps.ItemLists.FirstOrDefault(il => il.ItemList != null && il.ItemList.Replace("-", "").Replace(" ", "").ToUpper() == sanitizedItemLookup);
@@ -180,6 +183,22 @@ namespace VelastoProductionSystem.Controllers
                         shrinkMin = matchedList.LengthShrinkMin;
                         shrinkStd = matchedList.LengthShrinkStd;
                         shrinkMax = matchedList.LengthShrinkMax;
+                        cuttingMin = matchedList.LengthCuttingMin;
+                        cuttingStd = matchedList.LengthCuttingStd;
+                        cuttingMax = matchedList.LengthCuttingMax;
+                    }
+
+                    foreach (var il in sps.ItemLists)
+                    {
+                        itemListsObj.Add(new {
+                            itemList = il.ItemList,
+                            cuttingMin = il.LengthCuttingMin,
+                            cuttingStd = il.LengthCuttingStd,
+                            cuttingMax = il.LengthCuttingMax,
+                            shrinkMin = il.LengthShrinkMin,
+                            shrinkStd = il.LengthShrinkStd,
+                            shrinkMax = il.LengthShrinkMax
+                        });
                     }
                 }
 
@@ -208,9 +227,13 @@ namespace VelastoProductionSystem.Controllers
                         thickTol = sps.ThickTol,
                         totalTol = sps.TotalTol,
                         bypass = "2.0 mm",
+                        itemLists = itemListsObj,
                         shrinkMin = shrinkMin,
                         shrinkStd = shrinkStd,
-                        shrinkMax = shrinkMax
+                        shrinkMax = shrinkMax,
+                        cuttingMin = cuttingMin,
+                        cuttingStd = cuttingStd,
+                        cuttingMax = cuttingMax
                     }
                 });
             }
@@ -586,6 +609,18 @@ namespace VelastoProductionSystem.Controllers
             }
             ViewBag.ShrinkData = itemListEntry;
 
+            // Build ItemMap for all VINs/Items in report summaries
+            var allSpsItems = await _context.SpsItemLists.ToListAsync();
+            var itemMap = new Dictionary<string, SpsItemList>(StringComparer.OrdinalIgnoreCase);
+            foreach (var il in allSpsItems)
+            {
+                if (string.IsNullOrEmpty(il.ItemList)) continue;
+                var san = il.ItemList.Trim().Replace("-", "").Replace(" ", "").ToUpper();
+                if (!itemMap.ContainsKey(san)) itemMap[san] = il;
+                if (!itemMap.ContainsKey(il.ItemList)) itemMap[il.ItemList] = il;
+            }
+            ViewBag.ItemMap = itemMap;
+
             return View(report);
         }
 
@@ -854,6 +889,7 @@ namespace VelastoProductionSystem.Controllers
                 report.DimensionDisplay = data.DimensionDisplay ?? "";
                 report.VinCode = data.VinCode ?? "";
                 report.StandardLength = data.StandardLength ?? "";
+                report.StandardShrink = data.StandardShrink ?? "";
                 report.ActualLength = data.ActualLength ?? "";
                 report.QtyTarget = data.QtyTarget ?? 0;
                 report.QtyOk = data.QtyOk ?? 0;
@@ -916,6 +952,7 @@ namespace VelastoProductionSystem.Controllers
                             PartNumber = sData.PartNumber,
                             VinCode = sData.VinCode,
                             StandardLength = sData.StandardLength,
+                            StandardShrink = sData.StandardShrink,
                             ActualLength = sData.ActualLength,
                             QtyTarget = sData.QtyTarget ?? 0,
                             QtyOk = sData.QtyOk ?? 0,

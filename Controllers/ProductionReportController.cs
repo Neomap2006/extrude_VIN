@@ -535,8 +535,18 @@ namespace VelastoProductionSystem.Controllers
                     return $"{sMin} | {asli.Value:F2} | {sMax}";
                 }
                 
+                // If no std (asli) but min/max exist → return range format "min | -- | max"
+                if (min.HasValue || max.HasValue)
+                {
+                    string sMin = min.HasValue ? min.Value.ToString("F2") : "--";
+                    string sMax = max.HasValue ? max.Value.ToString("F2") : "--";
+                    return $"{sMin} | -- | {sMax}";
+                }
+                
+                // Filter out non-data string values from DB (e.g. "kosong", "-", etc.)
                 string fb = fallback?.Trim() ?? "";
-                if (string.IsNullOrEmpty(fb) || fb == "-" || fb == "---") return "";
+                var invalidFb = new[] { "", "-", "--", "---", "kosong", "null", "n/a" };
+                if (invalidFb.Contains(fb.ToLower())) return "";
                 if (fb.Contains("|")) return fb;
                 
                 return $"-- | {fb} | --";
@@ -547,6 +557,19 @@ namespace VelastoProductionSystem.Controllers
             var resolvedItemCode = !string.IsNullOrWhiteSpace(requestedItemCode)
                 ? requestedItemCode
                 : master.ItemLists?.FirstOrDefault(il => !string.IsNullOrWhiteSpace(il.ItemList))?.ItemList;
+
+            // Look up ItemList record for Length Shrink and Length Cutting standards
+            SpsItemList? matchedItemList = null;
+            if (!string.IsNullOrWhiteSpace(resolvedItemCode))
+            {
+                var norm = resolvedItemCode.Trim().ToUpper();
+                matchedItemList = master.ItemLists?.FirstOrDefault(il => il.ItemList != null && il.ItemList.ToUpper() == norm)
+                    ?? _context.SpsItemLists.FirstOrDefault(il => il.DocumentNumber == master.DocumentNumber && il.ItemList != null && il.ItemList.ToUpper() == norm);
+            }
+            if (matchedItemList == null)
+            {
+                matchedItemList = master.ItemLists?.FirstOrDefault();
+            }
 
             return new {
                 // Masterlist SPS rows do not have a numeric StandardParameterSettings FK.
@@ -566,6 +589,7 @@ namespace VelastoProductionSystem.Controllers
                 YarnType = master.Yarn,
                 LayerType = !string.IsNullOrWhiteSpace(master.MiddleTube) ? "CHS 3 Layer" : "CHS 2 Layer",
                 
+                // Inner (Tube 1)
                 HeadTempInner      = R(master.HeadTemp1_Asli, master.HeadTemp1_Min, master.HeadTemp1_Max, master.HeadTemp1),
                 Cylinder1TempInner = R(master.Cylinder1_1_Asli, master.Cylinder1_1_Min, master.Cylinder1_1_Max, master.Cylinder1_1),
                 Cylinder2TempInner = R(master.Cylinder2_1_Asli, master.Cylinder2_1_Min, master.Cylinder2_1_Max, master.Cylinder2_1),
@@ -575,7 +599,20 @@ namespace VelastoProductionSystem.Controllers
                 PressureInner      = R(master.Pressure1_Asli, master.Pressure1_Min, master.Pressure1_Max, master.Pressure1),
                 FeedRollRatioInner = R(master.FeedRollRatio1_Asli, master.FeedRollRatio1_Min, master.FeedRollRatio1_Max,
                     !string.IsNullOrEmpty(master.FeedRollRatio1) ? master.FeedRollRatio1 : master.Feed1),
-                
+                AmMeterInner       = R(master.AmMeter_Asli > 0 ? master.AmMeter_Asli : null, master.AmMeter_Min, master.AmMeter_Max, master.AmMeter),
+
+                // Middle (Tube 2)
+                HeadTempMiddle      = R(master.HeadTemp3_Asli, master.HeadTemp3_Min, master.HeadTemp3_Max, master.HeadTemp3),
+                Cylinder1TempMiddle = R(master.Cylinder1_3_Asli, master.Cylinder1_3_Min, master.Cylinder1_3_Max, master.Cylinder1_3),
+                Cylinder2TempMiddle = R(master.Cylinder2_3_Asli, master.Cylinder2_3_Min, master.Cylinder2_3_Max, master.Cylinder2_3),
+                Cylinder3TempMiddle = R(master.Cylinder3_3_Asli, master.Cylinder3_3_Min, master.Cylinder3_3_Max, master.Cylinder3_3),
+                ScrewTempMiddle     = R(master.ScrewTemp3_Asli, master.ScrewTemp3_Min, master.ScrewTemp3_Max, master.ScrewTemp3),
+                ScrewSpeedMiddle    = R(master.ScrewSpeed3_Asli, master.ScrewSpeed3_Min, master.ScrewSpeed3_Max, master.ScrewSpeed3),
+                PressureMiddle      = R(master.Pressure3_Asli, master.Pressure3_Min, master.Pressure3_Max, master.Pressure3),
+                FeedRollRatioMiddle = R(master.FeedRollRatio3_Asli, master.FeedRollRatio3_Min, master.FeedRollRatio3_Max, master.FeedRollRatio3),
+                AmMeterMiddle       = R(master.AmMeter3_Asli > 0 ? master.AmMeter3_Asli : null, master.AmMeter3_Min, master.AmMeter3_Max, master.AmMeter3),
+
+                // Outer (Cover)
                 HeadTempOuter      = R(master.HeadTemp2_Asli, master.HeadTemp2_Min, master.HeadTemp2_Max, master.HeadTemp2),
                 Cylinder1TempOuter = R(master.Cylinder1_2_Asli, master.Cylinder1_2_Min, master.Cylinder1_2_Max, master.Cylinder1_2),
                 Cylinder2TempOuter = R(master.Cylinder2_2_Asli, master.Cylinder2_2_Min, master.Cylinder2_2_Max, master.Cylinder2_2),
@@ -585,7 +622,9 @@ namespace VelastoProductionSystem.Controllers
                 PressureOuter      = R(master.Pressure2_Asli, master.Pressure2_Min, master.Pressure2_Max, master.Pressure2),
                 FeedRollRatioOuter = R(master.FeedRollRatio2_Asli, master.FeedRollRatio2_Min, master.FeedRollRatio2_Max,
                     !string.IsNullOrEmpty(master.FeedRollRatio2) ? master.FeedRollRatio2 : master.Feed2),
+                AmMeterOuter       = R(master.AmMeter2_Asli > 0 ? master.AmMeter2_Asli : null, master.AmMeter2_Min, master.AmMeter2_Max, master.AmMeter2),
                 
+                // Dies
                 NippleDie    = R(master.Nipple_Asli, master.Nipple_Min, master.Nipple_Max, master.Nipple),
                 TubeDie      = R(master.TubeDie_Asli, master.TubeDie_Min, master.TubeDie_Max, master.TubeDie),
                 MiddleDie    = R(master.MiddleDie_Asli, master.MiddleDie_Min, master.MiddleDie_Max, master.MiddleDie),
@@ -593,24 +632,43 @@ namespace VelastoProductionSystem.Controllers
                 SpacerDie    = R(master.SpacerDie_Asli, master.SpacerDie_Min, master.SpacerDie_Max, master.SpacerDie),
                 ToleranceDie = R(master.ADistance_Asli, master.ADistance_Min, master.ADistance_Max, master.ADistance),
                 
-                ChillerWaterTemp    = R(master.ChillerWaterTemp_Asli, master.ChillerWaterTemp_Min, master.ChillerWaterTemp_Max, master.ChillerWaterTemp),
-                TakeupConveyorSpeed = R(master.TakeUpConveyorSpeed_Asli, master.TakeUpConveyorSpeed_Min, master.TakeUpConveyorSpeed_Max, master.TakeUpConveyorSpeed),
+                // Spiral
                 SpiralSpeed         = R(master.SpiralSpeed_Asli, master.SpiralSpeed_Min, master.SpiralSpeed_Max, master.SpiralSpeed),
-                ToleranceSpiralPitch = R(master.SpiralPitchSetting_Asli, master.SpiralPitchSetting_Min, master.SpiralPitchSetting_Max,
-                    !string.IsNullOrEmpty(master.SpiralPitchSetting) ? master.SpiralPitchSetting : master.ToleranceSpiralPitch),
-                SpiralPitchDisplay  = R(master.SpiralPitchDisplay_Asli, master.SpiralPitchDisplay_Min, master.SpiralPitchDisplay_Max, master.SpiralPitchDisplay),
-                HoseSpeed           = R(master.HoseSpeed_Asli, master.HoseSpeed_Min, master.HoseSpeed_Max, master.HoseSpeed),
-                CoolConveyorSpeed   = R(master.CoolConveyorSpeed_Asli, master.CoolConveyorSpeed_Min, master.CoolConveyorSpeed_Max, master.CoolConveyorSpeed),
-                ConveyorRatio       = R(master.ConveyorRatio_Asli, master.ConveyorRatio_Min, master.ConveyorRatio_Max, master.ConveyorRatio),
+                ToleranceSpiralPitch = R(master.SpiralPitchSetting_Asli ?? master.PitchYarn_Asli ?? master.ToleranceSpiralPitch_Asli,
+                    master.SpiralPitchSetting_Min ?? master.PitchYarn_Min ?? master.ToleranceSpiralPitch_Min,
+                    master.SpiralPitchSetting_Max ?? master.PitchYarn_Max ?? master.ToleranceSpiralPitch_Max,
+                    !string.IsNullOrEmpty(master.SpiralPitchSetting) ? master.SpiralPitchSetting : (!string.IsNullOrEmpty(master.PitchYarn) ? master.PitchYarn : master.ToleranceSpiralPitch)),
+                SpiralPitchDisplay  = R(master.SpiralPitchDisplay_Asli ?? master.PitchYarn_Asli ?? master.ToleranceSpiralPitch_Asli,
+                    master.SpiralPitchDisplay_Min ?? master.PitchYarn_Min ?? master.ToleranceSpiralPitch_Min,
+                    master.SpiralPitchDisplay_Max ?? master.PitchYarn_Max ?? master.ToleranceSpiralPitch_Max,
+                    !string.IsNullOrEmpty(master.SpiralPitchDisplay) ? master.SpiralPitchDisplay : (!string.IsNullOrEmpty(master.PitchYarn) ? master.PitchYarn : master.ToleranceSpiralPitch)),
+
+                // Infra & Utility
+                OdSensor            = R(master.OdSensor_Asli, master.OdSensor_Min, master.OdSensor_Max, master.OdSensor),
                 PresetValue         = R(master.PresetValue_Asli, master.PresetValue_Min, master.PresetValue_Max, master.PresetValue),
                 ControlValue        = R(master.ControlValue_Asli, master.ControlValue_Min, master.ControlValue_Max, master.ControlValue),
+                HoseSpeed           = R(master.HoseSpeed_Asli, master.HoseSpeed_Min, master.HoseSpeed_Max, master.HoseSpeed),
+                TakeupConveyorSpeed = R(master.TakeUpConveyorSpeed_Asli, master.TakeUpConveyorSpeed_Min, master.TakeUpConveyorSpeed_Max, master.TakeUpConveyorSpeed),
+                CoolConveyorSpeed   = R(master.CoolConveyorSpeed_Asli, master.CoolConveyorSpeed_Min, master.CoolConveyorSpeed_Max, master.CoolConveyorSpeed),
+                CoolConveyorSpeed2  = R(master.CoolConveyorSpeed2_Asli, master.CoolConveyorSpeed2_Min, master.CoolConveyorSpeed2_Max, master.CoolConveyorSpeed2),
+                ConveyorRatio       = R(master.ConveyorRatio_Asli, master.ConveyorRatio_Min, master.ConveyorRatio_Max, master.ConveyorRatio),
                 UnsmoothSurface     = master.UnsmoothSurface,
+                ChillerWaterTemp    = R(master.ChillerWaterTemp_Asli, master.ChillerWaterTemp_Min, master.ChillerWaterTemp_Max, master.ChillerWaterTemp),
                 CaterpillarGap      = R(master.CaterpillarGap_Asli, master.CaterpillarGap_Min, master.CaterpillarGap_Max, master.CaterpillarGap),
+                CuttingSpeed        = R(master.CuttingSpeed_Asli, master.CuttingSpeed_Min, master.CuttingSpeed_Max, master.CuttingSpeed),
 
                 MeshScreen1 = master.MeshScreen1,
                 MeshScreen2 = master.MeshScreen2,
                 MeshScreen3 = master.MeshScreen3,
-                MarkingStandard = master.TextMarkingMaterial
+                MarkingStandard = master.TextMarkingMaterial,
+
+                // Item List Length Standards
+                LengthShrinkMin = matchedItemList?.LengthShrinkMin,
+                LengthShrinkStd = matchedItemList?.LengthShrinkStd,
+                LengthShrinkMax = matchedItemList?.LengthShrinkMax,
+                LengthCuttingMin = matchedItemList?.LengthCuttingMin,
+                LengthCuttingStd = matchedItemList?.LengthCuttingStd,
+                LengthCuttingMax = matchedItemList?.LengthCuttingMax
             };
         }
 
@@ -1032,7 +1090,17 @@ namespace VelastoProductionSystem.Controllers
                     MeshInnerCheck = dto.MeshInnerCheck, MeshOuterCheck = dto.MeshOuterCheck,
                     EmbossMarkContent = dto.EmbossMarkContent,
                     EmbossMarkDate = DateTime.TryParse(dto.EmbossMarkDate, out var ed) ? ed : null,
-                    QcCond = dto.QcCond, QcSurf = dto.QcSurf, QcRes = dto.QcRes
+                    QcCond = dto.QcCond, QcSurf = dto.QcSurf, QcRes = dto.QcRes,
+
+                    AlarmFunctionCheck = dto.AlarmFunctionCheck,
+                    LengthShrinkMin = dto.LengthShrinkMin,
+                    LengthShrinkStd = dto.LengthShrinkStd,
+                    LengthShrinkMax = dto.LengthShrinkMax,
+                    LengthCuttingMin = dto.LengthCuttingMin,
+                    LengthCuttingStd = dto.LengthCuttingStd,
+                    LengthCuttingMax = dto.LengthCuttingMax,
+                    ActualLengthShrink = dto.ActualLengthShrink,
+                    ActualLengthCutting = dto.ActualLengthCutting
                 };
 
                 // Sync Initial instrument parameters from the first reading if they are provided
@@ -1047,6 +1115,17 @@ namespace VelastoProductionSystem.Controllers
                     report.InitScrewSpeedInner = ParseDecimal(r0.ScrewSpeedInner);
                     report.InitFeedRollRatioInner = ParseDecimal(r0.FeedRollRatioInner);
                     report.InitPressureInner = ParseDecimal(r0.PressureInner);
+                    report.InitAmMeterInner = ParseDecimal(r0.AmMeterInner);
+
+                    report.InitHeadTempMiddle = ParseDecimal(r0.HeadTempMiddle);
+                    report.InitCylinder1TempMiddle = ParseDecimal(r0.Cylinder1TempMiddle);
+                    report.InitCylinder2TempMiddle = ParseDecimal(r0.Cylinder2TempMiddle);
+                    report.InitCylinder3TempMiddle = ParseDecimal(r0.Cylinder3TempMiddle);
+                    report.InitScrewTempMiddle = ParseDecimal(r0.ScrewTempMiddle);
+                    report.InitScrewSpeedMiddle = ParseDecimal(r0.ScrewSpeedMiddle);
+                    report.InitFeedRollRatioMiddle = ParseDecimal(r0.FeedRollRatioMiddle);
+                    report.InitPressureMiddle = ParseDecimal(r0.PressureMiddle);
+                    report.InitAmMeterMiddle = ParseDecimal(r0.AmMeterMiddle);
 
                     report.InitHeadTempOuter = ParseDecimal(r0.HeadTempOuter);
                     report.InitCylinder1TempOuter = ParseDecimal(r0.Cylinder1TempOuter);
@@ -1056,6 +1135,7 @@ namespace VelastoProductionSystem.Controllers
                     report.InitScrewSpeedOuter = ParseDecimal(r0.ScrewSpeedOuter);
                     report.InitFeedRollRatioOuter = ParseDecimal(r0.FeedRollRatioOuter);
                     report.InitPressureOuter = ParseDecimal(r0.PressureOuter);
+                    report.InitAmMeterOuter = ParseDecimal(r0.AmMeterOuter);
 
                     report.InitSpiralSpeed = ParseDecimal(r0.SpiralSpeed);
                     report.InitSpiralPitchSetting = ParseDecimal(r0.SpiralPitchSetting);
@@ -1063,11 +1143,14 @@ namespace VelastoProductionSystem.Controllers
                     report.InitConveyorRatio = ParseDecimal(r0.ConveyorRatio);
                     report.InitTakeupConveyorSpeed = ParseDecimal(r0.TakeupConveyorSpeed);
                     report.InitCoolConveyorSpeed = ParseDecimal(r0.CoolConveyorSpeed);
+                    report.InitCoolConveyorSpeed2 = ParseDecimal(r0.CoolConveyorSpeed2);
                     report.InitChillerWaterTemp = ParseDecimal(r0.ChillerWaterTemp);
                     report.InitCaterpillarGap = ParseDecimal(r0.CaterpillarGap);
                     report.InitUnsmoothSurface = ParseDecimal(r0.UnsmoothSurface);
                     report.InitPresetValue = ParseDecimal(r0.PresetValue);
                     report.InitControlValue = ParseDecimal(r0.ControlValue);
+                    report.InitOdSensor = ParseDecimal(r0.OdSensor);
+                    report.InitCuttingSpeed = ParseDecimal(r0.CuttingSpeed);
                 }
 
                 _context.ProductionReports.Add(report);
@@ -1096,23 +1179,35 @@ namespace VelastoProductionSystem.Controllers
                         ReadingTime         = DateTime.TryParse(r.ReadingTime, out var rt) ? rt : DateTime.Now,
                         RecordedBy          = r.RecordedBy ?? report.CreatedBy,
 
-                        HeadTempInner       = int.TryParse(r.HeadTempInner,       out var hti) ? hti : (int?)null,
-                        Cylinder1TempInner  = int.TryParse(r.Cylinder1TempInner,  out var c1i) ? c1i : (int?)null,
-                        Cylinder2TempInner  = int.TryParse(r.Cylinder2TempInner,  out var c2i) ? c2i : (int?)null,
-                        Cylinder3TempInner  = int.TryParse(r.Cylinder3TempInner,  out var c3i) ? c3i : (int?)null,
-                        ScrewTempInner      = int.TryParse(r.ScrewTempInner,      out var sti) ? sti : (int?)null,
+                        HeadTempInner       = ParseInt(r.HeadTempInner),
+                        Cylinder1TempInner  = ParseInt(r.Cylinder1TempInner),
+                        Cylinder2TempInner  = ParseInt(r.Cylinder2TempInner),
+                        Cylinder3TempInner  = ParseInt(r.Cylinder3TempInner),
+                        ScrewTempInner      = ParseInt(r.ScrewTempInner),
                         ScrewSpeedInner     = ParseDecimal(r.ScrewSpeedInner),
-                        FeedRollRatioInner  = int.TryParse(r.FeedRollRatioInner,  out var fri) ? fri : (int?)null,
+                        FeedRollRatioInner  = ParseInt(r.FeedRollRatioInner),
                         PressureInner       = ParseDecimal(r.PressureInner),
+                        AmMeterInner        = ParseDecimal(r.AmMeterInner),
 
-                        HeadTempOuter       = int.TryParse(r.HeadTempOuter,       out var hto) ? hto : (int?)null,
-                        Cylinder1TempOuter  = int.TryParse(r.Cylinder1TempOuter,  out var c1o) ? c1o : (int?)null,
-                        Cylinder2TempOuter  = int.TryParse(r.Cylinder2TempOuter,  out var c2o) ? c2o : (int?)null,
-                        Cylinder3TempOuter  = int.TryParse(r.Cylinder3TempOuter,  out var c3o) ? c3o : (int?)null,
-                        ScrewTempOuter      = int.TryParse(r.ScrewTempOuter,      out var sto) ? sto : (int?)null,
+                        HeadTempMiddle      = ParseInt(r.HeadTempMiddle),
+                        Cylinder1TempMiddle = ParseInt(r.Cylinder1TempMiddle),
+                        Cylinder2TempMiddle = ParseInt(r.Cylinder2TempMiddle),
+                        Cylinder3TempMiddle = ParseInt(r.Cylinder3TempMiddle),
+                        ScrewTempMiddle     = ParseInt(r.ScrewTempMiddle),
+                        ScrewSpeedMiddle    = ParseDecimal(r.ScrewSpeedMiddle),
+                        FeedRollRatioMiddle = ParseInt(r.FeedRollRatioMiddle),
+                        PressureMiddle      = ParseDecimal(r.PressureMiddle),
+                        AmMeterMiddle       = ParseDecimal(r.AmMeterMiddle),
+
+                        HeadTempOuter       = ParseInt(r.HeadTempOuter),
+                        Cylinder1TempOuter  = ParseInt(r.Cylinder1TempOuter),
+                        Cylinder2TempOuter  = ParseInt(r.Cylinder2TempOuter),
+                        Cylinder3TempOuter  = ParseInt(r.Cylinder3TempOuter),
+                        ScrewTempOuter      = ParseInt(r.ScrewTempOuter),
                         ScrewSpeedOuter     = ParseDecimal(r.ScrewSpeedOuter),
-                        FeedRollRatioOuter  = int.TryParse(r.FeedRollRatioOuter,  out var fro) ? fro : (int?)null,
+                        FeedRollRatioOuter  = ParseInt(r.FeedRollRatioOuter),
                         PressureOuter       = ParseDecimal(r.PressureOuter),
+                        AmMeterOuter        = ParseDecimal(r.AmMeterOuter),
 
                         SpiralSpeed         = ParseDecimal(r.SpiralSpeed),
                         SpiralPitchSetting  = ParseDecimal(r.SpiralPitchSetting),
@@ -1122,10 +1217,13 @@ namespace VelastoProductionSystem.Controllers
                         HoseSpeed           = ParseDecimal(r.HoseSpeed),
                         TakeupConveyorSpeed = ParseDecimal(r.TakeupConveyorSpeed),
                         CoolConveyorSpeed   = ParseDecimal(r.CoolConveyorSpeed),
+                        CoolConveyorSpeed2  = ParseDecimal(r.CoolConveyorSpeed2),
                         ConveyorRatio       = r.ConveyorRatio,
                         UnsmoothSurface     = ParseDecimal(r.UnsmoothSurface),
                         ChillerWaterTemp    = ParseDecimal(r.ChillerWaterTemp),
-                        CaterpillarGap      = ParseDecimal(r.CaterpillarGap)
+                        CaterpillarGap      = ParseDecimal(r.CaterpillarGap),
+                        OdSensor            = ParseDecimal(r.OdSensor),
+                        CuttingSpeed        = ParseDecimal(r.CuttingSpeed)
                     });
                     _context.ProductionReadings.AddRange(readings);
                 }
@@ -1208,6 +1306,16 @@ namespace VelastoProductionSystem.Controllers
                 if (DateTime.TryParse(dto.EmbossMarkDate, out var ed)) report.EmbossMarkDate = ed;
                 report.QcCond = dto.QcCond; report.QcSurf = dto.QcSurf; report.QcRes = dto.QcRes;
 
+                report.AlarmFunctionCheck = dto.AlarmFunctionCheck;
+                report.LengthShrinkMin = dto.LengthShrinkMin;
+                report.LengthShrinkStd = dto.LengthShrinkStd;
+                report.LengthShrinkMax = dto.LengthShrinkMax;
+                report.LengthCuttingMin = dto.LengthCuttingMin;
+                report.LengthCuttingStd = dto.LengthCuttingStd;
+                report.LengthCuttingMax = dto.LengthCuttingMax;
+                report.ActualLengthShrink = dto.ActualLengthShrink;
+                report.ActualLengthCutting = dto.ActualLengthCutting;
+
                 // Sync Initial instrument parameters from the first reading if they are empty
                 if (dto.Readings != null && dto.Readings.Count > 0)
                 {
@@ -1220,6 +1328,17 @@ namespace VelastoProductionSystem.Controllers
                     report.InitScrewSpeedInner = decimal.TryParse(r0.ScrewSpeedInner, out var it6) ? it6 : report.InitScrewSpeedInner;
                     report.InitFeedRollRatioInner = decimal.TryParse(r0.FeedRollRatioInner, out var it7) ? it7 : report.InitFeedRollRatioInner;
                     report.InitPressureInner = decimal.TryParse(r0.PressureInner, out var it8) ? it8 : report.InitPressureInner;
+                    report.InitAmMeterInner = decimal.TryParse(r0.AmMeterInner, out var it9) ? it9 : report.InitAmMeterInner;
+
+                    report.InitHeadTempMiddle = decimal.TryParse(r0.HeadTempMiddle, out var mt1) ? mt1 : report.InitHeadTempMiddle;
+                    report.InitCylinder1TempMiddle = decimal.TryParse(r0.Cylinder1TempMiddle, out var mt2) ? mt2 : report.InitCylinder1TempMiddle;
+                    report.InitCylinder2TempMiddle = decimal.TryParse(r0.Cylinder2TempMiddle, out var mt3) ? mt3 : report.InitCylinder2TempMiddle;
+                    report.InitCylinder3TempMiddle = decimal.TryParse(r0.Cylinder3TempMiddle, out var mt4) ? mt4 : report.InitCylinder3TempMiddle;
+                    report.InitScrewTempMiddle = decimal.TryParse(r0.ScrewTempMiddle, out var mt5) ? mt5 : report.InitScrewTempMiddle;
+                    report.InitScrewSpeedMiddle = decimal.TryParse(r0.ScrewSpeedMiddle, out var mt6) ? mt6 : report.InitScrewSpeedMiddle;
+                    report.InitFeedRollRatioMiddle = decimal.TryParse(r0.FeedRollRatioMiddle, out var mt7) ? mt7 : report.InitFeedRollRatioMiddle;
+                    report.InitPressureMiddle = decimal.TryParse(r0.PressureMiddle, out var mt8) ? mt8 : report.InitPressureMiddle;
+                    report.InitAmMeterMiddle = decimal.TryParse(r0.AmMeterMiddle, out var mt9) ? mt9 : report.InitAmMeterMiddle;
 
                     report.InitHeadTempOuter = decimal.TryParse(r0.HeadTempOuter, out var ot1) ? ot1 : report.InitHeadTempOuter;
                     report.InitCylinder1TempOuter = decimal.TryParse(r0.Cylinder1TempOuter, out var ot2) ? ot2 : report.InitCylinder1TempOuter;
@@ -1229,6 +1348,7 @@ namespace VelastoProductionSystem.Controllers
                     report.InitScrewSpeedOuter = decimal.TryParse(r0.ScrewSpeedOuter, out var ot6) ? ot6 : report.InitScrewSpeedOuter;
                     report.InitFeedRollRatioOuter = decimal.TryParse(r0.FeedRollRatioOuter, out var ot7) ? ot7 : report.InitFeedRollRatioOuter;
                     report.InitPressureOuter = decimal.TryParse(r0.PressureOuter, out var ot8) ? ot8 : report.InitPressureOuter;
+                    report.InitAmMeterOuter = decimal.TryParse(r0.AmMeterOuter, out var ot9) ? ot9 : report.InitAmMeterOuter;
 
                     report.InitSpiralSpeed = decimal.TryParse(r0.SpiralSpeed, out var m1) ? m1 : report.InitSpiralSpeed;
                     report.InitSpiralPitchSetting = decimal.TryParse(r0.SpiralPitchSetting, out var m2) ? m2 : report.InitSpiralPitchSetting;
@@ -1236,11 +1356,14 @@ namespace VelastoProductionSystem.Controllers
                     report.InitConveyorRatio = decimal.TryParse(r0.ConveyorRatio, out var m4) ? m4 : report.InitConveyorRatio;
                     report.InitTakeupConveyorSpeed = decimal.TryParse(r0.TakeupConveyorSpeed, out var m5) ? m5 : report.InitTakeupConveyorSpeed;
                     report.InitCoolConveyorSpeed = decimal.TryParse(r0.CoolConveyorSpeed, out var m6) ? m6 : report.InitCoolConveyorSpeed;
+                    report.InitCoolConveyorSpeed2 = decimal.TryParse(r0.CoolConveyorSpeed2, out var m6b) ? m6b : report.InitCoolConveyorSpeed2;
                     report.InitChillerWaterTemp = decimal.TryParse(r0.ChillerWaterTemp, out var m7) ? m7 : report.InitChillerWaterTemp;
                     report.InitCaterpillarGap = decimal.TryParse(r0.CaterpillarGap, out var m8) ? m8 : report.InitCaterpillarGap;
                     report.InitUnsmoothSurface = decimal.TryParse(r0.UnsmoothSurface, out var m9) ? m9 : report.InitUnsmoothSurface;
                     report.InitPresetValue = decimal.TryParse(r0.PresetValue, out var m10) ? m10 : report.InitPresetValue;
                     report.InitControlValue = decimal.TryParse(r0.ControlValue, out var m11) ? m11 : report.InitControlValue;
+                    report.InitOdSensor = decimal.TryParse(r0.OdSensor, out var m12) ? m12 : report.InitOdSensor;
+                    report.InitCuttingSpeed = decimal.TryParse(r0.CuttingSpeed, out var m13) ? m13 : report.InitCuttingSpeed;
                 }
 
                 // Update Readings: Remove old and add new (simplest for Edit)
@@ -1257,23 +1380,35 @@ namespace VelastoProductionSystem.Controllers
                             ReadingTime = DateTime.TryParse(r.ReadingTime, out var rt) ? rt : DateTime.Now,
                             RecordedBy = r.RecordedBy ?? report.CreatedBy ?? "Operator",
                             
-                            HeadTempInner = int.TryParse(r.HeadTempInner, out var hti) ? hti : (int?)null,
-                            Cylinder1TempInner = int.TryParse(r.Cylinder1TempInner, out var c1i) ? c1i : (int?)null,
-                            Cylinder2TempInner = int.TryParse(r.Cylinder2TempInner, out var c2i) ? c2i : (int?)null,
-                            Cylinder3TempInner = int.TryParse(r.Cylinder3TempInner, out var c3i) ? c3i : (int?)null,
-                            ScrewTempInner = int.TryParse(r.ScrewTempInner, out var sti) ? sti : (int?)null,
+                            HeadTempInner = ParseInt(r.HeadTempInner),
+                            Cylinder1TempInner = ParseInt(r.Cylinder1TempInner),
+                            Cylinder2TempInner = ParseInt(r.Cylinder2TempInner),
+                            Cylinder3TempInner = ParseInt(r.Cylinder3TempInner),
+                            ScrewTempInner = ParseInt(r.ScrewTempInner),
                             ScrewSpeedInner = ParseDecimal(r.ScrewSpeedInner),
-                            FeedRollRatioInner = int.TryParse(r.FeedRollRatioInner, out var fri) ? fri : (int?)null,
+                            FeedRollRatioInner = ParseInt(r.FeedRollRatioInner),
                             PressureInner = ParseDecimal(r.PressureInner),
+                            AmMeterInner = ParseDecimal(r.AmMeterInner),
 
-                            HeadTempOuter = int.TryParse(r.HeadTempOuter, out var hto) ? hto : (int?)null,
-                            Cylinder1TempOuter = int.TryParse(r.Cylinder1TempOuter, out var c1o) ? c1o : (int?)null,
-                            Cylinder2TempOuter = int.TryParse(r.Cylinder2TempOuter, out var c2o) ? c2o : (int?)null,
-                            Cylinder3TempOuter = int.TryParse(r.Cylinder3TempOuter, out var c3o) ? c3o : (int?)null,
-                            ScrewTempOuter = int.TryParse(r.ScrewTempOuter, out var sto) ? sto : (int?)null,
+                            HeadTempMiddle = ParseInt(r.HeadTempMiddle),
+                            Cylinder1TempMiddle = ParseInt(r.Cylinder1TempMiddle),
+                            Cylinder2TempMiddle = ParseInt(r.Cylinder2TempMiddle),
+                            Cylinder3TempMiddle = ParseInt(r.Cylinder3TempMiddle),
+                            ScrewTempMiddle = ParseInt(r.ScrewTempMiddle),
+                            ScrewSpeedMiddle = ParseDecimal(r.ScrewSpeedMiddle),
+                            FeedRollRatioMiddle = ParseInt(r.FeedRollRatioMiddle),
+                            PressureMiddle = ParseDecimal(r.PressureMiddle),
+                            AmMeterMiddle = ParseDecimal(r.AmMeterMiddle),
+
+                            HeadTempOuter = ParseInt(r.HeadTempOuter),
+                            Cylinder1TempOuter = ParseInt(r.Cylinder1TempOuter),
+                            Cylinder2TempOuter = ParseInt(r.Cylinder2TempOuter),
+                            Cylinder3TempOuter = ParseInt(r.Cylinder3TempOuter),
+                            ScrewTempOuter = ParseInt(r.ScrewTempOuter),
                             ScrewSpeedOuter = ParseDecimal(r.ScrewSpeedOuter),
-                            FeedRollRatioOuter = int.TryParse(r.FeedRollRatioOuter, out var fro) ? fro : (int?)null,
+                            FeedRollRatioOuter = ParseInt(r.FeedRollRatioOuter),
                             PressureOuter = ParseDecimal(r.PressureOuter),
+                            AmMeterOuter = ParseDecimal(r.AmMeterOuter),
 
                             SpiralSpeed = ParseDecimal(r.SpiralSpeed),
                             SpiralPitchSetting = ParseDecimal(r.SpiralPitchSetting),
@@ -1283,10 +1418,13 @@ namespace VelastoProductionSystem.Controllers
                             HoseSpeed = ParseDecimal(r.HoseSpeed),
                             TakeupConveyorSpeed = ParseDecimal(r.TakeupConveyorSpeed),
                             CoolConveyorSpeed = ParseDecimal(r.CoolConveyorSpeed),
+                            CoolConveyorSpeed2 = ParseDecimal(r.CoolConveyorSpeed2),
                             ConveyorRatio = r.ConveyorRatio,
                             UnsmoothSurface = ParseDecimal(r.UnsmoothSurface),
                             ChillerWaterTemp = ParseDecimal(r.ChillerWaterTemp),
-                            CaterpillarGap = ParseDecimal(r.CaterpillarGap)
+                            CaterpillarGap = ParseDecimal(r.CaterpillarGap),
+                            OdSensor = ParseDecimal(r.OdSensor),
+                            CuttingSpeed = ParseDecimal(r.CuttingSpeed)
                         };
                         _context.ProductionReadings.Add(reading);
                     }
@@ -1321,6 +1459,12 @@ namespace VelastoProductionSystem.Controllers
                     return result;
             } catch { }
             return null;
+        }
+
+        private int? ParseInt(string? input)
+        {
+            var dec = ParseDecimal(input);
+            return dec.HasValue ? (int)Math.Round(dec.Value) : (int?)null;
         }
 
         public async Task<IActionResult> Details(int? id)

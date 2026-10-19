@@ -8,24 +8,35 @@ namespace VelastoProductionSystem.Controllers
     public class ExtrudeMachineController : Controller
     {
         private readonly ElwpDbContext _context;
+        private readonly ILogger<ExtrudeMachineController> _logger;
 
-        public ExtrudeMachineController(ElwpDbContext context)
+        public ExtrudeMachineController(ElwpDbContext context, ILogger<ExtrudeMachineController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: ExtrudeMachine
         public async Task<IActionResult> Index()
         {
-            // Filter area Extrude (ID 1) dan TPE (ID 10)
-            var machines = await _context.ElwpMachines
-                .Include(m => m.Area)
-                .Where(m => m.AreaId == 1)
-                .OrderBy(m => m.AreaId)
-                .ThenBy(m => m.KodeMesin)
-                .ToListAsync();
-            
-            return View(machines);
+            try
+            {
+                // Filter area Extrude (ID 1)
+                var machines = await _context.ElwpMachines
+                    .Include(m => m.Area)
+                    .Where(m => m.AreaId == 1)
+                    .OrderBy(m => m.AreaId)
+                    .ThenBy(m => m.KodeMesin)
+                    .ToListAsync();
+                
+                return View(machines);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading machine list");
+                ViewBag.ErrorMessage = "Gagal memuat data mesin: " + ex.Message;
+                return View(new List<ElwpMachine>());
+            }
         }
 
         // GET: ExtrudeMachine/Create
@@ -39,13 +50,41 @@ namespace VelastoProductionSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ElwpMachine machine)
         {
+            machine.KodeMesin = machine.KodeMesin?.Trim().ToUpperInvariant() ?? string.Empty;
+            machine.NamaMesin = machine.NamaMesin?.Trim() ?? string.Empty;
+            machine.AreaId = machine.AreaId > 0 ? machine.AreaId : 1;
+            machine.PlantId = machine.PlantId > 0 ? machine.PlantId : 1;
+
+            if (string.IsNullOrWhiteSpace(machine.KodeMesin))
+            {
+                ModelState.AddModelError("KodeMesin", "Kode Mesin wajib diisi.");
+            }
+
+            if (string.IsNullOrWhiteSpace(machine.NamaMesin))
+            {
+                ModelState.AddModelError("NamaMesin", "Nama Mesin wajib diisi.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(machine.KodeMesin) && await _context.ElwpMachines.AnyAsync(m => m.KodeMesin == machine.KodeMesin))
+            {
+                ModelState.AddModelError("KodeMesin", $"Kode Mesin '{machine.KodeMesin}' sudah terdaftar.");
+            }
+
             if (ModelState.IsValid)
             {
-                machine.CreatedAt = DateTime.Now;
-                _context.Add(machine);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Mesin baru berhasil ditambahkan!";
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    machine.CreatedAt = DateTime.Now;
+                    _context.Add(machine);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = $"Mesin '{machine.KodeMesin}' berhasil ditambahkan!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating machine");
+                    ModelState.AddModelError("", "Gagal menyimpan mesin: " + (ex.InnerException?.Message ?? ex.Message));
+                }
             }
             return View(machine);
         }
@@ -68,6 +107,24 @@ namespace VelastoProductionSystem.Controllers
         {
             if (id != machine.Id) return NotFound();
 
+            machine.KodeMesin = machine.KodeMesin?.Trim().ToUpperInvariant() ?? string.Empty;
+            machine.NamaMesin = machine.NamaMesin?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(machine.KodeMesin))
+            {
+                ModelState.AddModelError("KodeMesin", "Kode Mesin wajib diisi.");
+            }
+
+            if (string.IsNullOrWhiteSpace(machine.NamaMesin))
+            {
+                ModelState.AddModelError("NamaMesin", "Nama Mesin wajib diisi.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(machine.KodeMesin) && await _context.ElwpMachines.AnyAsync(m => m.Id != id && m.KodeMesin == machine.KodeMesin))
+            {
+                ModelState.AddModelError("KodeMesin", $"Kode Mesin '{machine.KodeMesin}' sudah digunakan oleh mesin lain.");
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -78,7 +135,7 @@ namespace VelastoProductionSystem.Controllers
                     existing.KodeMesin = machine.KodeMesin;
                     existing.NamaMesin = machine.NamaMesin;
                     existing.Keterangan = machine.Keterangan;
-                    existing.AreaId = machine.AreaId;
+                    existing.AreaId = machine.AreaId > 0 ? machine.AreaId : 1;
                     existing.IsActive = machine.IsActive;
                     existing.Kapasitas = machine.Kapasitas;
                     existing.RequiredManPower = machine.RequiredManPower;
@@ -86,14 +143,19 @@ namespace VelastoProductionSystem.Controllers
 
                     _context.Update(existing);
                     await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Data mesin berhasil diperbarui!";
+                    TempData["SuccessMessage"] = $"Data mesin '{existing.KodeMesin}' berhasil diperbarui!";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!MachineExists(machine.Id)) return NotFound();
                     else throw;
                 }
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating machine");
+                    ModelState.AddModelError("", "Gagal memperbarui mesin: " + (ex.InnerException?.Message ?? ex.Message));
+                }
             }
             return View(machine);
         }
@@ -102,14 +164,22 @@ namespace VelastoProductionSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var machine = await _context.ElwpMachines.FindAsync(id);
-            if (machine != null)
+            try
             {
-                _context.ElwpMachines.Remove(machine);
-                await _context.SaveChangesAsync();
-                return Json(new { success = true, message = "Mesin berhasil dihapus!" });
+                var machine = await _context.ElwpMachines.FindAsync(id);
+                if (machine != null)
+                {
+                    _context.ElwpMachines.Remove(machine);
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, message = "Mesin berhasil dihapus!" });
+                }
+                return Json(new { success = false, message = "Mesin tidak ditemukan!" });
             }
-            return Json(new { success = false, message = "Mesin tidak ditemukan!" });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting machine");
+                return Json(new { success = false, message = "Gagal menghapus mesin: " + (ex.InnerException?.Message ?? ex.Message) });
+            }
         }
 
         private bool MachineExists(int id)

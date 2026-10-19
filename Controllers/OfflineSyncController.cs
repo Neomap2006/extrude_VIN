@@ -174,11 +174,21 @@ namespace VelastoProductionSystem.Controllers
             {
                 if (asli.HasValue)
                 {
-                    if (min.HasValue && max.HasValue)
-                        return $"{min:F2} | {asli:F2} | {max:F2}";
-                    return asli.Value.ToString("F2");
+                    string sMin = min.HasValue ? min.Value.ToString("F2") : "--";
+                    string sMax = max.HasValue ? max.Value.ToString("F2") : "--";
+                    return $"{sMin} | {asli.Value:F2} | {sMax}";
                 }
-                return fallback ?? "";
+                if (min.HasValue || max.HasValue)
+                {
+                    string sMin = min.HasValue ? min.Value.ToString("F2") : "--";
+                    string sMax = max.HasValue ? max.Value.ToString("F2") : "--";
+                    return $"{sMin} | -- | {sMax}";
+                }
+                string fb = fallback?.Trim() ?? "";
+                var invalidFb = new[] { "", "-", "--", "---", "kosong", "null", "n/a" };
+                if (invalidFb.Contains(fb.ToLower())) return "";
+                if (fb.Contains("|")) return fb;
+                return $"-- | {fb} | --";
             }
 
             return new
@@ -201,6 +211,7 @@ namespace VelastoProductionSystem.Controllers
 
                     // Die dimensions
                     innerDie = R(s.Nipple_Asli, s.Nipple_Min, s.Nipple_Max, s.Nipple),
+                    nippleDie = R(s.Nipple_Asli, s.Nipple_Min, s.Nipple_Max, s.Nipple),
                     tubeDie = R(s.TubeDie_Asli, s.TubeDie_Min, s.TubeDie_Max, s.TubeDie),
                     middleDie = R(s.MiddleDie_Asli, s.MiddleDie_Min, s.MiddleDie_Max, s.MiddleDie),
                     coverDie = R(s.CoverDie_Asli, s.CoverDie_Min, s.CoverDie_Max, s.CoverDie),

@@ -44,6 +44,7 @@ namespace VelastoProductionSystem.Models
         // Production Evaluation
         public string? VinCode { get; set; }
         public string? StandardLength { get; set; }
+        public string? StandardShrink { get; set; }
         public string? ActualLength { get; set; }
         public int QtyTarget { get; set; }
         public int QtyOk { get; set; }

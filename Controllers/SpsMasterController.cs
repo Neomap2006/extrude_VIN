@@ -34,8 +34,7 @@ namespace VelastoProductionSystem.Controllers
         /// Contoh: "4.3Â±0.1" â†’ Min=4.2, Asli=4.3, Max=4.4
         ///         "Max 120" â†’ Min=null, Asli=null, Max=120
         ///         "73" â†’ Min=null, Asli=73, Max=null
-        /// </summary>
-        private (decimal? min, decimal? asli, decimal? max) ParsePlusMinusValue(string input)
+           private (decimal? min, decimal? asli, decimal? max) ParsePlusMinusValue(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
             {
@@ -48,6 +47,27 @@ namespace VelastoProductionSystem.Controllers
                 // Clean input: normalize decimal separator (comma to period) and remove spaces
                 var cleaned = input.Trim().Replace(" ", "").Replace(",", ".");
                 _logger.LogInformation($"ParsePlusMinusValue: Input=[{input}], Cleaned=[{cleaned}]");
+
+                // Check for asymmetric tolerance format: e.g. "10.5+0.1/-0.2", "10.5(+0.1/-0.2)", "10.5+0.1-0.2"
+                var asymMatch = System.Text.RegularExpressions.Regex.Match(cleaned,
+                    @"^([0-9]+(?:\.[0-9]+)?)\s*(?:\()?[\+]+\s*([0-9]+(?:\.[0-9]+)?)\s*[\/\-]+\s*[\-]?\s*([0-9]+(?:\.[0-9]+)?)(?:\))?$",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                if (asymMatch.Success)
+                {
+                    if (decimal.TryParse(asymMatch.Groups[1].Value, System.Globalization.NumberStyles.Any, 
+                            System.Globalization.CultureInfo.InvariantCulture, out decimal baseVal) &&
+                        decimal.TryParse(asymMatch.Groups[2].Value, System.Globalization.NumberStyles.Any, 
+                            System.Globalization.CultureInfo.InvariantCulture, out decimal upperTol) &&
+                        decimal.TryParse(asymMatch.Groups[3].Value, System.Globalization.NumberStyles.Any, 
+                            System.Globalization.CultureInfo.InvariantCulture, out decimal lowerTol))
+                    {
+                        var min = baseVal - lowerTol;
+                        var max = baseVal + upperTol;
+                        _logger.LogInformation($"✅ Parsed asymmetric '{input}' → Min={min}, Asli={baseVal}, Max={max}");
+                        return (min, baseVal, max);
+                    }
+                }
                 
                 // Check for "Max X" format (case insensitive)
                 if (cleaned.StartsWith("max", StringComparison.OrdinalIgnoreCase) || 
@@ -70,7 +90,7 @@ namespace VelastoProductionSystem.Controllers
                         if (decimal.TryParse(numPart, System.Globalization.NumberStyles.Any, 
                             System.Globalization.CultureInfo.InvariantCulture, out decimal maxValue))
                         {
-                            _logger.LogInformation($"Parsed '{input}' as Max format â†’ Max={maxValue}");
+                            _logger.LogInformation($"Parsed '{input}' as Max format → Max={maxValue}");
                             return (null, null, maxValue);
                         }
                     }
@@ -96,7 +116,7 @@ namespace VelastoProductionSystem.Controllers
                         if (decimal.TryParse(numPart, System.Globalization.NumberStyles.Any, 
                             System.Globalization.CultureInfo.InvariantCulture, out decimal minValue))
                         {
-                            _logger.LogInformation($"Parsed '{input}' as Min format â†’ Min={minValue}");
+                            _logger.LogInformation($"Parsed '{input}' as Min format → Min={minValue}");
                             return (minValue, null, null);
                         }
                     }
@@ -124,12 +144,12 @@ namespace VelastoProductionSystem.Controllers
                                 var min = standard - tolerance;
                                 var max = standard + tolerance;
                                 
-                                _logger.LogInformation($"âœ… Parsed '{input}' â†’ Min={min}, Asli={standard}, Max={max}");
+                                _logger.LogInformation($"✅ Parsed '{input}' → Min={min}, Asli={standard}, Max={max}");
                                 return (min, standard, max);
                             }
                             else
                             {
-                                _logger.LogWarning($"âŒ Failed to parse parts as decimals: [{parts[0]}] and [{parts[1]}]");
+                                _logger.LogWarning($"❌ Failed to parse parts as decimals: [{parts[0]}] and [{parts[1]}]");
                             }
                         }
                     }
@@ -139,15 +159,15 @@ namespace VelastoProductionSystem.Controllers
                 if (decimal.TryParse(cleaned, System.Globalization.NumberStyles.Any, 
                     System.Globalization.CultureInfo.InvariantCulture, out decimal singleValue))
                 {
-                    _logger.LogInformation($"Parsed '{input}' as single value â†’ Asli={singleValue}");
+                    _logger.LogInformation($"Parsed '{input}' as single value → Asli={singleValue}");
                     return (null, singleValue, null);
                 }
                 
-                _logger.LogWarning($"âš ï¸ Could not parse '{input}' in any format");
+                _logger.LogWarning($"⚠️ Could not parse '{input}' in any format");
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"âŒ Exception parsing '{input}': {ex.Message}");
+                _logger.LogWarning($"❌ Exception parsing '{input}': {ex.Message}");
             }
             
             return (null, null, null);
@@ -782,8 +802,6 @@ namespace VelastoProductionSystem.Controllers
                     ("I+MID TARGET",8),("I+MID TOL",8),("I+MID LCL",8),("I+MID MIN",8),("I+MID UCL",8),("I+MID MAX",8),
                     ("THICK TARGET",8),("THICK TOL",8),("THICK LCL",8),("THICK MIN",8),("THICK UCL",8),("THICK MAX",8),
                     ("TOTAL TARGET",8),("TOTAL TOL",8),("TOTAL LCL",8),("TOTAL MIN",8),("TOTAL UCL",8),("TOTAL MAX",8),
-                    // 9 ITEM LIST (opsional)
-                    ("ITEM LIST",9),
                 };
 
                 int totalCols = colDefs.Length;
@@ -798,20 +816,18 @@ namespace VelastoProductionSystem.Controllers
                     System.Drawing.Color.FromArgb(12, 80, 20),    // 6 Speed/Feed
                     System.Drawing.Color.FromArgb(120, 0, 0),     // 7 Toleransi
                     System.Drawing.Color.FromArgb(0, 60, 80),     // 8 QM
-                    System.Drawing.Color.FromArgb(64, 64, 64),    // 9 ItemList
                 };
 
                 var groupNames = new string[] {
                     "IDENTIFIKASI",
                     "DOKUMEN & PRODUK",
                     "MATERIAL",
-                    "DIES & TOOLS (format XÂ±Y, atau isi MIN/STD/MAX manual)",
+                    "DIES & TOOLS (format X±Y, atau isi MIN/STD/MAX manual)",
                     "YARN & MESH",
-                    "SUHU, SCREW & TEKANAN (format XÂ±Y, atau isi MIN/STD/MAX manual)",
-                    "SPEED, FEED & OUTPUT MESIN (format XÂ±Y, atau isi MIN/STD/MAX manual)",
-                    "TOLERANSI & TEBAL (format XÂ±Y, atau isi MIN/STD/MAX manual)",
+                    "SUHU, SCREW & TEKANAN (format X±Y, atau isi MIN/STD/MAX manual)",
+                    "SPEED, FEED & OUTPUT MESIN (format X±Y, atau isi MIN/STD/MAX manual)",
+                    "TOLERANSI & TEBAL (format X±Y, atau isi MIN/STD/MAX manual)",
                     "QUALITY MATRIX",
-                    "ITEM LIST (Opsional â€” bisa upload terpisah)",
                 };
 
                 // Tulis header kolom (Row 2)
@@ -830,7 +846,7 @@ namespace VelastoProductionSystem.Controllers
                     cell.Style.Border.Bottom.Color.SetColor(System.Drawing.Color.White);
                 }
 
-                // Tulis group label Row 1 â€” deteksi batas grup
+                // Tulis group label Row 1 — deteksi batas grup
                 int gStart = 1;
                 int curG   = colDefs[0].G;
                 for (int i = 1; i <= totalCols; i++)
@@ -844,14 +860,14 @@ namespace VelastoProductionSystem.Controllers
                     }
                 }
 
-                                // Bikin sheet terpisah untuk petunjuk
+                // Bikin sheet terpisah untuk petunjuk
                 var wsPetunjuk = package.Workbook.Worksheets.Add("📋 Petunjuk");
                 var notes = new string[] {
                     "PETUNJUK PENGISIAN TEMPLATE SPS:",
                     "1. Kolom MIN/STD/MAX: isi nilai numerik langsung (MIN=batas bawah, STD=standar, MAX=batas atas).",
                     "2. Kolom ± (contoh: ± INNER): isi format X±Y (contoh: 37.0±0.2). Sistem otomatis hitung MIN & MAX.",
                     "3. Jika keduanya diisi, sistem menyimpan keduanya — nilai manual & hitungan otomatis sebagai pembanding.",
-                    "4. Kolom ITEM LIST di ujung kanan OPSIONAL. Item List bisa diupload terpisah via Import Item List.",
+                    "4. Item List dikelola secara terpisah melalui menu Master Item List (dengan Length Shrink & Length Cutting).",
                     "5. Sheet name untuk data utama harus: 'SPS', 'Digitalisasi', 'Parameter Setting', atau 'Master'.",
                     "6. Data diisi di sheet SPS mulai BARIS 3 ke bawah (langsung di bawah header tabel)."
                 };
@@ -897,35 +913,19 @@ namespace VelastoProductionSystem.Controllers
             try
             {
                 var allSpsNoDocs = await _context.SpsNoDocs
-                    .Include(s => s.ItemLists)
                     .OrderBy(s => s.DocumentNumber)
                     .ToListAsync();
 
-                // Expand data per ItemList
-                var expandedData = new List<SpsMaster>();
-                foreach (var nodoc in allSpsNoDocs)
-                {
-                    if (nodoc.ItemLists != null && nodoc.ItemLists.Any())
-                    {
-                        foreach (var item in nodoc.ItemLists)
-                        {
-                            expandedData.Add(SpsMapper.ToSpsMaster(nodoc, item.ItemList ?? ""));
-                        }
-                    }
-                    else
-                    {
-                        expandedData.Add(SpsMapper.ToSpsMaster(nodoc, ""));
-                    }
-                }
+                // 1 Record per SPS Document
+                var listData = allSpsNoDocs.Select(nodoc => SpsMapper.ToSpsMaster(nodoc, "")).ToList();
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("SPS Master Data");
 
-                                // Definisi kolom persis seperti UI (Index.cshtml)
+                // Definisi kolom persis seperti UI (Index.cshtml)
                 var colDefs = new List<(string H, Func<SpsMaster, object?> Value, int G, string Color)> {
                     ("ID Excel", x => x.No, 0, ""),
                     ("NO", x => x.No, 0, ""),
-                    ("Item List", x => x.ItemList, 0, ""),
                     ("Machine", x => x.Machine, 0, ""),
                     ("NO. DOC", x => x.DocumentNumber, 0, ""),
                     ("STATUS", x => x.IsActive ? "ACTIVE" : "INACTIVE", 0, ""),
@@ -1242,7 +1242,7 @@ namespace VelastoProductionSystem.Controllers
                 }
 
                 int row = 3;
-                foreach (var item in expandedData)
+                foreach (var item in listData)
                 {
                     for (int i = 0; i < colDefs.Count; i++)
                     {
@@ -1347,6 +1347,7 @@ namespace VelastoProductionSystem.Controllers
                 int colCount = worksheet.Dimension?.Columns ?? 0;
                 int importedCount = 0;
                 int importedDocsCount = 0;
+                int updatedDocsCount = 0;
                 int errorCount = 0;
                 int skipped = 0;
                 var errors = new List<string>();
@@ -1355,15 +1356,28 @@ namespace VelastoProductionSystem.Controllers
 
                 // ========== DETECT HEADER AND DATA START ROW ==========
                 int headerRow = 1;
-                int headerRow2 = 0; // Secondary header row (for CHS 3 Layer)
+                int headerRow2 = 0; // Secondary header row (for CHS 3 Layer / Legacy)
                 int dataStartRow = 2;
                 
-                // Check row 1 for title to detect format
-                var row1Col1 = worksheet.Cells[1, 1].Text?.Trim().ToUpper() ?? "";
-                var row1Col2 = worksheet.Cells[1, 2].Text?.Trim().ToUpper() ?? "";
-                var row1Text = row1Col1 + " " + row1Col2;
+                // Scan row 1 to 3 across columns to detect titles and header positions
+                string GetRowScanText(int r, int maxCols = 60)
+                {
+                    var texts = new List<string>();
+                    for (int c = 1; c <= Math.Min(colCount, maxCols); c++)
+                    {
+                        var t = worksheet.Cells[r, c].Text?.Trim();
+                        if (!string.IsNullOrWhiteSpace(t)) texts.Add(t.ToUpper());
+                    }
+                    return string.Join(" ", texts);
+                }
+
+                var row1Text = GetRowScanText(1);
+                var row2Text = GetRowScanText(2);
+                var row3Text = GetRowScanText(3);
                 
-                _logger.LogInformation($"Row 1 Text: '{row1Text}'");
+                _logger.LogInformation($"Row 1 Scanned Text: '{row1Text}'");
+                _logger.LogInformation($"Row 2 Scanned Text: '{row2Text}'");
+                _logger.LogInformation($"Row 3 Scanned Text: '{row3Text}'");
                 
                 // Format 1: NON-CHS Single/Double Layer (header di row 3)
                 if (row1Text.Contains("NON-CHS") || row1Text.Contains("SINGLE") || row1Text.Contains("DOUBLE LAYER PARAMETER"))
@@ -1372,12 +1386,6 @@ namespace VelastoProductionSystem.Controllers
                     headerRow = 3;  // Headers: ID, No, Machine, No. Document, ...
                     headerRow2 = 5; // Secondary headers (ITEM, dll) ada di row 5
                     dataStartRow = 6;
-                    
-                    // Log first few rows for debugging
-                    _logger.LogInformation($"Row 2 Col 4: '{worksheet.Cells[2, 4].Text}'");
-                    _logger.LogInformation($"Row 3 Col 4: '{worksheet.Cells[3, 4].Text}'");
-                    _logger.LogInformation($"Row 5 Col 51 (ITEM): '{worksheet.Cells[5, 51].Text}'");
-                    _logger.LogInformation($"Row 6 Col 4: '{worksheet.Cells[6, 4].Text}'");
                 }
                 // Format 2: CHS 2 Layer / 3 Layer Digitalisasi (header di row 3 + row 6 untuk Item)
                 else if (row1Text.Contains("CHS 2 LAYER") || row1Text.Contains("CHS 3 LAYER") || row1Text.Contains("DIGITALISASI"))
@@ -1386,23 +1394,23 @@ namespace VelastoProductionSystem.Controllers
                     headerRow = 3;  // Main headers di row 3
                     headerRow2 = 6; // Secondary headers (Item List) di row 6 untuk CHS 3 Layer
                     dataStartRow = 7; // Row 6 = numbers, Row 7+ = data
-                    
-                    // Log first few rows
-                    _logger.LogInformation($"Row 3 Col 4: '{worksheet.Cells[3, 4].Text}'");
-                    _logger.LogInformation($"Row 6 Col 4: '{worksheet.Cells[6, 4].Text}'");
-                    _logger.LogInformation($"Row 7 Col 4: '{worksheet.Cells[7, 4].Text}'");
                 }
                 // Format 3: Template SPS Full (group labels di row 1, headers di row 2)
-                else if (row1Text.Contains("IDENTIFIKASI") || row1Text.Contains("DOKUMEN"))
+                else if (row1Text.Contains("IDENTIFIKASI") || row1Text.Contains("DOKUMEN") || row1Text.Contains("MATERIAL") || row1Text.Contains("DIES") ||
+                         row2Text.Contains("NO. DOC") || row2Text.Contains("NO.DOC") || row2Text.Contains("ID EXCEL") || (row2Text.Contains("CUSTOMER") && row2Text.Contains("MACHINE")))
                 {
                     _logger.LogInformation("Detected Template SPS Full format (row 1 = group labels, row 2 = headers)");
                     headerRow = 2;  // Headers: ID, No, MC, NO. DOC, ...
                     dataStartRow = 3; // Row 3+ = data
-                    
-                    _logger.LogInformation($"Row 2 Col 4: '{worksheet.Cells[2, 4].Text}'");
-                    _logger.LogInformation($"Row 3 Col 4: '{worksheet.Cells[3, 4].Text}'");
                 }
-                // Format 4: Simple format (header di row 1)
+                // Format 4: 3-Row Header (e.g. general masterlist)
+                else if (row3Text.Contains("NO. DOC") || row3Text.Contains("NO.DOC") || row3Text.Contains("ID EXCEL"))
+                {
+                    _logger.LogInformation("Detected 3-row header format");
+                    headerRow = 3;
+                    dataStartRow = 4;
+                }
+                // Format 5: Simple format (header di row 1)
                 else
                 {
                     _logger.LogInformation("Detected simple format (header in row 1)");
@@ -1412,11 +1420,11 @@ namespace VelastoProductionSystem.Controllers
                 
                 _logger.LogInformation($"Using headerRow={headerRow}, headerRow2={headerRow2}, dataStartRow={dataStartRow}");
 
-                // ========== FORMAT DETECTION (Simplified from backup) ==========
+                // ========== FORMAT DETECTION ==========
                 bool isDig3L = row1Text.Contains("CHS 3 LAYER");
                 bool isDig2L = row1Text.Contains("CHS 2 LAYER");
                 bool isLegacy = row1Text.Contains("NON-CHS") || row1Text.Contains("SINGLE") || row1Text.Contains("DOUBLE LAYER PARAMETER");
-                bool isTemplateFull = row1Text.Contains("IDENTIFIKASI") || row1Text.Contains("DOKUMEN");
+                bool isTemplateFull = headerRow == 2 || row1Text.Contains("IDENTIFIKASI") || row1Text.Contains("DOKUMEN") || row1Text.Contains("MATERIAL") || row1Text.Contains("DIES");
                 
                 _logger.LogInformation($"Format Detection: isDig3L={isDig3L}, isDig2L={isDig2L}, isLegacy={isLegacy}, isTemplateFull={isTemplateFull}");
                 
@@ -2015,10 +2023,18 @@ namespace VelastoProductionSystem.Controllers
                     {
                         int firstRow = rowNum; // Alias to keep existing code working
                         
-                        // ====== LOCAL HELPER: Supports both Â± format AND manual MIN/STD/MAX columns ======
-                        // Untuk isTemplateFull: setiap parameter punya 4 kolom: raw(N), MIN(N+1), STD(N+2), MAX(N+3)
-                        // Jika kolom raw berisi format Â±  â†’ parse otomatis
-                        // Jika kolom raw kosong/tidak pakai Â± â†’ baca MIN/STD/MAX dari kolom terpisah (manual input)
+                        // ====== LOCAL HELPER: Supports both ± format AND manual MIN/STD/MAX columns ======
+                        // Untuk isTemplateFull/manual: setiap parameter punya 4 kolom: raw(N), MIN(N+1), STD(N+2), MAX(N+3)
+                        // Jika kolom raw berisi format ± / asymmetric → parse otomatis
+                        // Jika kolom raw kosong/tidak pakai ± → baca MIN/STD/MAX dari kolom terpisah (manual input)
+                        bool TryParseCleanDecimal(string? str, out decimal val)
+                        {
+                            val = 0;
+                            if (string.IsNullOrWhiteSpace(str)) return false;
+                            var cleanedStr = str.Trim().Replace(" ", "").Replace(",", ".");
+                            return decimal.TryParse(cleanedStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out val);
+                        }
+
                         void AssignFullOrManual(int rawCol,
                             Action<decimal?> setMin, Action<decimal?> setAsli, Action<decimal?> setMax)
                         {
@@ -2027,24 +2043,39 @@ namespace VelastoProductionSystem.Controllers
                             var parsed = ParsePlusMinusValue(rawVal);
                             if (parsed.min != null || parsed.asli != null || parsed.max != null)
                             {
-                                // Format Â± berhasil di-parse â†’ gunakan hasil parse
+                                // Format ± berhasil di-parse → gunakan hasil parse
                                 setMin(parsed.min); setAsli(parsed.asli); setMax(parsed.max);
+                                return;
                             }
-                            else if (isTemplateFull)
+
+                            // Cek kolom manual MIN/STD/MAX (rawCol+1, rawCol+2, rawCol+3)
+                            var minStr = GetCellValue(firstRow, rawCol + 1);
+                            var stdStr = GetCellValue(firstRow, rawCol + 2);
+                            var maxStr = GetCellValue(firstRow, rawCol + 3);
+
+                            // Jika stdStr berisi format formula/toleransi (contoh: 7.3±0.1 atau 10.5+0.1/-0.2)
+                            if (!string.IsNullOrWhiteSpace(stdStr))
                             {
-                                // Fallback: baca kolom MIN/STD/MAX yang diisi manual (rawCol+1, rawCol+2, rawCol+3)
-                                var ci = System.Globalization.CultureInfo.InvariantCulture;
-                                var ns = System.Globalization.NumberStyles.Any;
-                                var minStr = GetCellValue(firstRow, rawCol + 1);
-                                var stdStr = GetCellValue(firstRow, rawCol + 2);
-                                var maxStr = GetCellValue(firstRow, rawCol + 3);
-                                decimal? minV = decimal.TryParse(minStr, ns, ci, out var mv) ? mv : (decimal?)null;
-                                decimal? stdV = decimal.TryParse(stdStr, ns, ci, out var sv) ? sv : (decimal?)null;
-                                decimal? maxV = decimal.TryParse(maxStr, ns, ci, out var xv) ? xv : (decimal?)null;
-                                if (minV != null || stdV != null || maxV != null)
+                                var stdParsed = ParsePlusMinusValue(stdStr);
+                                if (stdParsed.min != null || stdParsed.asli != null || stdParsed.max != null)
                                 {
-                                    _logger.LogInformation($"  ðŸ“‹ Manual MIN/STD/MAX col {rawCol}: MIN={minV}, STD={stdV}, MAX={maxV}");
+                                    decimal? minVal = stdParsed.min;
+                                    decimal? maxVal = stdParsed.max;
+                                    if (TryParseCleanDecimal(minStr, out var expMin)) minVal = expMin;
+                                    if (TryParseCleanDecimal(maxStr, out var expMax)) maxVal = expMax;
+
+                                    setMin(minVal); setAsli(stdParsed.asli); setMax(maxVal);
+                                    return;
                                 }
+                            }
+
+                            decimal? minV = TryParseCleanDecimal(minStr, out var mv) ? mv : (decimal?)null;
+                            decimal? stdV = TryParseCleanDecimal(stdStr, out var sv) ? sv : (decimal?)null;
+                            decimal? maxV = TryParseCleanDecimal(maxStr, out var xv) ? xv : (decimal?)null;
+
+                            if (minV != null || stdV != null || maxV != null)
+                            {
+                                _logger.LogInformation($"  📋 Manual MIN/STD/MAX col {rawCol}: MIN={minV}, STD={stdV}, MAX={maxV}");
                                 setMin(minV); setAsli(stdV); setMax(maxV);
                             }
                             else
@@ -2054,39 +2085,30 @@ namespace VelastoProductionSystem.Controllers
                         }
                         string docNumber = useRowNumberFallback ? $"ROW-{firstRow}" : GetCellValue(firstRow, docNumberCol);
                         var itemListValue = itemListCol > 0 ? GetCellValue(firstRow, itemListCol) : "";
+
+                        _logger.LogInformation($"Processing row {firstRow}: Doc {docNumber}");
+
+                        // Check if document exists
+                        var existingDoc = await _context.SpsNoDocs
+                            .Include(s => s.ItemLists)
+                            .FirstOrDefaultAsync(s => s.DocumentNumber == docNumber);
+
+                        SpsNoDoc spsNoDoc;
+                        bool isNewDoc = false;
                         
-                        var items = string.IsNullOrWhiteSpace(itemListValue) 
-                            ? new List<string> { $"UNKNOWN-{Guid.NewGuid().ToString().Substring(0, 4)}" }
-                            : itemListValue.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                                .Select(s => s.Trim())
-                                .Where(s => !string.IsNullOrEmpty(s))
-                                .ToList();
-
-                        foreach (var item in items)
+                        if (existingDoc != null)
                         {
-                            _logger.LogInformation($"Processing row {firstRow}: Doc {docNumber} - Item: {item}");
-
-                            // Check if document exists
-                            var existingDoc = await _context.SpsNoDocs
-                                .Include(s => s.ItemLists)
-                                .FirstOrDefaultAsync(s => s.DocumentNumber == docNumber);
-
-                            SpsNoDoc spsNoDoc;
-                            bool isNewDoc = false;
-                            
-                            if (existingDoc != null)
-                            {
-                                // UPDATE existing document
-                                _logger.LogInformation($"📝 UPDATING EXISTING DOC: '{docNumber}' (Item: {item})");
-                                spsNoDoc = existingDoc;
-                            }
-                            else
-                            {
-                                // CREATE new document
-                                _logger.LogInformation($"✨ CREATING NEW DOC: '{docNumber}' (Item: {item})");
-                                spsNoDoc = new SpsNoDoc();
-                                isNewDoc = true;
-                            }
+                            // UPDATE existing document
+                            _logger.LogInformation($"📝 UPDATING EXISTING DOC: '{docNumber}'");
+                            spsNoDoc = existingDoc;
+                        }
+                        else
+                        {
+                            // CREATE new document
+                            _logger.LogInformation($"✨ CREATING NEW DOC: '{docNumber}'");
+                            spsNoDoc = new SpsNoDoc();
+                            isNewDoc = true;
+                        }
                             
                             // Update/Set all fields from Excel
                             {
@@ -2691,83 +2713,83 @@ namespace VelastoProductionSystem.Controllers
                             
                             if (idxSpiralSpeed <= 0) {
                                 int spiralSpeedCol = FindColumn("SPIRAL SPEED", "SPIRALSPEED");
-                                AssignParsedValue(GetCellValue(firstRow, spiralSpeedCol), 
+                                AssignFullOrManual(spiralSpeedCol, 
                                     v => spsNoDoc.SpiralSpeed_Min = v, v => spsNoDoc.SpiralSpeed_Asli = v, v => spsNoDoc.SpiralSpeed_Max = v);
                             }
                             
                             int cuttingSpeedCol = idxCuttingSpeed > 0 ? idxCuttingSpeed : FindColumn("CUTTING SPEED", "CUTTINGSPEED");
                             if (cuttingSpeedCol > 0)
                             {
-                                AssignParsedValue(GetCellValue(firstRow, cuttingSpeedCol), 
+                                AssignFullOrManual(cuttingSpeedCol, 
                                     v => spsNoDoc.CuttingSpeed_Min = v, v => spsNoDoc.CuttingSpeed_Asli = v, v => spsNoDoc.CuttingSpeed_Max = v);
                             }
                             
                             if (idxTakeUpConveyorSpeed <= 0) {
                                 int takeUpSpeedCol = FindColumn("TAKE UP CONVEYOR SPEED", "TAKEUPCONVEYORSPEED");
-                                AssignParsedValue(GetCellValue(firstRow, takeUpSpeedCol), 
+                                AssignFullOrManual(takeUpSpeedCol, 
                                     v => spsNoDoc.TakeUpConveyorSpeed_Min = v, v => spsNoDoc.TakeUpConveyorSpeed_Asli = v, v => spsNoDoc.TakeUpConveyorSpeed_Max = v);
                             }
                             
                             if (idxChillerWaterTemp <= 0) {
                                 int chillerCol = FindColumn("CHILLER WATER TEMP", "CHILLER", "CHILLERWATERTEMP");
-                                AssignParsedValue(GetCellValue(firstRow, chillerCol), 
+                                AssignFullOrManual(chillerCol, 
                                     v => spsNoDoc.ChillerWaterTemp_Min = v, v => spsNoDoc.ChillerWaterTemp_Asli = v, v => spsNoDoc.ChillerWaterTemp_Max = v);
                             }
                             
-                            // THICKNESS with ±
+                            // THICKNESS with ± / MIN / STD / MAX
                             if (idxTebalInner <= 0) {
                                 int tebalInnerCol = FindColumn("TEBAL INNER", "TEBALINNER");
-                                AssignParsedValue(GetCellValue(firstRow, tebalInnerCol), 
+                                AssignFullOrManual(tebalInnerCol, 
                                     v => spsNoDoc.TebalInner_Min = v, v => spsNoDoc.TebalInner_Asli = v, v => spsNoDoc.TebalInner_Max = v);
                             }
                             
                             int tebalOuterCol = idxTebalOuter > 0 ? idxTebalOuter : FindColumn("TEBAL OUTER", "TEBALOUTER");
                             if (tebalOuterCol > 0)
                             {
-                                AssignParsedValue(GetCellValue(firstRow, tebalOuterCol), 
+                                AssignFullOrManual(tebalOuterCol, 
                                     v => spsNoDoc.TebalOuter_Min = v, v => spsNoDoc.TebalOuter_Asli = v, v => spsNoDoc.TebalOuter_Max = v);
                             }
                             
                             if (idxTebalTotal <= 0) {
                                 int tebalTotalCol = FindColumn("TEBAL TOTAL", "TEBALTOTAL");
-                                AssignParsedValue(GetCellValue(firstRow, tebalTotalCol), 
+                                AssignFullOrManual(tebalTotalCol, 
                                     v => spsNoDoc.TebalTotal_Min = v, v => spsNoDoc.TebalTotal_Asli = v, v => spsNoDoc.TebalTotal_Max = v);
                             }
                             
-                            // TOLERANCE Inner/Outer with ±
+                            // TOLERANCE Inner/Outer with ± / MIN / STD / MAX
                             if (idxToleranceInner <= 0) {
-                                AssignParsedValue(GetCellValue(firstRow, toleranceInnerCol), 
+                                AssignFullOrManual(toleranceInnerCol, 
                                     v => spsNoDoc.ToleranceInner_Min = v, v => spsNoDoc.ToleranceInner_Asli = v, v => spsNoDoc.ToleranceInner_Max = v);
                             }
                             
                             if (idxToleranceOuter <= 0) {
-                                AssignParsedValue(GetCellValue(firstRow, toleranceOuterCol), 
+                                AssignFullOrManual(toleranceOuterCol, 
                                     v => spsNoDoc.ToleranceOuter_Min = v, v => spsNoDoc.ToleranceOuter_Asli = v, v => spsNoDoc.ToleranceOuter_Max = v);
                             }
                             
-                            // OTHER PARAMETERS with ±
+                            // OTHER PARAMETERS with ± / MIN / STD / MAX
                             if (idxPitchYarn <= 0) {
                                 int pitchYarnCol = FindColumn("PITCH YARN", "PITCHYARN");
-                                AssignParsedValue(GetCellValue(firstRow, pitchYarnCol), 
+                                AssignFullOrManual(pitchYarnCol, 
                                     v => spsNoDoc.PitchYarn_Min = v, v => spsNoDoc.PitchYarn_Asli = v, v => spsNoDoc.PitchYarn_Max = v);
                             }
                             
                             if (idxCaterpillarGap <= 0) {
                                 int caterpillarCol = FindColumn("CATERPILLAR GAP", "CATERPILLARGAP");
-                                AssignParsedValue(GetCellValue(firstRow, caterpillarCol), 
+                                AssignFullOrManual(caterpillarCol, 
                                     v => spsNoDoc.CaterpillarGap_Min = v, v => spsNoDoc.CaterpillarGap_Asli = v, v => spsNoDoc.CaterpillarGap_Max = v);
                             }
                             
                             if (idxDancerPosition <= 0) {
                                 int dancerCol = FindColumn("DANCER POSITION", "DANCERPOSITION");
-                                AssignParsedValue(GetCellValue(firstRow, dancerCol), 
+                                AssignFullOrManual(dancerCol, 
                                     v => spsNoDoc.DancerPosition_Min = v, v => spsNoDoc.DancerPosition_Asli = v, v => spsNoDoc.DancerPosition_Max = v);
                             }
                             
-                            int odSensorCol = idxODSensor > 0 ? idxODSensor : FindColumn("OD SENSOR", "ODSENSOR");
+                            int odSensorCol = idxODSensor > 0 ? idxODSensor : FindColumn("OD SENSOR", "ODSENSOR", "OD");
                             if (odSensorCol > 0)
                             {
-                                AssignParsedValue(GetCellValue(firstRow, odSensorCol), 
+                                AssignFullOrManual(odSensorCol, 
                                     v => spsNoDoc.OdSensor_Min = v, v => spsNoDoc.OdSensor_Asli = v, v => spsNoDoc.OdSensor_Max = v);
                             }
                             
@@ -2807,22 +2829,36 @@ namespace VelastoProductionSystem.Controllers
                             }
                             else
                             {
+                                updatedDocsCount++;
                                 _logger.LogInformation($"Updated SpsNoDoc: {spsNoDoc.DocumentNumber}");
                             }
                             
-                            // Check if ItemList needs to be added
-                            bool itemExists = !isNewDoc && existingDoc?.ItemLists != null && existingDoc.ItemLists.Any(i => i.ItemList == item);
-                            if (!itemExists)
+                            // Optional backward compatibility: if ItemList column was populated with valid item code
+                            if (!string.IsNullOrWhiteSpace(itemListValue))
                             {
-                                _context.SpsItemLists.Add(new SpsItemList
+                                var items = itemListValue.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(s => s.Trim())
+                                    .Where(s => !string.IsNullOrEmpty(s) && !s.StartsWith("UNKNOWN-", StringComparison.OrdinalIgnoreCase))
+                                    .ToList();
+
+                                foreach (var item in items)
                                 {
-                                    DocumentNumber = spsNoDoc.DocumentNumber,
-                                    ItemList = item
-                                });
-                                await _context.SaveChangesAsync();
-                                importedCount++;
+                                    bool itemExists = spsNoDoc.ItemLists != null && spsNoDoc.ItemLists.Any(i => i.ItemList == item);
+                                    if (!itemExists)
+                                    {
+                                        _context.SpsItemLists.Add(new SpsItemList
+                                        {
+                                            DocumentNumber = spsNoDoc.DocumentNumber,
+                                            ItemList = item
+                                        });
+                                        importedCount++;
+                                    }
+                                }
+                                if (importedCount > 0)
+                                {
+                                    await _context.SaveChangesAsync();
+                                }
                             }
-                        } // end foreach (var item in items)
                     }
                     catch (Exception ex)
                     {
@@ -2833,10 +2869,17 @@ namespace VelastoProductionSystem.Controllers
                 }
 
                 // Auto-refresh dengan redirect
-                TempData["SuccessMessage"] = $"âœ… Import berhasil! {importedDocsCount} dokumen baru, {importedCount} item list ditambahkan!";
+                string successMsg = $"Import berhasil! {importedDocsCount} dokumen baru ditambahkan" +
+                    (updatedDocsCount > 0 ? $", {updatedDocsCount} dokumen diperbarui." : ".");
+                if (importedCount > 0)
+                {
+                    successMsg += $" ({importedCount} item list terhubung).";
+                }
+
+                TempData["SuccessMessage"] = $"✅ {successMsg}";
                 if (errorCount > 0)
                 {
-                    TempData["WarningMessage"] = $"âš  {errorCount} error: {string.Join(", ", errors.Take(3))}";
+                    TempData["WarningMessage"] = $"⚠️ {errorCount} error: {string.Join(", ", errors.Take(3))}";
                 }
 
                 await _approvalService.ConsumeApprovalAsync(ApprovalActionType.SpsImportTemplate, fileApprovalKey);
@@ -2844,9 +2887,10 @@ namespace VelastoProductionSystem.Controllers
                 return Json(new
                 {
                     success = true,
-                    message = $"Import berhasil: {importedDocsCount} dokumen baru, {importedCount} item list ditambahkan!",
+                    message = successMsg,
                     imported = importedCount,
                     importedDocs = importedDocsCount,
+                    updatedDocs = updatedDocsCount,
                     errors = errorCount,
                     errorDetails = errors.Take(10).ToList(),
                     redirect = true

@@ -74,6 +74,8 @@ using (var scope = app.Services.CreateScope())
 
         EnsureApprovalWorkflowObjects(context);
         EnsureSpsDocumentActivationColumn(context);
+        EnsureSpsItemListLengthColumns(context);
+        EnsureProductionReportExtendedColumns(context);
 
         DataSeeder.SeedData(context, elwpContext);
         await ShiftHelper.EnsureCompanyShiftsAsync(context);
@@ -236,6 +238,200 @@ END;
         catch (Exception ex) when (ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
         {
             // Column already exists; no action needed.
+        }
+    }
+}
+
+static void EnsureSpsItemListLengthColumns(ApplicationDbContext context)
+{
+    var provider = context.Database.ProviderName ?? string.Empty;
+
+    if (provider.Contains("SqlServer", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Database.ExecuteSqlRaw(@"
+IF COL_LENGTH(N'[dbo].[SpsItemLists]', N'LengthShrinkMin') IS NULL
+    ALTER TABLE [dbo].[SpsItemLists] ADD [LengthShrinkMin] REAL NULL;
+
+IF COL_LENGTH(N'[dbo].[SpsItemLists]', N'LengthShrinkStd') IS NULL
+    ALTER TABLE [dbo].[SpsItemLists] ADD [LengthShrinkStd] REAL NULL;
+
+IF COL_LENGTH(N'[dbo].[SpsItemLists]', N'LengthShrinkMax') IS NULL
+    ALTER TABLE [dbo].[SpsItemLists] ADD [LengthShrinkMax] REAL NULL;
+
+IF COL_LENGTH(N'[dbo].[SpsItemLists]', N'LengthCuttingMin') IS NULL
+    ALTER TABLE [dbo].[SpsItemLists] ADD [LengthCuttingMin] REAL NULL;
+
+IF COL_LENGTH(N'[dbo].[SpsItemLists]', N'LengthCuttingStd') IS NULL
+    ALTER TABLE [dbo].[SpsItemLists] ADD [LengthCuttingStd] REAL NULL;
+
+IF COL_LENGTH(N'[dbo].[SpsItemLists]', N'LengthCuttingMax') IS NULL
+    ALTER TABLE [dbo].[SpsItemLists] ADD [LengthCuttingMax] REAL NULL;
+");
+    }
+    else if (provider.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
+    {
+        var statements = new[]
+        {
+            "ALTER TABLE SpsItemLists ADD COLUMN LengthShrinkMin REAL NULL;",
+            "ALTER TABLE SpsItemLists ADD COLUMN LengthShrinkStd REAL NULL;",
+            "ALTER TABLE SpsItemLists ADD COLUMN LengthShrinkMax REAL NULL;",
+            "ALTER TABLE SpsItemLists ADD COLUMN LengthCuttingMin REAL NULL;",
+            "ALTER TABLE SpsItemLists ADD COLUMN LengthCuttingStd REAL NULL;",
+            "ALTER TABLE SpsItemLists ADD COLUMN LengthCuttingMax REAL NULL;"
+        };
+        foreach (var sql in statements)
+        {
+            try
+            {
+                context.Database.ExecuteSqlRaw(sql);
+            }
+            catch (Exception ex) when (ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+            {
+                // Already exists
+            }
+        }
+    }
+}
+
+static void EnsureProductionReportExtendedColumns(ApplicationDbContext context)
+{
+    var provider = context.Database.ProviderName ?? string.Empty;
+
+    if (provider.Contains("SqlServer", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Database.ExecuteSqlRaw(@"
+-- ProductionReports new columns
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitAmMeterInner') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitAmMeterInner] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitHeadTempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitHeadTempMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitCylinder1TempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitCylinder1TempMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitCylinder2TempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitCylinder2TempMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitCylinder3TempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitCylinder3TempMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitScrewTempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitScrewTempMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitScrewSpeedMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitScrewSpeedMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitFeedRollRatioMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitFeedRollRatioMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitPressureMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitPressureMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitAmMeterMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitAmMeterMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitAmMeterOuter') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitAmMeterOuter] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitOdSensor') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitOdSensor] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitCoolConveyorSpeed2') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitCoolConveyorSpeed2] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'InitCuttingSpeed') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [InitCuttingSpeed] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'AlarmFunctionCheck') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [AlarmFunctionCheck] NVARCHAR(50) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'LengthShrinkMin') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [LengthShrinkMin] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'LengthShrinkStd') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [LengthShrinkStd] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'LengthShrinkMax') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [LengthShrinkMax] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'LengthCuttingMin') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [LengthCuttingMin] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'LengthCuttingStd') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [LengthCuttingStd] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'LengthCuttingMax') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [LengthCuttingMax] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'ActualLengthShrink') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [ActualLengthShrink] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReports]', N'ActualLengthCutting') IS NULL
+    ALTER TABLE [dbo].[ProductionReports] ADD [ActualLengthCutting] DECIMAL(18,2) NULL;
+
+-- ProductionReadings new columns
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'AmMeterInner') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [AmMeterInner] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'HeadTempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [HeadTempMiddle] INT NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'Cylinder1TempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [Cylinder1TempMiddle] INT NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'Cylinder2TempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [Cylinder2TempMiddle] INT NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'Cylinder3TempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [Cylinder3TempMiddle] INT NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'ScrewTempMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [ScrewTempMiddle] INT NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'ScrewSpeedMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [ScrewSpeedMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'FeedRollRatioMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [FeedRollRatioMiddle] INT NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'PressureMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [PressureMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'AmMeterMiddle') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [AmMeterMiddle] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'AmMeterOuter') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [AmMeterOuter] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'OdSensor') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [OdSensor] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'CoolConveyorSpeed2') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [CoolConveyorSpeed2] DECIMAL(18,2) NULL;
+IF COL_LENGTH(N'[dbo].[ProductionReadings]', N'CuttingSpeed') IS NULL
+    ALTER TABLE [dbo].[ProductionReadings] ADD [CuttingSpeed] DECIMAL(18,2) NULL;
+");
+    }
+    else if (provider.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
+    {
+        var statements = new[]
+        {
+            "ALTER TABLE ProductionReports ADD COLUMN InitAmMeterInner REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitHeadTempMiddle REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitCylinder1TempMiddle REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitCylinder2TempMiddle REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitCylinder3TempMiddle REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitScrewTempMiddle REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitScrewSpeedMiddle REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitFeedRollRatioMiddle REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitPressureMiddle REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitAmMeterMiddle REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitAmMeterOuter REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitOdSensor REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitCoolConveyorSpeed2 REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN InitCuttingSpeed REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN AlarmFunctionCheck TEXT NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN LengthShrinkMin REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN LengthShrinkStd REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN LengthShrinkMax REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN LengthCuttingMin REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN LengthCuttingStd REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN LengthCuttingMax REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN ActualLengthShrink REAL NULL;",
+            "ALTER TABLE ProductionReports ADD COLUMN ActualLengthCutting REAL NULL;",
+
+            "ALTER TABLE ProductionReadings ADD COLUMN AmMeterInner REAL NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN HeadTempMiddle INTEGER NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN Cylinder1TempMiddle INTEGER NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN Cylinder2TempMiddle INTEGER NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN Cylinder3TempMiddle INTEGER NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN ScrewTempMiddle INTEGER NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN ScrewSpeedMiddle REAL NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN FeedRollRatioMiddle INTEGER NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN PressureMiddle REAL NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN AmMeterMiddle REAL NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN AmMeterOuter REAL NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN OdSensor REAL NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN CoolConveyorSpeed2 REAL NULL;",
+            "ALTER TABLE ProductionReadings ADD COLUMN CuttingSpeed REAL NULL;"
+        };
+        foreach (var sql in statements)
+        {
+            try
+            {
+                context.Database.ExecuteSqlRaw(sql);
+            }
+            catch (Exception ex) when (ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+            {
+                // Already exists
+            }
         }
     }
 }

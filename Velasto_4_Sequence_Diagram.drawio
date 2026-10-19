@@ -1,0 +1,82 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6" pages="2">
+  <diagram name="5. Sequence - Approval SPS" id="d5">
+    <mxGraphModel dx="1042" dy="660" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="p5_2" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#0f172a;fontStyle=1;" value="Admin Engineering" vertex="1">
+          <mxGeometry height="650" width="130" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_3" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#0f172a;fontStyle=1;" value="Web UI (Approval)" vertex="1">
+          <mxGeometry height="650" width="130" x="220" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_4" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontColor=#0f172a;fontStyle=1;" value="ApprovalController" vertex="1">
+          <mxGeometry height="650" width="140" x="400" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_5" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontColor=#0f172a;fontStyle=1;" value="ApprovalService" vertex="1">
+          <mxGeometry height="650" width="130" x="590" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_6" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f8fafc;strokeColor=#475569;strokeWidth=1.5;fontColor=#0f172a;fontStyle=1;" value="ApplicationDbContext" vertex="1">
+          <mxGeometry height="650" width="150" x="770" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_6b" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=1.5;fontColor=#0f172a;fontStyle=1;" value="SuperAdmin / Manager" vertex="1">
+          <mxGeometry height="650" width="150" x="970" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_7" edge="1" parent="1" source="p5_2" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" target="p5_3" value="1: POST /Approval/Submit(spsId)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="90" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_8" edge="1" parent="1" source="p5_3" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" target="p5_4" value="2: SubmitForApproval(spsId)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="115" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_9" edge="1" parent="1" source="p5_4" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" target="p5_5" value="3: SubmitRequestAsync(ActionType, TargetKey)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="140" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_10" edge="1" parent="1" source="p5_5" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" target="p5_6" value="4: INSERT ApprovalRequest (Pending)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="165" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_11" edge="1" parent="1" source="p5_6" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" target="p5_3" value="5: Response OK (Pending)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="190" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_12" edge="1" parent="1" source="p5_6b" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" target="p5_3" value="6: GET /Approval/Inbox">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="230" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_13" edge="1" parent="1" source="p5_3" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" target="p5_4" value="7: GetInboxAsync()">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="255" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_14" edge="1" parent="1" source="p5_4" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" target="p5_6" value="8: SELECT ApprovalRequests WHERE Status=Pending">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="280" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_15" edge="1" parent="1" source="p5_6" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" target="p5_6b" value="9: Tampilkan List Approval Pending">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="305" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_16" edge="1" parent="1" source="p5_6b" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#dc2626;strokeWidth=1.5;" target="p5_4" value="10a: POST SetRevisionRequired(id, comment)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="350" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_17" edge="1" parent="1" source="p5_4" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#dc2626;strokeWidth=1.5;" target="p5_5" value="11a: SetRevisionRequiredAsync(...)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="375" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_18" edge="1" parent="1" source="p5_5" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#dc2626;strokeWidth=1.5;" target="p5_6" value="12a: UPDATE Status=RevisionRequired">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="400" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_19" edge="1" parent="1" source="p5_2" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0284c7;strokeWidth=1.5;" target="p5_4" value="13: Edit &amp; POST Resubmit(id)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="445" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_20" edge="1" parent="1" source="p5_4" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#0284c7;strokeWidth=1.5;" target="p5_6" value="14: UPDATE Status=Pending (Revision+1)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="470" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_21" edge="1" parent="1" source="p5_6b" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#16a34a;strokeWidth=1.5;" target="p5_4" value="15: POST Approve(id)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="515" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_22" edge="1" parent="1" source="p5_4" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#16a34a;strokeWidth=1.5;" target="p5_5" value="16: ApproveRequestAsync(id)">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="540" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_23" edge="1" parent="1" source="p5_5" style="html=1;rounded=0;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#16a34a;strokeWidth=1.5;" target="p5_6" value="17: UPDATE Status=Approved, IsActive=1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="565" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p5_24" edge="1" parent="1" source="p5_6" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;labelBackgroundColor=#ffffff;fontSize=11;fontColor=#0f172a;strokeColor=#16a34a;strokeWidth=1.5;" target="p5_2" value="18: SPS Active For Production Notification">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="590" as="offset" /></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

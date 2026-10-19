@@ -114,11 +114,17 @@
     <div class="container-fluid p-1 p-md-2">
 
         <!-- HEADER HUD -->
-        <div class="mb-5 py-2">
-            <div class="text-center">
+        <div class="d-flex align-items-center justify-content-between mb-4 py-2">
+            <div style="min-width: 180px;">
+                <a href="/ProductionReport/Details/@Model.Id" class="btn btn-outline-light btn-sm px-3 rounded-pill border-opacity-25 d-inline-flex align-items-center shadow-sm" style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);">
+                    <i class="bi bi-arrow-left me-1 me-md-2"></i> <span class="d-none d-sm-inline font-monospace fw-bold">KEMBALI KE DETAIL</span><span class="d-inline d-sm-none font-monospace fw-bold">KEMBALI</span>
+                </a>
+            </div>
+            <div class="text-center flex-grow-1">
                 <h1 class="m-0 fw-black text-white letter-spacing-2" style="font-size: 1.6rem;">EDIT PRODUCTION REPORT</h1>
                 <div class="text-warning fw-bold tracking-widest" style="font-size: 0.95rem;">(PARAMETER CORRECTION)</div>
             </div>
+            <div style="min-width: 180px;" class="d-none d-md-block"></div>
         </div>
 
         <form asp-action="Edit" id="editForm">
@@ -482,7 +488,7 @@
                     <div class="row g-3">
                         @{
                             var diesList = new[] { 
-                                new { Name = "Nipple", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal", OK = Model!.NippleDieOK, InitVal = Model!.NippleDieInitial, FinalVal = Model!.NippleDieFinal },
+                                new { Name = "Nipple Die", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal", OK = Model!.NippleDieOK, InitVal = Model!.NippleDieInitial, FinalVal = Model!.NippleDieFinal },
                                 new { Name = "Tube Die", Field = "TubeDieOK", SpecKey = "TubeDie", InitName = "TubeDieInitial", FinalName = "TubeDieFinal", OK = Model!.TubeDieOK, InitVal = Model!.TubeDieInitial, FinalVal = Model!.TubeDieFinal },
                                 new { Name = "Middle Die", Field = "MiddleDieOK", SpecKey = "MiddleDie", InitName = "MiddleDieInitial", FinalName = "MiddleDieFinal", OK = Model!.MiddleDieOK, InitVal = Model!.MiddleDieInitial, FinalVal = Model!.MiddleDieFinal },
                                 new { Name = "Cover Die", Field = "CoverDieOK", SpecKey = "CoverDie", InitName = "CoverDieInitial", FinalName = "CoverDieFinal", OK = Model!.CoverDieOK, InitVal = Model!.CoverDieInitial, FinalVal = Model!.CoverDieFinal },
@@ -493,7 +499,10 @@
 
                         @foreach(var die in diesList) {
                             var isMiddleDie = die.Name == "Middle Die";
-                            <div class="col-md-6 col-xl-4 @(isMiddleDie && string.IsNullOrEmpty(die.SpecKey) ? "d-none" : "")" id="die_card_@die.SpecKey">
+                            var isDLMachine = (Model?.MachineName ?? "").ToUpper().Contains("DL");
+                            var hideDieCard = (isMiddleDie && string.IsNullOrEmpty(die.SpecKey)) 
+                                              || (isDLMachine && (die.Name == "Middle Die" || die.Name == "A Distance" || die.Name == "Spacer"));
+                            <div class="col-md-6 col-xl-4 @(hideDieCard ? "d-none" : "")" id="die_card_@die.SpecKey" style="@(hideDieCard ? "display:none!important;" : "")">
                                 <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
 
                                     <!-- TOP: Instrument name + OK/NG -->
@@ -586,25 +595,76 @@
                     var monSections = new[] {
                         new { 
                             Title = "SECTION 01: INNER (TUBE 1)", Icon="bi-gear-fill", Color = "#3b82f6", ID="inner",
-                            Rows = new[,] { { "Head Temp.", "°C", "HeadTempInner" }, { "Cylinder 1", "°C", "Cylinder1TempInner" }, { "Cylinder 2", "°C", "Cylinder2TempInner" }, { "Cylinder 3", "°C", "Cylinder3TempInner" }, { "Screw Temp.", "°C", "ScrewTempInner" }, { "Screw Speed", "rpm", "ScrewSpeedInner" }, { "Feed Roll Ratio", "%", "FeedRollRatioInner" }, { "Pressure", "MPa", "PressureInner" } }
+                            Rows = new[,] { 
+                                { "Head Temp.", "°C", "HeadTempInner" }, 
+                                { "Cylinder 1", "°C", "Cylinder1TempInner" }, 
+                                { "Cylinder 2", "°C", "Cylinder2TempInner" }, 
+                                { "Cylinder 3", "°C", "Cylinder3TempInner" }, 
+                                { "Screw Temp.", "°C", "ScrewTempInner" }, 
+                                { "Screw Speed", "rpm", "ScrewSpeedInner" }, 
+                                { "Feed Roll Ratio", "%", "FeedRollRatioInner" }, 
+                                { "Pressure", "MPa", "PressureInner" },
+                                { "Am meter", "A", "AmMeterInner" }
+                            }
                         },
                         new { 
-                            Title = "SECTION 02: OUTER (COVER)", Icon="bi-shield-shaded", Color = "#f59e0b", ID="outer",
-                            Rows = new[,] { { "Head Temp.", "°C", "HeadTempOuter" }, { "Cylinder 1", "°C", "Cylinder1TempOuter" }, { "Cylinder 2", "°C", "Cylinder2TempOuter" }, { "Cylinder 3", "°C", "Cylinder3TempOuter" }, { "Screw Temp.", "°C", "ScrewTempOuter" }, { "Screw Speed", "rpm", "ScrewSpeedOuter" }, { "Feed Roll Ratio", "%", "FeedRollRatioOuter" }, { "Pressure", "MPa", "PressureOuter" } }
+                            Title = "SECTION 02: MIDDLE (TUBE 2)", Icon="bi-layers-fill", Color = "#8b5cf6", ID="middle",
+                            Rows = new[,] { 
+                                { "Head Temp.", "°C", "HeadTempMiddle" }, 
+                                { "Cylinder 1", "°C", "Cylinder1TempMiddle" }, 
+                                { "Cylinder 2", "°C", "Cylinder2TempMiddle" }, 
+                                { "Cylinder 3", "°C", "Cylinder3TempMiddle" }, 
+                                { "Screw Temp.", "°C", "ScrewTempMiddle" }, 
+                                { "Screw Speed", "rpm", "ScrewSpeedMiddle" }, 
+                                { "Feed Roll Ratio", "%", "FeedRollRatioMiddle" }, 
+                                { "Pressure", "MPa", "PressureMiddle" },
+                                { "Am meter", "A", "AmMeterMiddle" }
+                            }
                         },
                         new { 
-                            Title = "SECTION 03: SPIRAL MECHANISM", Icon="bi-sync", Color = "#10b981", ID="spiral",
-                            Rows = new[,] { { "Spiral Speed", "rpm", "SpiralSpeed" }, { "Spiral Pitch (Set)", "mm", "SpiralPitchSetting" }, { "Spiral Pitch (Disp)", "mm", "SpiralPitchDisplay" } } 
+                            Title = "SECTION 03: OUTER (COVER)", Icon="bi-shield-shaded", Color = "#f59e0b", ID="outer",
+                            Rows = new[,] { 
+                                { "Head Temp.", "°C", "HeadTempOuter" }, 
+                                { "Cylinder 1", "°C", "Cylinder1TempOuter" }, 
+                                { "Cylinder 2", "°C", "Cylinder2TempOuter" }, 
+                                { "Cylinder 3", "°C", "Cylinder3TempOuter" }, 
+                                { "Screw Temp.", "°C", "ScrewTempOuter" }, 
+                                { "Screw Speed", "rpm", "ScrewSpeedOuter" }, 
+                                { "Feed Roll Ratio", "%", "FeedRollRatioOuter" }, 
+                                { "Pressure", "MPa", "PressureOuter" },
+                                { "Am meter", "A", "AmMeterOuter" }
+                            }
                         },
                         new { 
-                            Title = "SECTION 04: INFRA & UTILITY", Icon="bi-water", Color = "#0ea5e9", ID="other",
-                            Rows = new[,] { { "Preset Value", "Ø mm", "PresetValue" }, { "Control Value", "Ø mm", "ControlValue" }, { "Hose Speed", "m/min", "HoseSpeed" }, { "Take-up Speed", "", "TakeupConveyorSpeed" }, { "Cool Speed", "", "CoolConveyorSpeed" }, { "Conveyor Ratio", "", "ConveyorRatio" }, { "Surface Condition", "", "UnsmoothSurface" }, { "Chiller Temp", "°C", "ChillerWaterTemp" }, { "Caterpillar Gap", "mm", "CaterpillarGap" } } 
+                            Title = "SECTION 04: SPIRAL MECHANISM", Icon="bi-sync", Color = "#10b981", ID="spiral",
+                            Rows = new[,] { 
+                                { "Spiral Speed", "rpm", "SpiralSpeed" }, 
+                                { "Spiral Pitch (Set)", "mm", "SpiralPitchSetting" }, 
+                                { "Spiral Pitch (Disp)", "mm", "SpiralPitchDisplay" } 
+                            } 
+                        },
+                        new { 
+                            Title = "SECTION 05: INFRA & UTILITY", Icon="bi-water", Color = "#0ea5e9", ID="other",
+                            Rows = new[,] { 
+                                { "OD Sensor", "Ø mm", "OdSensor" },
+                                { "Preset Value", "Ø mm", "PresetValue" }, 
+                                { "Control Value", "Ø mm", "ControlValue" }, 
+                                { "Hose Speed", "m/min", "HoseSpeed" }, 
+                                { "Take-up Speed", "", "TakeupConveyorSpeed" }, 
+                                { "Cool Speed 1", "", "CoolConveyorSpeed" }, 
+                                { "Cool Speed 2", "", "CoolConveyorSpeed2" }, 
+                                { "Conveyor Ratio", "", "ConveyorRatio" }, 
+                                { "Surface Condition", "", "UnsmoothSurface" }, 
+                                { "Chiller Temp", "°C", "ChillerWaterTemp" }, 
+                                { "Caterpillar Gap", "mm", "CaterpillarGap" },
+                                { "Cutting Speed", "m/min", "CuttingSpeed" }
+                            } 
                         }
                     };
                 }
 
                 @foreach (var mSec in monSections) {
-                    <div class="col-12 col-xxl-6">
+                    <div class="col-12 col-xxl-6" id="card_col_@mSec.ID">
                         <div class="hud-card h-100 shadow-hud mb-1 overflow-hidden" 
                              style="border: 1px solid @(mSec.Color)44; background: rgba(15, 23, 42, 0.6); box-shadow: 0 0 20px @(mSec.Color)11;">
                             
@@ -622,7 +682,7 @@
                                 <div class="row g-4">
                                     @for (int r = 0; r < mSec.Rows.GetLength(0); r++) {
                                         var key = mSec.Rows[r, 2];
-                                        <div class="col-6">
+                                        <div class="col-6" id="tile_col_@key">
                                             <div class="param-tile-modern rounded-3 p-3 text-center h-100 d-flex flex-column justify-content-between"
                                                  style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; position: relative; overflow: hidden;">
                                                 
@@ -793,7 +853,7 @@
                             </div>
 
                             <div class="mt-auto d-flex gap-2">
-                                <a asp-action="ParameterHistory" class="btn btn-hud-outline flex-grow-1 py-3 fw-bold small d-flex align-items-center justify-content-center gap-2" style="border-width:1px;">
+                                <a href="/ProductionReport/Details/@Model.Id" class="btn btn-hud-outline flex-grow-1 py-3 fw-bold small d-flex align-items-center justify-content-center gap-2" style="border-width:1px;">
                                     <i class="bi bi-x-lg"></i> CANCEL
                                 </a>
                                 <button type="button" class="btn btn-hud-primary flex-grow-3 py-3 fw-900 tracking-widest shadow-glow-primary border-0 rounded-1 d-flex align-items-center justify-content-center gap-2" style="font-size:1.1rem;" onclick="submitUpdateReport()">
@@ -1241,32 +1301,85 @@
         }
 
         function generateSteps(minStr, stdStr, maxStr) {
-            const rangeMatch = stdStr && String(stdStr).trim().match(/^([\d,.]+)\s*[-?"~]\s*([\d,.]+)$/);
-            if (rangeMatch) {
-                const rangeMin = parseFloat(rangeMatch[1].replace(',', '.'));
-                const rangeMax = parseFloat(rangeMatch[2].replace(',', '.'));
-                if (!isNaN(rangeMin) && !isNaN(rangeMax) && rangeMin < rangeMax) {
-                    const part1Dec = (rangeMatch[1].includes(',') ? rangeMatch[1].split(',')[1] : (rangeMatch[1].includes('.') ? rangeMatch[1].split('.')[1] : '')).length;
-                    const part2Dec = (rangeMatch[2].includes(',') ? rangeMatch[2].split(',')[1] : (rangeMatch[2].includes('.') ? rangeMatch[2].split('.')[1] : '')).length;
-                    const decimalsToUse = Math.max(part1Dec, part2Dec);
-                    const diff = rangeMax - rangeMin;
-                    const stepSize = decimalsToUse === 0 ? 1 : (diff > 5 ? Math.ceil(diff / 10) : 0.5);
-                    const stepCount = Math.min(Math.round(diff / stepSize), 20);
-                    const stepValue = diff / stepCount;
-                    const values = [];
-                    for (let i = 0; i <= stepCount; i++) {
-                        values.push(rangeMin + stepValue * i);
-                    }
-                    const fmt = v => v.toFixed(decimalsToUse).replace('.', ',');
-                    const unique = [...new Set(values.map(v => Number(v.toFixed(3))))].sort((a, b) => a - b);
-                    return { steps: unique.map(v => fmt(v)), rangeMin: fmt(rangeMin), rangeMax: fmt(rangeMax), isRange: true };
-                }
-            }
-
             const min = parseFloat((minStr || '').replace(',', '.'));
             const std = parseFloat((stdStr || '').replace(',', '.'));
             const max = parseFloat((maxStr || '').replace(',', '.'));
-            
+
+            let rangeMin = NaN, rangeMax = NaN;
+            let rangeDecimals = 0;
+
+            // --- RANGE DETECTION ---
+            // 1. stdStr contains range "5-8" or "2 ~ 5" or "2.0-5.0"
+            const rangeMatch = stdStr && String(stdStr).trim().match(/^([\d,.]+)\s*[-–~]\s*([\d,.]+)$/);
+            if (rangeMatch) {
+                rangeMin = parseFloat(rangeMatch[1].replace(',', '.'));
+                rangeMax = parseFloat(rangeMatch[2].replace(',', '.'));
+                const p1Dec = (rangeMatch[1].includes(',') ? rangeMatch[1].split(',')[1] : (rangeMatch[1].includes('.') ? rangeMatch[1].split('.')[1] : '')).replace(/0+$/, '').length;
+                const p2Dec = (rangeMatch[2].includes(',') ? rangeMatch[2].split(',')[1] : (rangeMatch[2].includes('.') ? rangeMatch[2].split('.')[1] : '')).replace(/0+$/, '').length;
+                rangeDecimals = Math.max(p1Dec, p2Dec);
+            }
+            // 2. Or std is missing/NaN/--, but min and max exist with min < max (e.g. DL Nipple Die min=2, max=5)
+            else if ((isNaN(std) || stdStr === '--' || stdStr === '---' || !stdStr) && !isNaN(min) && !isNaN(max) && min < max) {
+                rangeMin = min;
+                rangeMax = max;
+                const getDec = s => {
+                    if (!s) return 0;
+                    const c = String(s).trim();
+                    const d = c.includes(',') ? c.split(',')[1] : (c.includes('.') ? c.split('.')[1] : '');
+                    return (d || '').replace(/0+$/, '').length;
+                };
+                rangeDecimals = Math.max(getDec(minStr), getDec(maxStr));
+            }
+
+            if (!isNaN(rangeMin) && !isNaN(rangeMax) && rangeMin < rangeMax) {
+                const diff = rangeMax - rangeMin;
+                let stepSize = 1;
+                if (diff <= 1) {
+                    stepSize = 0.1;
+                } else if (diff <= 3) {
+                    stepSize = 0.5;
+                } else if (diff <= 6) {
+                    stepSize = 0.5;
+                } else if (diff > 10) {
+                    stepSize = Math.ceil(diff / 10);
+                }
+
+                const decimalsToUse = (stepSize % 1 !== 0) ? Math.max(rangeDecimals, 1) : rangeDecimals;
+                const stepCount = Math.min(Math.round(diff / stepSize), 20);
+                const stepValue = diff / stepCount;
+                const values = [];
+                for (let i = 0; i <= stepCount; i++) {
+                    values.push(rangeMin + stepValue * i);
+                }
+                const fmt = v => {
+                    let s = v.toFixed(decimalsToUse);
+                    return s.replace('.', ',');
+                };
+                const unique = [...new Set(values.map(v => Number(v.toFixed(3))))].sort((a, b) => a - b);
+                return { 
+                    steps: unique.map(v => fmt(v)), 
+                    rangeMin: fmt(rangeMin), 
+                    rangeMax: fmt(rangeMax), 
+                    isRange: true 
+                };
+            }
+
+            // 3. Max-only spec (e.g. Chiller Water Temp max 15 or max 9)
+            if (!isNaN(max) && (isNaN(min) || minStr === '--') && (isNaN(std) || stdStr === '--' || String(stdStr).toLowerCase().includes('max'))) {
+                let stepMin = Math.max(1, max <= 10 ? max - 4 : (max <= 20 ? max - 5 : Math.round(max * 0.7)));
+                const values = [];
+                for (let v = stepMin; v <= max; v++) {
+                    values.push(v);
+                }
+                const fmt = v => String(v).replace('.', ',');
+                return {
+                    steps: values.map(v => fmt(v)),
+                    rangeMax: fmt(max),
+                    isMaxOnly: true,
+                    isRange: false
+                };
+            }
+
             if (isNaN(std)) return stdStr && stdStr !== '--' && stdStr !== '---' ? { steps: [stdStr], isRange: false } : { steps: [], isRange: false };
             if (isNaN(min) || isNaN(max) || min === max) return { steps: [stdStr], isRange: false };
             
@@ -1300,18 +1413,45 @@
             const result = generateSteps(finalMin, finalStd, finalMax);
             const steps = result.steps;
             const isRange = result.isRange;
+            const isMaxOnly = result.isMaxOnly;
             const rangeMin = result.rangeMin;
             const rangeMax = result.rangeMax;
 
             if (steps.length === 0) return;
 
+            const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
+
             const qtBtns = document.getElementById('qt_btns_' + key);
             if (qtBtns) {
+                // Max-only spec (e.g. Chiller Water Temp)
+                if (isMaxOnly) {
+                    const limitLabel = finalMax || result.rangeMax;
+                    let html = `<div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">MAX: ${limitLabel}</div>`;
+                    html += '<div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center; width:100%;">';
+                    steps.forEach(val => {
+                        const isMaxVal = (val === result.rangeMax);
+                        const label = isMaxVal ? 'MAX' : '&nbsp;';
+                        html += `<button type="button" class="qt-btn qt-std" style="${btnStyle} flex: 1 1 calc(33% - 4px); min-width: 45px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2;" onclick="quickFillParamDynamic('${key}', '${val}', true, this)">
+                            <span style="font-size:0.45rem; opacity:0.6; font-weight:normal; letter-spacing:0.5px;">${label}</span>
+                            <span>${val}</span>
+                        </button>`;
+                    });
+                    html += `</div>`;
+                    html += `<div style="margin-top:4px; display:flex; gap:4px; width:100%;">
+                        <button type="button" class="qt-btn qt-std" style="${btnStyle} flex:1;" onclick="quickFillParamDynamic('${key}', 'ok_manual', true, this)">OK (Manual)</button>
+                        <button type="button" class="qt-btn qt-ng" style="${btnStyle} flex:1;" onclick="quickFillParamDynamic('${key}', 'ng', false, this)">NG (Manual)</button>
+                    </div>`;
+                    qtBtns.innerHTML = html;
+                    
+                    const themeColor = qtBtns.closest('.param-tile-modern')?.querySelector('.vibrant-hud-input')?.style.getPropertyValue('--theme-color');
+                    if(themeColor) qtBtns.style.setProperty('--qt-color', themeColor);
+                    return;
+                }
+
                 if (steps.length === 1 && !isRange) {
                     const limitLabel = finalStd || steps[0];
-                    const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
                     const html = `
-                        <div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">MAX: ${limitLabel}</div>
+                        <div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">STD: ${limitLabel}</div>
                         <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
                             <button type="button" class="qt-btn qt-std" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ok_manual', false, this)">OK (Manual Input)</button>
                             <button type="button" class="qt-btn qt-ng" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ng', false, this)">NG (Manual Input)</button>
@@ -1324,8 +1464,6 @@
                     
                     return;
                 }
-
-                const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
                 
                 if (isRange) {
                     qtBtns.insertAdjacentHTML('beforebegin', `<div id="rangelabel_${key}" style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">STD: ${rangeMin} \u2013 ${rangeMax}</div>`);
@@ -1374,8 +1512,6 @@
                 };
                 const d = dieRadios[key];
                 if (d) {
-                    const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
-                    
                     let html = '';
                     if (isRange) {
                         html += `<div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">STD: ${rangeMin} \u2013 ${rangeMax}</div>`;
@@ -1422,7 +1558,7 @@
                 const std = stdEl ? stdEl.textContent.trim() : '--';
                 const max = maxEl ? maxEl.textContent.trim() : '--';
                 
-                if (std !== '--' && std !== '---' && std !== '') {
+                if ((std !== '--' && std !== '---' && std !== '') || (min !== '--' && min !== '---') || (max !== '--' && max !== '---')) {
                     renderDynamicButtons(key, min, std, max);
                 }
             });
@@ -1438,7 +1574,7 @@
                 const std = stdEl ? stdEl.textContent.trim() : '--';
                 const max = maxEl ? maxEl.textContent.trim() : '--';
                 
-                if (std !== '--' && std !== '---' && std !== '') {
+                if ((std !== '--' && std !== '---' && std !== '') || (min !== '--' && min !== '---') || (max !== '--' && max !== '---')) {
                     renderDynamicButtons(key, min, std, max);
                 }
             });
@@ -1910,7 +2046,7 @@
             const outerMatEl = document.getElementById('OuterMaterial');
             if (outerMatEl) outerMatEl.value = sps.outerMaterial || sps.OuterMaterial || sps.material || sps.Material || '';
 
-            // Show/hide Middle material CARD based on LayerType
+            // Show/hide Middle material CARD & parameter card based on LayerType
             const layerType = (sps.layerType || sps.LayerType || '').toLowerCase();
             const middleStd = sps.middleMaterial || sps.MiddleMaterial || sps.middleTube || sps.MiddleTube || '';
             const is3Layer = layerType.includes('3') || layerType.includes('triple') || layerType.includes('three') || middleStd !== '';
@@ -1925,6 +2061,11 @@
                 }
             }
 
+            const middleParamCol = document.getElementById('card_col_middle');
+            if (middleParamCol) {
+                middleParamCol.style.display = is3Layer ? 'block' : 'none';
+            }
+
             // Set Yarn/Benang field
             const yarnStd = sps.yarnType || sps.YarnType || sps.yarn || sps.Yarn || '';
             const yarnEl = document.getElementById('Yarn');
@@ -1933,21 +2074,56 @@
             // Populate parameter standards
             const setSpec = (id, val, minVal, maxVal, specId) => {
                 const fmt = v => (v != null && v !== '' && v !== 0 && v !== '0') ? String(v) : '--';
-                const stdStr = fmt(val);
-                const minStr = fmt(minVal);
-                const maxStr = fmt(maxVal);
+                let stdStr = fmt(val);
+                let minStr = fmt(minVal);
+                let maxStr = fmt(maxVal);
+
+                // Check ± format in stdStr (e.g. "15±2" or "12 ± 1" or "15+/-1")
+                if (minStr === '--' && maxStr === '--' && stdStr !== '--') {
+                    const pmMatch = String(stdStr).match(/^([\d,.]+)\s*(?:[\u00b1\uFFFD]|\+\s*[\/-]|\+\s*-)\s*([\d,.]+)$/);
+                    if (pmMatch) {
+                        const center = parseFloat(pmMatch[1].replace(',', '.'));
+                        const tol = parseFloat(pmMatch[2].replace(',', '.'));
+                        if (!isNaN(center) && !isNaN(tol)) {
+                            minStr = String(center - tol).replace('.', ',');
+                            stdStr = String(center).replace('.', ',');
+                            maxStr = String(center + tol).replace('.', ',');
+                        }
+                    }
+                    const maxMatch = String(stdStr).match(/^Max\.?\s*([\d,.]+)/i);
+                    if (maxMatch) {
+                        maxStr = maxMatch[1];
+                        stdStr = '--';
+                    }
+                    const minMatch = String(stdStr).match(/^Min\.?\s*([\d,.]+)/i);
+                    if (minMatch) {
+                        minStr = minMatch[1];
+                        stdStr = '--';
+                    }
+                }
+
                 // Populate split min/std/max display for die cards
                 const minEl = document.getElementById('spec_min_' + id);
                 const stdEl = document.getElementById('spec_std_' + id);
                 const maxEl = document.getElementById('spec_max_' + id);
                 if (minEl) minEl.textContent = minStr;
-                if (stdEl) stdEl.textContent = stdStr;
+                
+                // If STD is '--' but Min/Max exist, show as range "Min ~ Max" or "Max X" in STN column
+                const stdDisplay = (stdStr === '--' || !stdStr)
+                    ? ((minStr !== '--' || maxStr !== '--')
+                        ? (minStr !== '--' && maxStr !== '--' ? `${minStr} ~ ${maxStr}` : (maxStr !== '--' ? `Max ${maxStr}` : `Min ${minStr}`))
+                        : '--')
+                    : stdStr;
+                if (stdEl) stdEl.textContent = stdDisplay;
                 if (maxEl) maxEl.textContent = maxStr;
                 
-                // Show std-zone if standard exists
+                // Show std-zone if standard or range exists
                 if (stdEl) {
                     const stdZone = stdEl.closest('.std-zone');
-                    if (stdZone) stdZone.style.display = (stdStr !== '--') ? 'block' : 'none';
+                    const hasAnyValue = (stdStr !== '--' && stdStr !== '---') || 
+                                        (minStr !== '--' && minStr !== '---') || 
+                                        (maxStr !== '--' && maxStr !== '---');
+                    if (stdZone) stdZone.style.display = hasAnyValue ? 'block' : 'none';
                 }
 
                 // Store pipe-range in hidden spec element for checkDieStatus validation
@@ -1956,25 +2132,80 @@
                 if (el) {
                     if (minStr !== '--' && maxStr !== '--') {
                         el.textContent = minStr + ' | ' + stdStr + ' | ' + maxStr;
+                    } else if (maxStr !== '--') {
+                        el.textContent = '-- | -- | ' + maxStr;
                     } else {
                         el.textContent = stdStr;
                     }
                 }
+
+                // Render dynamic buttons
+                renderDynamicButtons(id, minStr, stdStr, maxStr);
             };
             
+            // Filter out known non-data string values from DB (e.g. 'kosong')
+            const cleanSpsVal = v => {
+                if (v == null || v === '' || v === 0 || v === '0') return null;
+                const s = String(v).trim().toLowerCase();
+                if (s === 'kosong' || s === '-' || s === '--' || s === '---' || s === 'null') return null;
+                return String(v).trim();
+            };
+
             // Helper to parse pre-formatted "min | std | max" string from backend
             const parsePipe = (formatted, fallbackVal, fallbackMin, fallbackMax) => {
                 if (formatted && formatted !== '--' && formatted !== '---' && formatted !== '') {
                     const parts = String(formatted).split('|').map(s => s.trim());
-                    if (parts.length === 3) return { val: parts[1], min: parts[0], max: parts[2] };
-                    if (parts.length === 1) return { val: parts[0], min: '--', max: '--' };
+                    if (parts.length === 3) {
+                        const cleanP = p => {
+                            if (!p) return '--';
+                            const sl = p.toLowerCase();
+                            return (sl === 'kosong' || sl === 'null' || sl === 'n/a' || sl === '---') ? '--' : p;
+                        };
+                        return { val: cleanP(parts[1]), min: cleanP(parts[0]), max: cleanP(parts[2]) };
+                    }
+                    if (parts.length === 1) {
+                        const single = parts[0];
+                        // Check if it's "Max. 15" or "Max 15"
+                        const maxMatch = single.match(/^Max\.?\s*([\d,.]+)/i);
+                        if (maxMatch) {
+                            return { val: '--', min: '--', max: maxMatch[1] };
+                        }
+                        // Check if it's "Min. 15" or "Min 15"
+                        const minMatch = single.match(/^Min\.?\s*([\d,.]+)/i);
+                        if (minMatch) {
+                            return { val: '--', min: minMatch[1], max: '--' };
+                        }
+                        // Check if it's ±
+                        const pmMatch = single.match(/^([\d,.]+)\s*(?:[\u00b1\uFFFD]|\+\s*[\/-]|\+\s*-)\s*([\d,.]+)$/);
+                        if (pmMatch) {
+                            const center = parseFloat(pmMatch[1].replace(',', '.'));
+                            const tol = parseFloat(pmMatch[2].replace(',', '.'));
+                            if (!isNaN(center) && !isNaN(tol)) {
+                                return {
+                                    val: String(center).replace('.', ','),
+                                    min: String(center - tol).replace('.', ','),
+                                    max: String(center + tol).replace('.', ',')
+                                };
+                            }
+                        }
+                        return { val: single, min: '--', max: '--' };
+                    }
                 }
-                const fmt = v => (v != null && v !== '' && v !== 0 && v !== '0') ? String(v) : '--';
-                return { val: fmt(fallbackVal), min: fmt(fallbackMin), max: fmt(fallbackMax) };
+                const fmt = v => cleanSpsVal(v) ?? '--';
+                const fVal = fmt(fallbackVal);
+                const fMin = fmt(fallbackMin);
+                const fMax = fmt(fallbackMax);
+                // If only min/max exist but no center std, still show as range
+                if (fVal === '--' && (fMin !== '--' || fMax !== '--')) {
+                    return { val: '--', min: fMin, max: fMax };
+                }
+                return { val: fVal, min: fMin, max: fMax };
             };
 
             // Dies dimension standards — backend pre-formats as "min | std | max"
-            const nd = parsePipe(sps.NippleDie || sps.nippleDie, sps.Nipple_Asli || sps.nipple_Asli || sps.Nipple || sps.nipple, sps.Nipple_Min || sps.nipple_Min, sps.Nipple_Max || sps.nipple_Max);
+            const nd = parsePipe(sps.NippleDie || sps.nippleDie,
+                cleanSpsVal(sps.Nipple_Asli || sps.nipple_Asli) ?? cleanSpsVal(sps.Nipple || sps.nipple),
+                sps.Nipple_Min || sps.nipple_Min, sps.Nipple_Max || sps.nipple_Max);
             setSpec('NippleDie', nd.val, nd.min, nd.max, 'NippleDie');
             const td = parsePipe(sps.TubeDie || sps.tubeDie, sps.TubeDie_Asli || sps.tubeDie_Asli || sps.TubeDie || sps.tubeDie, sps.TubeDie_Min || sps.tubeDie_Min, sps.TubeDie_Max || sps.tubeDie_Max);
             setSpec('TubeDie', td.val, td.min, td.max, 'TubeDie');
@@ -1988,7 +2219,9 @@
             setSpec('ToleranceDie', tld.val, tld.min, tld.max, 'ToleranceDie');
 
             // AUTO-HIDE Die Cards if empty OR if it's a Double Layer machine
-            const nippleVal = String(sps.NippleDie || sps.nippleDie || sps.Nipple_Asli || sps.nipple_Asli || sps.Nipple || sps.nipple || '').trim();
+            const nippleVal = cleanSpsVal(sps.NippleDie || sps.nippleDie || sps.Nipple_Asli || sps.nipple_Asli)
+                            ?? cleanSpsVal(sps.Nipple || sps.nipple)
+                            ?? (((sps.Nipple_Min || sps.nipple_Min) || (sps.Nipple_Max || sps.nipple_Max)) ? 'range' : '');
             const midVal = String(sps.MiddleDie || sps.middleDie || sps.MiddleDie_Asli || sps.middleDie_Asli || '').trim();
             
             // SUPER ROBUST Machine Detection
@@ -2000,18 +2233,43 @@
             
             const isDoubleLayer = (machineHidden + navbarMachine).toUpperCase().includes('DL');
             
+            const middleStd = sps.middleMaterial || sps.MiddleMaterial || sps.middleTube || sps.MiddleTube || '';
+            const layerType3L = (sps.layerType || sps.LayerType || '').toLowerCase();
+            const machineName3L = (window.SESSION_MACHINE_NAME || machineHidden || navbarMachine || '').toLowerCase();
+            const is3Layer = layerType3L.includes('3') || layerType3L.includes('triple') || layerType3L.includes('three')
+                          || machineName3L.includes('3l') || machineName3L.includes('chs3') || machineName3L.includes('3 layer') || machineName3L.includes('3layer')
+                          || (middleStd !== '' && middleStd !== 'kosong' && middleStd !== '-');
+            const middleCard = document.getElementById('middleMaterialCard');
+            if (middleCard) middleCard.style.display = is3Layer ? '' : 'none';
+            const middleParamCol = document.getElementById('card_col_middle');
+            if (middleParamCol) middleParamCol.style.setProperty('display', is3Layer ? '' : 'none', 'important');
+            
             const nippleCard = document.getElementById('die_card_NippleDie');
             const midCard = document.getElementById('die_card_MiddleDie');
+            const tubeCard = document.getElementById('die_card_TubeDie');
+            const coverCard = document.getElementById('die_card_CoverDie');
+            const spacerCard = document.getElementById('die_card_SpacerDie');
+            const toleranceCard = document.getElementById('die_card_ToleranceDie');
+
+            const tubeVal = cleanSpsVal(sps.TubeDie || sps.tubeDie || sps.TubeDie_Asli || sps.tubeDie_Asli)
+                            ?? cleanSpsVal(sps.Tube || sps.tube)
+                            ?? (((sps.TubeDie_Min || sps.tubeDie_Min) || (sps.TubeDie_Max || sps.tubeDie_Max)) ? 'range' : '');
+            const coverVal = cleanSpsVal(sps.CoverDie || sps.coverDie || sps.CoverDie_Asli || sps.coverDie_Asli)
+                            ?? cleanSpsVal(sps.Cover || sps.cover)
+                            ?? (((sps.CoverDie_Min || sps.coverDie_Min) || (sps.CoverDie_Max || sps.coverDie_Max)) ? 'range' : '');
+            const spacerVal = String(sps.SpacerDie || sps.spacerDie || sps.SpacerDie_Asli || sps.spacerDie_Asli || '').trim();
+            const toleranceVal = cleanSpsVal(sps.ToleranceDie || sps.toleranceDie || sps.ADistance || sps.aDistance || sps.ADistance_Asli || sps.aDistance_Asli)
+                                ?? (((sps.ADistance_Min || sps.aDistance_Min) || (sps.ADistance_Max || sps.aDistance_Max)) ? 'range' : '');
 
             if (nippleCard) {
-                if (!nippleVal || nippleVal === '--' || nippleVal === '0' || nippleVal === '') {
-                    nippleCard.classList.add('d-none');
-                    nippleCard.style.setProperty('display', 'none', 'important');
-                    console.log('🚫 FORCE HIDE Nipple Die. Detected:', (machineHidden || navbarMachine), 'Value:', nippleVal);
-                } else {
+                if (isDoubleLayer || (nippleVal && nippleVal !== '--' && nippleVal !== '0' && nippleVal !== '')) {
                     nippleCard.classList.remove('d-none');
                     nippleCard.style.display = 'block';
                     console.log('✅ SHOW Nipple Die. Value:', nippleVal);
+                } else {
+                    nippleCard.classList.add('d-none');
+                    nippleCard.style.setProperty('display', 'none', 'important');
+                    console.log('🚫 FORCE HIDE Nipple Die. Detected:', (machineHidden || navbarMachine), 'Value:', nippleVal);
                 }
             }
 
@@ -2025,6 +2283,57 @@
                     midCard.style.display = 'block';
                     console.log('✅ SHOW Middle Die. Value:', midVal);
                 }
+            }
+
+            if (tubeCard) {
+                if (isDoubleLayer || (tubeVal && tubeVal !== '--' && tubeVal !== '0' && tubeVal !== '')) {
+                    tubeCard.classList.remove('d-none');
+                    tubeCard.style.display = 'block';
+                } else {
+                    tubeCard.classList.add('d-none');
+                    tubeCard.style.setProperty('display', 'none', 'important');
+                }
+            }
+
+            if (coverCard) {
+                if (isDoubleLayer || (coverVal && coverVal !== '--' && coverVal !== '0' && coverVal !== '')) {
+                    coverCard.classList.remove('d-none');
+                    coverCard.style.display = 'block';
+                } else {
+                    coverCard.classList.add('d-none');
+                    coverCard.style.setProperty('display', 'none', 'important');
+                }
+            }
+
+            if (spacerCard) {
+                if (!isDoubleLayer && (spacerVal && spacerVal !== '--' && spacerVal !== '0' && spacerVal !== '')) {
+                    spacerCard.classList.remove('d-none');
+                    spacerCard.style.display = 'block';
+                } else {
+                    spacerCard.classList.add('d-none');
+                    spacerCard.style.setProperty('display', 'none', 'important');
+                }
+            }
+
+            if (toleranceCard) {
+                if (!isDoubleLayer && (toleranceVal && toleranceVal !== '--' && toleranceVal !== '0' && toleranceVal !== '')) {
+                    toleranceCard.classList.remove('d-none');
+                    toleranceCard.style.display = 'block';
+                } else {
+                    toleranceCard.classList.add('d-none');
+                    toleranceCard.style.setProperty('display', 'none', 'important');
+                }
+            }
+
+            // On DL machines, AM Meter does not exist -> hide all AM Meter tiles
+            if (isDoubleLayer) {
+                ['AmMeterInner', 'AmMeterMiddle', 'AmMeterOuter'].forEach(k => {
+                    const col = document.getElementById('tile_col_' + k);
+                    if (col) {
+                        col.classList.add('d-none');
+                        col.style.setProperty('display', 'none', 'important');
+                    }
+                });
             }
 
             // Map SPS fields to spec labels
@@ -2041,6 +2350,17 @@
             parseAndSet('ScrewSpeedInner', sps.ScrewSpeedInner || sps.screwSpeedInner, sps.ScrewSpeed1_Asli || sps.screwSpeed1_Asli || sps.ScrewSpeed1 || sps.screwSpeed1, sps.ScrewSpeed1_Min || sps.screwSpeed1_Min, sps.ScrewSpeed1_Max || sps.screwSpeed1_Max);
             parseAndSet('FeedRollRatioInner', sps.FeedRollRatioInner || sps.feedRollRatioInner, sps.FeedRollRatio1_Asli || sps.feedRollRatio1_Asli || sps.FeedRollRatio1 || sps.feedRollRatio1 || sps.Feed1_Asli || sps.feed1_Asli || sps.Feed1 || sps.feed1, sps.FeedRollRatio1_Min || sps.feedRollRatio1_Min || sps.Feed1_Min || sps.feed1_Min, sps.FeedRollRatio1_Max || sps.feedRollRatio1_Max || sps.Feed1_Max || sps.feed1_Max);
             parseAndSet('PressureInner', sps.PressureInner || sps.pressureInner, sps.Pressure1_Asli || sps.pressure1_Asli || sps.Pressure1 || sps.pressure1, sps.Pressure1_Min || sps.pressure1_Min, sps.Pressure1_Max || sps.pressure1_Max);
+            parseAndSet('AmMeterInner', sps.AmMeterInner || sps.amMeterInner, sps.AmMeterInner || sps.amMeterInner || sps.AmMeterInner_Asli || sps.AmMeter_Asli || sps.AmMeter, sps.AmMeterInner_Min || sps.AmMeter_Min, sps.AmMeterInner_Max || sps.AmMeter_Max);
+
+            parseAndSet('HeadTempMiddle', sps.HeadTempMiddle || sps.headTempMiddle, sps.HeadTempMiddle_Asli || sps.HeadTempMiddle || sps.HeadTemp3_Asli || sps.HeadTemp3, sps.HeadTempMiddle_Min || sps.HeadTemp3_Min, sps.HeadTempMiddle_Max || sps.HeadTemp3_Max);
+            parseAndSet('Cylinder1TempMiddle', sps.Cylinder1TempMiddle || sps.cylinder1TempMiddle, sps.Cylinder1_Middle_Asli || sps.Cylinder1TempMiddle || sps.Cylinder1_3_Asli || sps.Cylinder1_3, sps.Cylinder1_Middle_Min || sps.Cylinder1_3_Min, sps.Cylinder1_Middle_Max || sps.Cylinder1_3_Max);
+            parseAndSet('Cylinder2TempMiddle', sps.Cylinder2TempMiddle || sps.cylinder2TempMiddle, sps.Cylinder2_Middle_Asli || sps.Cylinder2TempMiddle || sps.Cylinder2_3_Asli || sps.Cylinder2_3, sps.Cylinder2_Middle_Min || sps.Cylinder2_3_Min, sps.Cylinder2_Middle_Max || sps.Cylinder2_3_Max);
+            parseAndSet('Cylinder3TempMiddle', sps.Cylinder3TempMiddle || sps.cylinder3TempMiddle, sps.Cylinder3_Middle_Asli || sps.Cylinder3TempMiddle || sps.Cylinder3_3_Asli || sps.Cylinder3_3, sps.Cylinder3_Middle_Min || sps.Cylinder3_3_Min, sps.Cylinder3_Middle_Max || sps.Cylinder3_3_Max);
+            parseAndSet('ScrewTempMiddle', sps.ScrewTempMiddle || sps.screwTempMiddle, sps.ScrewTempMiddle_Asli || sps.ScrewTempMiddle || sps.ScrewTemp3_Asli || sps.ScrewTemp3, sps.ScrewTempMiddle_Min || sps.ScrewTemp3_Min, sps.ScrewTempMiddle_Max || sps.ScrewTemp3_Max);
+            parseAndSet('ScrewSpeedMiddle', sps.ScrewSpeedMiddle || sps.screwSpeedMiddle, sps.ScrewSpeedMiddle_Asli || sps.ScrewSpeedMiddle || sps.ScrewSpeed3_Asli || sps.ScrewSpeed3, sps.ScrewSpeedMiddle_Min || sps.ScrewSpeed3_Min, sps.ScrewSpeedMiddle_Max || sps.ScrewSpeed3_Max);
+            parseAndSet('FeedRollRatioMiddle', sps.FeedRollRatioMiddle || sps.feedRollRatioMiddle, sps.FeedRollRatioMiddle_Asli || sps.FeedRollRatioMiddle || sps.FeedRollRatio3_Asli || sps.Feed3_Asli, sps.FeedRollRatioMiddle_Min || sps.Feed3_Min, sps.FeedRollRatioMiddle_Max || sps.Feed3_Max);
+            parseAndSet('PressureMiddle', sps.PressureMiddle || sps.pressureMiddle, sps.PressureMiddle_Asli || sps.PressureMiddle || sps.Pressure3_Asli || sps.Pressure3, sps.PressureMiddle_Min || sps.Pressure3_Min, sps.PressureMiddle_Max || sps.Pressure3_Max);
+            parseAndSet('AmMeterMiddle', is3Layer ? (sps.AmMeterMiddle || sps.amMeterMiddle) : null, is3Layer ? (sps.AmMeterMiddle_Asli || sps.amMeterMiddle_Asli || sps.AmMeterMiddle || sps.amMeterMiddle || sps.AmMeter3_Asli || sps.AmMeter3) : '--', sps.AmMeterMiddle_Min || sps.AmMeter3_Min, sps.AmMeterMiddle_Max || sps.AmMeter3_Max);
 
             parseAndSet('HeadTempOuter', sps.HeadTempOuter || sps.headTempOuter, sps.HeadTemp2_Asli || sps.headTemp2_Asli || sps.HeadTemp2 || sps.headTemp2, sps.HeadTemp2_Min || sps.headTemp2_Min, sps.HeadTemp2_Max || sps.headTemp2_Max);
             parseAndSet('Cylinder1TempOuter', sps.Cylinder1TempOuter || sps.cylinder1TempOuter, sps.Cylinder1_2_Asli || sps.cylinder1_2_Asli || sps.Cylinder1_2 || sps.cylinder1_2, sps.Cylinder1_2_Min || sps.cylinder1_2_Min, sps.Cylinder1_2_Max || sps.cylinder1_2_Max);
@@ -2050,11 +2370,13 @@
             parseAndSet('ScrewSpeedOuter', sps.ScrewSpeedOuter || sps.screwSpeedOuter, sps.ScrewSpeed2_Asli || sps.screwSpeed2_Asli || sps.ScrewSpeed2 || sps.screwSpeed2, sps.ScrewSpeed2_Min || sps.screwSpeed2_Min, sps.ScrewSpeed2_Max || sps.screwSpeed2_Max);
             parseAndSet('FeedRollRatioOuter', sps.FeedRollRatioOuter || sps.feedRollRatioOuter, sps.FeedRollRatio2_Asli || sps.feedRollRatio2_Asli || sps.FeedRollRatio2 || sps.feedRollRatio2 || sps.Feed2_Asli || sps.feed2_Asli || sps.Feed2 || sps.feed2, sps.FeedRollRatio2_Min || sps.feedRollRatio2_Min || sps.Feed2_Min || sps.feed2_Min, sps.FeedRollRatio2_Max || sps.feedRollRatio2_Max || sps.Feed2_Max || sps.feed2_Max);
             parseAndSet('PressureOuter', sps.PressureOuter || sps.pressureOuter, sps.Pressure2_Asli || sps.pressure2_Asli || sps.Pressure2 || sps.pressure2, sps.Pressure2_Min || sps.pressure2_Min, sps.Pressure2_Max || sps.pressure2_Max);
+            parseAndSet('AmMeterOuter', sps.AmMeterOuter || sps.amMeterOuter, sps.AmMeterOuter_Asli || sps.amMeterOuter_Asli || sps.AmMeterOuter || sps.amMeterOuter || sps.AmMeter2_Asli || sps.AmMeter2, sps.AmMeterOuter_Min || sps.AmMeter2_Min, sps.AmMeterOuter_Max || sps.AmMeter2_Max);
 
             parseAndSet('SpiralSpeed', sps.SpiralSpeed || sps.spiralSpeed, sps.SpiralSpeed_Asli || sps.spiralSpeed_Asli || sps.SpiralSpeed || sps.spiralSpeed, sps.SpiralSpeed_Min || sps.spiralSpeed_Min, sps.SpiralSpeed_Max || sps.spiralSpeed_Max);
-            parseAndSet('SpiralPitchSetting', sps.ToleranceSpiralPitch || sps.toleranceSpiralPitch || sps.SpiralPitchSetting || sps.spiralPitchSetting, sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting, sps.SpiralPitchSetting_Min || sps.spiralPitchSetting_Min, sps.SpiralPitchSetting_Max || sps.spiralPitchSetting_Max);
-            parseAndSet('SpiralPitchDisplay', sps.SpiralPitchDisplay || sps.spiralPitchDisplay, sps.SpiralPitchDisplay_Asli || sps.spiralPitchDisplay_Asli || sps.SpiralPitchDisplay || sps.spiralPitchDisplay, sps.SpiralPitchDisplay_Min || sps.spiralPitchDisplay_Min, sps.SpiralPitchDisplay_Max || sps.spiralPitchDisplay_Max);
+            parseAndSet('SpiralPitchSetting', sps.ToleranceSpiralPitch || sps.toleranceSpiralPitch || sps.SpiralPitchSetting || sps.spiralPitchSetting, sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting || sps.PitchYarn_Asli || sps.ToleranceSpiralPitch_Asli, sps.SpiralPitchSetting_Min || sps.spiralPitchSetting_Min || sps.PitchYarn_Min || sps.ToleranceSpiralPitch_Min, sps.SpiralPitchSetting_Max || sps.spiralPitchSetting_Max || sps.PitchYarn_Max || sps.ToleranceSpiralPitch_Max);
+            parseAndSet('SpiralPitchDisplay', sps.SpiralPitchDisplay || sps.spiralPitchDisplay, sps.SpiralPitchDisplay_Asli || sps.spiralPitchDisplay_Asli || sps.SpiralPitchDisplay || sps.spiralPitchDisplay || sps.PitchYarn_Asli || sps.ToleranceSpiralPitch_Asli, sps.SpiralPitchDisplay_Min || sps.spiralPitchDisplay_Min || sps.PitchYarn_Min || sps.ToleranceSpiralPitch_Min, sps.SpiralPitchDisplay_Max || sps.spiralPitchDisplay_Max || sps.PitchYarn_Max || sps.ToleranceSpiralPitch_Max);
 
+            parseAndSet('OdSensor', sps.OdSensor || sps.odSensor, sps.OdSensor || sps.odSensor, '--', '--');
             parseAndSet('HoseSpeed', sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Asli || sps.hoseSpeed_Asli || sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Min || sps.hoseSpeed_Min, sps.HoseSpeed_Max || sps.hoseSpeed_Max);
             parseAndSet('ConveyorRatio', sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Min || sps.conveyorRatio_Min, sps.ConveyorRatio_Max || sps.conveyorRatio_Max);
             
@@ -2063,9 +2385,11 @@
             parseAndSet('ControlValue', sps.ControlValue || sps.controlValue, sps.ControlValue_Asli || sps.controlValue_Asli || sps.ControlValue || sps.controlValue, sps.ControlValue_Min || sps.controlValue_Min, sps.ControlValue_Max || sps.controlValue_Max);
             parseAndSet('TakeupConveyorSpeed', sps.TakeUpSpeed || sps.takeUpSpeed, sps.TakeUpSpeed_Asli || sps.takeUpSpeed_Asli || sps.TakeUpSpeed || sps.takeUpSpeed, sps.TakeUpSpeed_Min || sps.takeUpSpeed_Min, sps.TakeUpSpeed_Max || sps.takeUpSpeed_Max);
             parseAndSet('CoolConveyorSpeed', sps.CoolSpeed || sps.coolSpeed, sps.CoolSpeed_Asli || sps.coolSpeed_Asli || sps.CoolSpeed || sps.coolSpeed, sps.CoolSpeed_Min || sps.coolSpeed_Min, sps.CoolSpeed_Max || sps.coolSpeed_Max);
+            parseAndSet('CoolConveyorSpeed2', sps.CoolConveyorSpeed2 || sps.coolConveyorSpeed2, sps.CoolConveyorSpeed2 || sps.coolConveyorSpeed2, '--', '--');
             parseAndSet('UnsmoothSurface', sps.SurfaceCondition || sps.surfaceCondition, sps.SurfaceCondition || sps.surfaceCondition, '--', '--');
-            parseAndSet('ChillerWaterTemp', sps.ChillerTemp || sps.chillerTemp, sps.ChillerTemp || sps.chillerTemp, '--', '--');
+            parseAndSet('ChillerWaterTemp', sps.ChillerWaterTemp || sps.chillerWaterTemp || sps.ChillerTemp || sps.chillerTemp, sps.ChillerWaterTemp_Asli || sps.chillerWaterTemp_Asli, sps.ChillerWaterTemp_Min || sps.chillerWaterTemp_Min, sps.ChillerWaterTemp_Max || sps.chillerWaterTemp_Max);
             parseAndSet('CaterpillarGap', sps.CaterpillarGap || sps.caterpillarGap, sps.CaterpillarGap || sps.caterpillarGap, '--', '--');
+            parseAndSet('CuttingSpeed', sps.CuttingSpeed || sps.cuttingSpeed, sps.CuttingSpeed || sps.cuttingSpeed, '--', '--');
 
             // Populate Emboss Marking Date if empty
             const dateEl = document.getElementById('EmbossMarkDate');
@@ -2134,6 +2458,18 @@
                 if (row) row.style.display = '';
             }
 
+            // Auto-hide AM Meter on DL machines
+            const mName = (document.getElementById('MachineName')?.value || '') + (document.querySelector('.navbar-right .text-warning.fw-bold')?.textContent || '');
+            if (mName.toUpperCase().includes('DL')) {
+                ['AmMeterInner', 'AmMeterMiddle', 'AmMeterOuter'].forEach(k => {
+                    const col = document.getElementById('tile_col_' + k);
+                    if (col) {
+                        col.classList.add('d-none');
+                        col.style.setProperty('display', 'none', 'important');
+                    }
+                });
+            }
+
             // ✅ FIX: Render tabs and load existing reading data into inputs on page load
             renderTabs();
             initAllDynamicButtons();
@@ -2157,6 +2493,18 @@
                     ScrewSpeedInner = Model?.InitScrewSpeedInner?.ToString(),
                     FeedRollRatioInner = Model?.InitFeedRollRatioInner?.ToString(),
                     PressureInner = Model?.InitPressureInner?.ToString(),
+                    AmMeterInner = Model?.InitAmMeterInner?.ToString(),
+
+                    HeadTempMiddle = Model?.InitHeadTempMiddle?.ToString(),
+                    Cylinder1TempMiddle = Model?.InitCylinder1TempMiddle?.ToString(),
+                    Cylinder2TempMiddle = Model?.InitCylinder2TempMiddle?.ToString(),
+                    Cylinder3TempMiddle = Model?.InitCylinder3TempMiddle?.ToString(),
+                    ScrewTempMiddle = Model?.InitScrewTempMiddle?.ToString(),
+                    ScrewSpeedMiddle = Model?.InitScrewSpeedMiddle?.ToString(),
+                    FeedRollRatioMiddle = Model?.InitFeedRollRatioMiddle?.ToString(),
+                    PressureMiddle = Model?.InitPressureMiddle?.ToString(),
+                    AmMeterMiddle = Model?.InitAmMeterMiddle?.ToString(),
+
                     HeadTempOuter = Model?.InitHeadTempOuter?.ToString(),
                     Cylinder1TempOuter = Model?.InitCylinder1TempOuter?.ToString(),
                     Cylinder2TempOuter = Model?.InitCylinder2TempOuter?.ToString(),
@@ -2165,6 +2513,8 @@
                     ScrewSpeedOuter = Model?.InitScrewSpeedOuter?.ToString(),
                     FeedRollRatioOuter = Model?.InitFeedRollRatioOuter?.ToString(),
                     PressureOuter = Model?.InitPressureOuter?.ToString(),
+                    AmMeterOuter = Model?.InitAmMeterOuter?.ToString(),
+
                     SpiralSpeed = Model?.InitSpiralSpeed?.ToString(),
                     SpiralPitchSetting = Model?.InitSpiralPitchSetting?.ToString(),
                     SpiralPitchDisplay = Model?.InitSpiralPitchDisplay?.ToString(),
@@ -2173,10 +2523,13 @@
                     HoseSpeed = Model?.InitHoseSpeed?.ToString(),
                     TakeupConveyorSpeed = Model?.InitTakeupConveyorSpeed?.ToString(),
                     CoolConveyorSpeed = Model?.InitCoolConveyorSpeed?.ToString(),
+                    CoolConveyorSpeed2 = Model?.InitCoolConveyorSpeed2?.ToString(),
                     ConveyorRatio = Model?.InitConveyorRatio?.ToString(),
                     UnsmoothSurface = Model?.InitUnsmoothSurface?.ToString(),
                     ChillerWaterTemp = Model?.InitChillerWaterTemp?.ToString(),
                     CaterpillarGap = Model?.InitCaterpillarGap?.ToString(),
+                    OdSensor = Model?.InitOdSensor?.ToString(),
+                    CuttingSpeed = Model?.InitCuttingSpeed?.ToString(),
                     ReadingTime = (Model?.ProductionDate ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm:ss")
                 });
             }
@@ -2196,6 +2549,18 @@
                             ScrewSpeedInner = Model?.InitScrewSpeedInner?.ToString() ?? r.ScrewSpeedInner?.ToString(),
                             FeedRollRatioInner = Model?.InitFeedRollRatioInner?.ToString() ?? r.FeedRollRatioInner?.ToString(),
                             PressureInner = Model?.InitPressureInner?.ToString() ?? r.PressureInner?.ToString(),
+                            AmMeterInner = Model?.InitAmMeterInner?.ToString() ?? r.AmMeterInner?.ToString(),
+
+                            HeadTempMiddle = Model?.InitHeadTempMiddle?.ToString() ?? r.HeadTempMiddle?.ToString(),
+                            Cylinder1TempMiddle = Model?.InitCylinder1TempMiddle?.ToString() ?? r.Cylinder1TempMiddle?.ToString(),
+                            Cylinder2TempMiddle = Model?.InitCylinder2TempMiddle?.ToString() ?? r.Cylinder2TempMiddle?.ToString(),
+                            Cylinder3TempMiddle = Model?.InitCylinder3TempMiddle?.ToString() ?? r.Cylinder3TempMiddle?.ToString(),
+                            ScrewTempMiddle = Model?.InitScrewTempMiddle?.ToString() ?? r.ScrewTempMiddle?.ToString(),
+                            ScrewSpeedMiddle = Model?.InitScrewSpeedMiddle?.ToString() ?? r.ScrewSpeedMiddle?.ToString(),
+                            FeedRollRatioMiddle = Model?.InitFeedRollRatioMiddle?.ToString() ?? r.FeedRollRatioMiddle?.ToString(),
+                            PressureMiddle = Model?.InitPressureMiddle?.ToString() ?? r.PressureMiddle?.ToString(),
+                            AmMeterMiddle = Model?.InitAmMeterMiddle?.ToString() ?? r.AmMeterMiddle?.ToString(),
+
                             HeadTempOuter = Model?.InitHeadTempOuter?.ToString() ?? r.HeadTempOuter?.ToString(),
                             Cylinder1TempOuter = Model?.InitCylinder1TempOuter?.ToString() ?? r.Cylinder1TempOuter?.ToString(),
                             Cylinder2TempOuter = Model?.InitCylinder2TempOuter?.ToString() ?? r.Cylinder2TempOuter?.ToString(),
@@ -2204,6 +2569,8 @@
                             ScrewSpeedOuter = Model?.InitScrewSpeedOuter?.ToString() ?? r.ScrewSpeedOuter?.ToString(),
                             FeedRollRatioOuter = Model?.InitFeedRollRatioOuter?.ToString() ?? r.FeedRollRatioOuter?.ToString(),
                             PressureOuter = Model?.InitPressureOuter?.ToString() ?? r.PressureOuter?.ToString(),
+                            AmMeterOuter = Model?.InitAmMeterOuter?.ToString() ?? r.AmMeterOuter?.ToString(),
+
                             SpiralSpeed = Model?.InitSpiralSpeed?.ToString() ?? r.SpiralSpeed?.ToString(),
                             SpiralPitchSetting = Model?.InitSpiralPitchSetting?.ToString() ?? r.SpiralPitchSetting?.ToString(),
                             SpiralPitchDisplay = Model?.InitSpiralPitchDisplay?.ToString() ?? r.SpiralPitchDisplay?.ToString(),
@@ -2212,10 +2579,13 @@
                             HoseSpeed = Model?.InitHoseSpeed?.ToString() ?? r.HoseSpeed?.ToString(),
                             TakeupConveyorSpeed = Model?.InitTakeupConveyorSpeed?.ToString() ?? r.TakeupConveyorSpeed?.ToString(),
                             CoolConveyorSpeed = Model?.InitCoolConveyorSpeed?.ToString() ?? r.CoolConveyorSpeed?.ToString(),
+                            CoolConveyorSpeed2 = Model?.InitCoolConveyorSpeed2?.ToString() ?? r.CoolConveyorSpeed2?.ToString(),
                             ConveyorRatio = Model?.InitConveyorRatio?.ToString() ?? r.ConveyorRatio?.ToString(),
                             UnsmoothSurface = Model?.InitUnsmoothSurface?.ToString() ?? r.UnsmoothSurface?.ToString(),
                             ChillerWaterTemp = Model?.InitChillerWaterTemp?.ToString() ?? r.ChillerWaterTemp?.ToString(),
                             CaterpillarGap = Model?.InitCaterpillarGap?.ToString() ?? r.CaterpillarGap?.ToString(),
+                            OdSensor = Model?.InitOdSensor?.ToString() ?? r.OdSensor?.ToString(),
+                            CuttingSpeed = Model?.InitCuttingSpeed?.ToString() ?? r.CuttingSpeed?.ToString(),
                             ReadingTime = r.ReadingTime.ToString("yyyy-MM-ddTHH:mm:ss")
                         });
                     }
@@ -2230,6 +2600,18 @@
                             ScrewSpeedInner = r.ScrewSpeedInner?.ToString(),
                             FeedRollRatioInner = r.FeedRollRatioInner?.ToString(),
                             PressureInner = r.PressureInner?.ToString(),
+                            AmMeterInner = r.AmMeterInner?.ToString(),
+
+                            HeadTempMiddle = r.HeadTempMiddle?.ToString(),
+                            Cylinder1TempMiddle = r.Cylinder1TempMiddle?.ToString(),
+                            Cylinder2TempMiddle = r.Cylinder2TempMiddle?.ToString(),
+                            Cylinder3TempMiddle = r.Cylinder3TempMiddle?.ToString(),
+                            ScrewTempMiddle = r.ScrewTempMiddle?.ToString(),
+                            ScrewSpeedMiddle = r.ScrewSpeedMiddle?.ToString(),
+                            FeedRollRatioMiddle = r.FeedRollRatioMiddle?.ToString(),
+                            PressureMiddle = r.PressureMiddle?.ToString(),
+                            AmMeterMiddle = r.AmMeterMiddle?.ToString(),
+
                             HeadTempOuter = r.HeadTempOuter?.ToString(),
                             Cylinder1TempOuter = r.Cylinder1TempOuter?.ToString(),
                             Cylinder2TempOuter = r.Cylinder2TempOuter?.ToString(),
@@ -2238,6 +2620,8 @@
                             ScrewSpeedOuter = r.ScrewSpeedOuter?.ToString(),
                             FeedRollRatioOuter = r.FeedRollRatioOuter?.ToString(),
                             PressureOuter = r.PressureOuter?.ToString(),
+                            AmMeterOuter = r.AmMeterOuter?.ToString(),
+
                             SpiralSpeed = r.SpiralSpeed?.ToString(),
                             SpiralPitchSetting = r.SpiralPitchSetting?.ToString(),
                             SpiralPitchDisplay = r.SpiralPitchDisplay?.ToString(),
@@ -2246,10 +2630,13 @@
                             HoseSpeed = r.HoseSpeed?.ToString(),
                             TakeupConveyorSpeed = r.TakeupConveyorSpeed?.ToString(),
                             CoolConveyorSpeed = r.CoolConveyorSpeed?.ToString(),
+                            CoolConveyorSpeed2 = r.CoolConveyorSpeed2?.ToString(),
                             ConveyorRatio = r.ConveyorRatio?.ToString(),
                             UnsmoothSurface = r.UnsmoothSurface?.ToString(),
                             ChillerWaterTemp = r.ChillerWaterTemp?.ToString(),
                             CaterpillarGap = r.CaterpillarGap?.ToString(),
+                            OdSensor = r.OdSensor?.ToString(),
+                            CuttingSpeed = r.CuttingSpeed?.ToString(),
                             ReadingTime = r.ReadingTime.ToString("yyyy-MM-ddTHH:mm:ss")
                         });
                     }
@@ -2732,7 +3119,7 @@
                 const result = await res.json();
                 if (result.success) {
                     Swal.fire({ icon: 'success', title: 'UPDATED!', text: 'Report successfully updated in the database.', background: '#0f172a', color: '#38bdf8' })
-                        .then(() => window.location.href = '/ProductionReport/ParameterHistory');
+                        .then(() => window.location.href = '/ProductionReport/Details/@Model.Id');
                 } else {
                     Swal.fire({ icon: 'error', title: 'FAILED', text: result.message || 'Server error occurred.', background: '#0f172a', color: '#f87171' });
                 }
@@ -2795,6 +3182,33 @@
                 if (midCard && (isDoubleLayer || !midVal || midVal === '--' || midVal === '0')) {
                     midCard.classList.add('d-none');
                     midCard.style.setProperty('display', 'none', 'important');
+                }
+                if (isDoubleLayer) {
+                    const nippleCard = document.getElementById('die_card_NippleDie');
+                    if (nippleCard) {
+                        nippleCard.classList.remove('d-none');
+                        nippleCard.style.display = 'block';
+                    }
+                    const tubeCard = document.getElementById('die_card_TubeDie');
+                    if (tubeCard) {
+                        tubeCard.classList.remove('d-none');
+                        tubeCard.style.display = 'block';
+                    }
+                    const coverCard = document.getElementById('die_card_CoverDie');
+                    if (coverCard) {
+                        coverCard.classList.remove('d-none');
+                        coverCard.style.display = 'block';
+                    }
+                    const toleranceCard = document.getElementById('die_card_ToleranceDie');
+                    if (toleranceCard) {
+                        toleranceCard.classList.add('d-none');
+                        toleranceCard.style.setProperty('display', 'none', 'important');
+                    }
+                    const spacerCard = document.getElementById('die_card_SpacerDie');
+                    if (spacerCard) {
+                        spacerCard.classList.add('d-none');
+                        spacerCard.style.setProperty('display', 'none', 'important');
+                    }
                 }
             }
         });

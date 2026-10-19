@@ -893,8 +893,10 @@
                 <div class="p-3">
                     <div class="row g-3" id="diesDimensionRow">
                         @{
+                            var currentMachine = (Model?.MachineName ?? ViewBag.MachineName as string ?? "").ToUpper();
+                            var isInitDL = currentMachine.Contains("DL");
                             var diesList = new[] { 
-                                new { Name = "Nipple", Std = "--", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal" },
+                                new { Name = "Nipple Die", Std = "--", Field = "NippleDieOK", SpecKey = "NippleDie", InitName = "NippleDieInitial", FinalName = "NippleDieFinal" },
                                 new { Name = "Tube Die", Std = "--", Field = "TubeDieOK", SpecKey = "TubeDie", InitName = "TubeDieInitial", FinalName = "TubeDieFinal" },
                                 new { Name = "Middle Die", Std = "--", Field = "MiddleDieOK", SpecKey = "MiddleDie", InitName = "MiddleDieInitial", FinalName = "MiddleDieFinal" },
                                 new { Name = "Cover Die", Std = "--", Field = "CoverDieOK", SpecKey = "CoverDie", InitName = "CoverDieInitial", FinalName = "CoverDieFinal" },
@@ -904,7 +906,8 @@
                         }
 
                         @foreach(var die in diesList) {
-                            <div class="col-md-6 col-xl-4 die-container-item" id="die_card_@die.SpecKey">
+                            var hideInit = isInitDL && (die.Name == "Middle Die" || die.Name == "A Distance" || die.Name == "Spacer");
+                            <div class="col-md-6 col-xl-4 die-container-item @(hideInit ? "d-none" : "")" id="die_card_@die.SpecKey" style="@(hideInit ? "display:none!important;" : "")">
                                 <div class="die-card p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-30 h-100 d-flex flex-column">
 
                                     <!-- TOP: Instrument name + OK/NG -->
@@ -1032,7 +1035,7 @@
                     background: rgba(13, 202, 240, 0.05);
                 }
                 .add-check-trigger:hover { 
-                    opacity: 1;
+                    opacity: 1; 
                     background: rgba(13, 202, 240, 0.15);
                     box-shadow: 0 0 15px rgba(13, 202, 240, 0.4);
                     transform: translateY(-2px);
@@ -1077,25 +1080,76 @@
                     var monSections = new[] {
                         new { 
                             Title = "SECTION 01: INNER (TUBE 1)", Icon="bi-gear-fill", Color = "#3b82f6", ID="inner",
-                            Rows = new[,] { { "Head Temp.", "°C", "HeadTempInner" }, { "Cylinder 1", "°C", "Cylinder1TempInner" }, { "Cylinder 2", "°C", "Cylinder2TempInner" }, { "Cylinder 3", "°C", "Cylinder3TempInner" }, { "Screw Temp.", "°C", "ScrewTempInner" }, { "Screw Speed", "rpm", "ScrewSpeedInner" }, { "Feed Roll Ratio", "%", "FeedRollRatioInner" }, { "Pressure", "MPa", "PressureInner" } }
+                            Rows = new[,] { 
+                                { "Head Temp.", "°C", "HeadTempInner" }, 
+                                { "Cylinder 1", "°C", "Cylinder1TempInner" }, 
+                                { "Cylinder 2", "°C", "Cylinder2TempInner" }, 
+                                { "Cylinder 3", "°C", "Cylinder3TempInner" }, 
+                                { "Screw Temp.", "°C", "ScrewTempInner" }, 
+                                { "Screw Speed", "rpm", "ScrewSpeedInner" }, 
+                                { "Feed Roll Ratio", "%", "FeedRollRatioInner" }, 
+                                { "Pressure", "MPa", "PressureInner" },
+                                { "Am meter", "A", "AmMeterInner" }
+                            }
                         },
                         new { 
-                            Title = "SECTION 02: OUTER (COVER)", Icon="bi-shield-shaded", Color = "#f59e0b", ID="outer",
-                            Rows = new[,] { { "Head Temp.", "°C", "HeadTempOuter" }, { "Cylinder 1", "°C", "Cylinder1TempOuter" }, { "Cylinder 2", "°C", "Cylinder2TempOuter" }, { "Cylinder 3", "°C", "Cylinder3TempOuter" }, { "Screw Temp.", "°C", "ScrewTempOuter" }, { "Screw Speed", "rpm", "ScrewSpeedOuter" }, { "Feed Roll Ratio", "%", "FeedRollRatioOuter" }, { "Pressure", "MPa", "PressureOuter" } }
+                            Title = "SECTION 02: MIDDLE (TUBE 2)", Icon="bi-layers-fill", Color = "#8b5cf6", ID="middle",
+                            Rows = new[,] { 
+                                { "Head Temp.", "°C", "HeadTempMiddle" }, 
+                                { "Cylinder 1", "°C", "Cylinder1TempMiddle" }, 
+                                { "Cylinder 2", "°C", "Cylinder2TempMiddle" }, 
+                                { "Cylinder 3", "°C", "Cylinder3TempMiddle" }, 
+                                { "Screw Temp.", "°C", "ScrewTempMiddle" }, 
+                                { "Screw Speed", "rpm", "ScrewSpeedMiddle" }, 
+                                { "Feed Roll Ratio", "%", "FeedRollRatioMiddle" }, 
+                                { "Pressure", "MPa", "PressureMiddle" },
+                                { "Am meter", "A", "AmMeterMiddle" }
+                            }
                         },
                         new { 
-                            Title = "SECTION 03: SPIRAL MECHANISM", Icon="bi-sync", Color = "#10b981", ID="spiral",
-                            Rows = new[,] { { "Spiral Speed", "rpm", "SpiralSpeed" }, { "Spiral Pitch (Set)", "mm", "SpiralPitchSetting" }, { "Spiral Pitch (Disp)", "mm", "SpiralPitchDisplay" } } 
+                            Title = "SECTION 03: OUTER (COVER)", Icon="bi-shield-shaded", Color = "#f59e0b", ID="outer",
+                            Rows = new[,] { 
+                                { "Head Temp.", "°C", "HeadTempOuter" }, 
+                                { "Cylinder 1", "°C", "Cylinder1TempOuter" }, 
+                                { "Cylinder 2", "°C", "Cylinder2TempOuter" }, 
+                                { "Cylinder 3", "°C", "Cylinder3TempOuter" }, 
+                                { "Screw Temp.", "°C", "ScrewTempOuter" }, 
+                                { "Screw Speed", "rpm", "ScrewSpeedOuter" }, 
+                                { "Feed Roll Ratio", "%", "FeedRollRatioOuter" }, 
+                                { "Pressure", "MPa", "PressureOuter" },
+                                { "Am meter", "A", "AmMeterOuter" }
+                            }
                         },
                         new { 
-                            Title = "SECTION 04: INFRA & UTILITY", Icon="bi-water", Color = "#0ea5e9", ID="other",
-                            Rows = new[,] { { "Preset Value", "Ø mm", "PresetValue" }, { "Control Value", "Ø mm", "ControlValue" }, { "Hose Speed", "m/min", "HoseSpeed" }, { "Take-up Speed", "", "TakeupConveyorSpeed" }, { "Cool Speed", "", "CoolConveyorSpeed" }, { "Conveyor Ratio", "", "ConveyorRatio" }, { "Surface Condition", "", "UnsmoothSurface" }, { "Chiller Temp", "°C", "ChillerWaterTemp" }, { "Caterpillar Gap", "mm", "CaterpillarGap" } } 
+                            Title = "SECTION 04: SPIRAL MECHANISM", Icon="bi-sync", Color = "#10b981", ID="spiral",
+                            Rows = new[,] { 
+                                { "Spiral Speed", "rpm", "SpiralSpeed" }, 
+                                { "Spiral Pitch (Set)", "mm", "SpiralPitchSetting" }, 
+                                { "Spiral Pitch (Disp)", "mm", "SpiralPitchDisplay" } 
+                            } 
+                        },
+                        new { 
+                            Title = "SECTION 05: INFRA & UTILITY", Icon="bi-water", Color = "#0ea5e9", ID="other",
+                            Rows = new[,] { 
+                                { "OD Sensor", "Ø mm", "OdSensor" },
+                                { "Preset Value", "Ø mm", "PresetValue" }, 
+                                { "Control Value", "Ø mm", "ControlValue" }, 
+                                { "Hose Speed", "m/min", "HoseSpeed" }, 
+                                { "Take-up Speed", "", "TakeupConveyorSpeed" }, 
+                                { "Cool Speed 1", "", "CoolConveyorSpeed" }, 
+                                { "Cool Speed 2", "", "CoolConveyorSpeed2" }, 
+                                { "Conveyor Ratio", "", "ConveyorRatio" }, 
+                                { "Surface Condition", "", "UnsmoothSurface" }, 
+                                { "Chiller Temp", "°C", "ChillerWaterTemp" }, 
+                                { "Caterpillar Gap", "mm", "CaterpillarGap" },
+                                { "Cutting Speed", "m/min", "CuttingSpeed" }
+                            } 
                         }
                     };
                 }
 
                 @foreach (var mSec in monSections) {
-                    <div class="col-12 col-xxl-6">
+                    <div class="col-12 col-xxl-6" id="card_col_@mSec.ID">
                         <div class="hud-card h-100 shadow-hud mb-1 overflow-hidden" 
                              style="border: 1px solid @(mSec.Color)44; background: rgba(15, 23, 42, 0.6); box-shadow: 0 0 20px @(mSec.Color)11;">
                             
@@ -1113,7 +1167,7 @@
                                 <div class="row g-4">
                                     @for (int r = 0; r < mSec.Rows.GetLength(0); r++) {
                                         var key = mSec.Rows[r, 2];
-                                        <div class="col-6">
+                                        <div class="col-6" id="tile_col_@key">
                                             <div class="param-tile-modern rounded-3 p-3 text-center h-100 d-flex flex-column justify-content-between"
                                                  style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; position: relative; overflow: hidden;">
                                                 
@@ -1778,7 +1832,7 @@
             const yarnEl = document.getElementById('Yarn');
             if (yarnEl) yarnEl.value = yarnStd;
 
-            // Show/hide Middle material card based on LayerType (CHS 3 Layer)
+            // Show/hide Middle material card & parameter card based on LayerType (CHS 3 Layer)
             const layerType3L = (sps.layerType || sps.LayerType || '').toLowerCase();
             const machineName3L = (window.SESSION_MACHINE_NAME || '').toLowerCase();
             const is3Layer = layerType3L.includes('3') || layerType3L.includes('triple') || layerType3L.includes('three')
@@ -1788,10 +1842,21 @@
             if (middleCard) {
                 middleCard.style.display = is3Layer ? '' : 'none';
             }
+            const middleParamCol = document.getElementById('card_col_middle');
+            if (middleParamCol) {
+                middleParamCol.style.display = is3Layer ? '' : 'none';
+            }
 
             // formatVal: server now returns Min | Asli | Max ranges directly
+            // Filter out known non-data string values from DB (e.g. 'kosong')
+            const cleanSpsVal = v => {
+                if (v == null || v === '' || v === 0 || v === '0') return null;
+                const s = String(v).trim().toLowerCase();
+                if (s === 'kosong' || s === '-' || s === '--' || s === '---' || s === 'null') return null;
+                return String(v).trim();
+            };
             const formatVal = (val, min, max) => {
-                const fmt = v => (v != null && v !== '' && v !== 0 && v !== '0') ? String(v).trim() : '--';
+                const fmt = v => cleanSpsVal(v) ?? '--';
                 const strVal = fmt(val);
                 const strMin = fmt(min);
                 const strMax = fmt(max);
@@ -1799,9 +1864,20 @@
                 if (strVal === '--' && strMin === '--' && strMax === '--') return '---';
                 
                 if (strMin !== '--' || strMax !== '--') {
+                    // If no standard/center value, show as range "Min ~ Max"
+                    if (strVal === '--') {
+                        return `${strMin} | -- | ${strMax}`;
+                    }
                     return `${strMin} | ${strVal} | ${strMax}`;
                 }
                 return strVal === '--' ? '---' : strVal;
+            };
+
+            const cleanDieSpec = (pipeVal, asli, raw, min, max) => {
+                if (pipeVal && /\d/.test(pipeVal) && !/kosong/i.test(pipeVal)) {
+                    return pipeVal;
+                }
+                return formatVal(cleanSpsVal(asli) ?? cleanSpsVal(raw), min, max);
             };
 
             const specMappings = {
@@ -1813,6 +1889,17 @@
                 'ScrewSpeedInner':    sps.ScrewSpeedInner || sps.screwSpeedInner || formatVal(sps.ScrewSpeed1_Asli || sps.screwSpeed1_Asli || sps.ScrewSpeed1 || sps.screwSpeed1, sps.ScrewSpeed1_Min || sps.screwSpeed1_Min, sps.ScrewSpeed1_Max || sps.screwSpeed1_Max),
                 'FeedRollRatioInner': sps.FeedRollRatioInner || sps.feedRollRatioInner || formatVal(sps.FeedRollRatio1_Asli || sps.feedRollRatio1_Asli || sps.FeedRollRatio1 || sps.feedRollRatio1 || sps.Feed1_Asli || sps.feed1_Asli || sps.Feed1 || sps.feed1, sps.FeedRollRatio1_Min || sps.feedRollRatio1_Min || sps.Feed1_Min || sps.feed1_Min, sps.FeedRollRatio1_Max || sps.feedRollRatio1_Max || sps.Feed1_Max || sps.feed1_Max),
                 'PressureInner':      sps.PressureInner || sps.pressureInner || formatVal(sps.Pressure1_Asli || sps.pressure1_Asli || sps.Pressure1 || sps.pressure1, sps.Pressure1_Min || sps.pressure1_Min, sps.Pressure1_Max || sps.pressure1_Max),
+                'AmMeterInner':       sps.AmMeterInner || sps.amMeterInner || formatVal(sps.AmMeterInner || sps.amMeterInner || sps.AmMeterInner_Asli || sps.AmMeter_Asli || sps.AmMeter, sps.AmMeterInner_Min || sps.AmMeter_Min, sps.AmMeterInner_Max || sps.AmMeter_Max),
+
+                'HeadTempMiddle':      sps.HeadTempMiddle || sps.headTempMiddle || formatVal(sps.HeadTempMiddle_Asli || sps.HeadTempMiddle || sps.HeadTemp3_Asli || sps.HeadTemp3, sps.HeadTempMiddle_Min || sps.HeadTemp3_Min, sps.HeadTempMiddle_Max || sps.HeadTemp3_Max),
+                'Cylinder1TempMiddle': sps.Cylinder1TempMiddle || sps.cylinder1TempMiddle || formatVal(sps.Cylinder1_Middle_Asli || sps.Cylinder1TempMiddle || sps.Cylinder1_3_Asli || sps.Cylinder1_3, sps.Cylinder1_Middle_Min || sps.Cylinder1_3_Min, sps.Cylinder1_Middle_Max || sps.Cylinder1_3_Max),
+                'Cylinder2TempMiddle': sps.Cylinder2TempMiddle || sps.cylinder2TempMiddle || formatVal(sps.Cylinder2_Middle_Asli || sps.Cylinder2TempMiddle || sps.Cylinder2_3_Asli || sps.Cylinder2_3, sps.Cylinder2_Middle_Min || sps.Cylinder2_3_Min, sps.Cylinder2_Middle_Max || sps.Cylinder2_3_Max),
+                'Cylinder3TempMiddle': sps.Cylinder3TempMiddle || sps.cylinder3TempMiddle || formatVal(sps.Cylinder3_Middle_Asli || sps.Cylinder3TempMiddle || sps.cylinder3TempMiddle || sps.Cylinder3_3_Asli || sps.Cylinder3_3, sps.Cylinder3_Middle_Min || sps.Cylinder3_3_Min, sps.Cylinder3_Middle_Max || sps.Cylinder3_3_Max),
+                'ScrewTempMiddle':     sps.ScrewTempMiddle || sps.screwTempMiddle || formatVal(sps.ScrewTempMiddle_Asli || sps.ScrewTempMiddle || sps.ScrewTemp3_Asli || sps.ScrewTemp3, sps.ScrewTempMiddle_Min || sps.ScrewTemp3_Min, sps.ScrewTempMiddle_Max || sps.ScrewTemp3_Max),
+                'ScrewSpeedMiddle':    sps.ScrewSpeedMiddle || sps.screwSpeedMiddle || formatVal(sps.ScrewSpeedMiddle_Asli || sps.ScrewSpeedMiddle || sps.ScrewSpeed3_Asli || sps.ScrewSpeed3, sps.ScrewSpeedMiddle_Min || sps.ScrewSpeed3_Min, sps.ScrewSpeedMiddle_Max || sps.ScrewSpeed3_Max),
+                'FeedRollRatioMiddle': sps.FeedRollRatioMiddle || sps.feedRollRatioMiddle || formatVal(sps.FeedRollRatioMiddle_Asli || sps.FeedRollRatioMiddle || sps.FeedRollRatio3_Asli || sps.Feed3_Asli, sps.FeedRollRatioMiddle_Min || sps.Feed3_Min, sps.FeedRollRatioMiddle_Max || sps.Feed3_Max),
+                'PressureMiddle':      sps.PressureMiddle || sps.pressureMiddle || formatVal(sps.PressureMiddle_Asli || sps.PressureMiddle || sps.Pressure3_Asli || sps.Pressure3, sps.PressureMiddle_Min || sps.Pressure3_Min, sps.PressureMiddle_Max || sps.Pressure3_Max),
+                'AmMeterMiddle':       is3Layer ? (sps.AmMeterMiddle || sps.amMeterMiddle || formatVal(sps.AmMeterMiddle || sps.amMeterMiddle || sps.AmMeterMiddle_Asli || sps.AmMeter3_Asli || sps.AmMeter3, sps.AmMeterMiddle_Min || sps.AmMeter3_Min, sps.AmMeterMiddle_Max || sps.AmMeter3_Max)) : '---',
 
                 'HeadTempOuter':      sps.HeadTempOuter || sps.headTempOuter || formatVal(sps.HeadTemp2_Asli || sps.headTemp2_Asli || sps.HeadTemp2 || sps.headTemp2, sps.HeadTemp2_Min || sps.headTemp2_Min, sps.HeadTemp2_Max || sps.headTemp2_Max),
                 'Cylinder1TempOuter': sps.Cylinder1TempOuter || sps.cylinder1TempOuter || formatVal(sps.Cylinder1_2_Asli || sps.cylinder1_2_Asli || sps.Cylinder1_2 || sps.cylinder1_2, sps.Cylinder1_2_Min || sps.cylinder1_2_Min, sps.Cylinder1_2_Max || sps.cylinder1_2_Max),
@@ -1822,27 +1909,31 @@
                 'ScrewSpeedOuter':    sps.ScrewSpeedOuter || sps.screwSpeedOuter || formatVal(sps.ScrewSpeed2_Asli || sps.screwSpeed2_Asli || sps.ScrewSpeed2 || sps.screwSpeed2, sps.ScrewSpeed2_Min || sps.screwSpeed2_Min, sps.ScrewSpeed2_Max || sps.screwSpeed2_Max),
                 'FeedRollRatioOuter': sps.FeedRollRatioOuter || sps.feedRollRatioOuter || formatVal(sps.FeedRollRatio2_Asli || sps.feedRollRatio2_Asli || sps.FeedRollRatio2 || sps.feedRollRatio2 || sps.Feed2_Asli || sps.feed2_Asli || sps.Feed2 || sps.feed2, sps.FeedRollRatio2_Min || sps.feedRollRatio2_Min || sps.Feed2_Min || sps.feed2_Min, sps.FeedRollRatio2_Max || sps.feedRollRatio2_Max || sps.Feed2_Max || sps.feed2_Max),
                 'PressureOuter':      sps.PressureOuter || sps.pressureOuter || formatVal(sps.Pressure2_Asli || sps.pressure2_Asli || sps.Pressure2 || sps.pressure2, sps.Pressure2_Min || sps.pressure2_Min, sps.Pressure2_Max || sps.pressure2_Max),
+                'AmMeterOuter':       sps.AmMeterOuter || sps.amMeterOuter || formatVal(sps.AmMeterOuter || sps.amMeterOuter || sps.AmMeterOuter_Asli || sps.AmMeter2_Asli || sps.AmMeter2, sps.AmMeterOuter_Min || sps.AmMeter2_Min, sps.AmMeterOuter_Max || sps.AmMeter2_Max),
 
                 'SpiralSpeed':         sps.SpiralSpeed || sps.spiralSpeed || formatVal(sps.SpiralSpeed_Asli || sps.spiralSpeed_Asli || sps.SpiralSpeed || sps.spiralSpeed, sps.SpiralSpeed_Min || sps.spiralSpeed_Min, sps.SpiralSpeed_Max || sps.spiralSpeed_Max),
-                'SpiralPitchSetting':  sps.ToleranceSpiralPitch || sps.toleranceSpiralPitch || sps.SpiralPitchSetting || sps.spiralPitchSetting || formatVal(sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting, sps.SpiralPitchSetting_Min || sps.spiralPitchSetting_Min, sps.SpiralPitchSetting_Max || sps.spiralPitchSetting_Max),
-                'SpiralPitchDisplay':  sps.SpiralPitchDisplay || sps.spiralPitchDisplay || formatVal(sps.SpiralPitchDisplay_Asli || sps.spiralPitchDisplay_Asli || sps.SpiralPitchDisplay || sps.spiralPitchDisplay, sps.SpiralPitchDisplay_Min || sps.spiralPitchDisplay_Min, sps.SpiralPitchDisplay_Max || sps.spiralPitchDisplay_Max),
+                'SpiralPitchSetting':  sps.ToleranceSpiralPitch || sps.toleranceSpiralPitch || sps.SpiralPitchSetting || sps.spiralPitchSetting || formatVal(sps.SpiralPitchSetting_Asli || sps.spiralPitchSetting_Asli || sps.SpiralPitchSetting || sps.spiralPitchSetting || sps.PitchYarn_Asli || sps.ToleranceSpiralPitch_Asli, sps.SpiralPitchSetting_Min || sps.spiralPitchSetting_Min || sps.PitchYarn_Min || sps.ToleranceSpiralPitch_Min, sps.SpiralPitchSetting_Max || sps.spiralPitchSetting_Max || sps.PitchYarn_Max || sps.ToleranceSpiralPitch_Max),
+                'SpiralPitchDisplay':  sps.SpiralPitchDisplay || sps.spiralPitchDisplay || formatVal(sps.SpiralPitchDisplay_Asli || sps.spiralPitchDisplay_Asli || sps.SpiralPitchDisplay || sps.spiralPitchDisplay || sps.PitchYarn_Asli || sps.ToleranceSpiralPitch_Asli, sps.SpiralPitchDisplay_Min || sps.spiralPitchDisplay_Min || sps.PitchYarn_Min || sps.ToleranceSpiralPitch_Min, sps.SpiralPitchDisplay_Max || sps.spiralPitchDisplay_Max || sps.PitchYarn_Max || sps.ToleranceSpiralPitch_Max),
                 
+                'OdSensor':            sps.OdSensor || sps.odSensor || formatVal(sps.OdSensor || sps.odSensor),
                 'PresetValue':         sps.PresetValue || sps.presetValue || formatVal(sps.PresetValue || sps.presetValue),
                 'ControlValue':        sps.ControlValue || sps.controlValue || formatVal(sps.ControlValue || sps.controlValue),
                 'HoseSpeed':           sps.HoseSpeed || sps.hoseSpeed || formatVal(sps.HoseSpeed_Asli || sps.hoseSpeed_Asli || sps.HoseSpeed || sps.hoseSpeed, sps.HoseSpeed_Min || sps.hoseSpeed_Min, sps.HoseSpeed_Max || sps.hoseSpeed_Max),
                 'TakeupConveyorSpeed': sps.TakeupConveyorSpeed || sps.takeupConveyorSpeed || formatVal(sps.TakeupConveyorSpeed || sps.takeupConveyorSpeed || sps.TakeUpConveyorSpeed),
                 'CoolConveyorSpeed':   sps.CoolConveyorSpeed || sps.coolConveyorSpeed || formatVal(sps.CoolConveyorSpeed || sps.coolConveyorSpeed),
+                'CoolConveyorSpeed2':  sps.CoolConveyorSpeed2 || sps.coolConveyorSpeed2 || formatVal(sps.CoolConveyorSpeed2 || sps.coolConveyorSpeed2),
                 'ConveyorRatio':       sps.ConveyorRatio || sps.conveyorRatio || formatVal(sps.ConveyorRatio_Asli || sps.conveyorRatio_Asli || sps.ConveyorRatio || sps.conveyorRatio, sps.ConveyorRatio_Min || sps.conveyorRatio_Min, sps.ConveyorRatio_Max || sps.conveyorRatio_Max),
-                'ChillerWaterTemp':    formatVal(sps.ChillerWaterTemp || sps.chillerWaterTemp),
+                'ChillerWaterTemp':    cleanDieSpec(sps.ChillerWaterTemp || sps.chillerWaterTemp, sps.ChillerWaterTemp_Asli || sps.chillerWaterTemp_Asli, sps.ChillerWaterTemp || sps.chillerWaterTemp, sps.ChillerWaterTemp_Min || sps.chillerWaterTemp_Min, sps.ChillerWaterTemp_Max || sps.chillerWaterTemp_Max),
                 'CaterpillarGap':      formatVal(sps.CaterpillarGap || sps.caterpillarGap),
                 'UnsmoothSurface':     formatVal(sps.UnsmoothSurface || sps.unsmoothSurface),
+                'CuttingSpeed':        sps.CuttingSpeed || sps.cuttingSpeed || formatVal(sps.CuttingSpeed || sps.cuttingSpeed),
 
-                'NippleDie':    sps.NippleDie || sps.nippleDie || formatVal(sps.Nipple_Asli || sps.nipple_Asli || sps.Nipple || sps.nipple, sps.Nipple_Min || sps.nipple_Min, sps.Nipple_Max || sps.nipple_Max),
-                'TubeDie':      sps.TubeDie   || sps.tubeDie   || formatVal(sps.TubeDie_Asli || sps.tubeDie_Asli || sps.TubeDie || sps.tubeDie, sps.TubeDie_Min || sps.tubeDie_Min, sps.TubeDie_Max || sps.tubeDie_Max),
-                'MiddleDie':    sps.MiddleDie  || sps.middleDie  || formatVal(sps.MiddleDie_Asli || sps.middleDie_Asli || sps.MiddleDie || sps.middleDie, sps.MiddleDie_Min || sps.middleDie_Min, sps.MiddleDie_Max || sps.middleDie_Max),
-                'CoverDie':     sps.CoverDie  || sps.coverDie  || formatVal(sps.CoverDie_Asli || sps.coverDie_Asli || sps.CoverDie || sps.coverDie, sps.CoverDie_Min || sps.coverDie_Min, sps.CoverDie_Max || sps.coverDie_Max),
-                'SpacerDie':    sps.SpacerDie || sps.spacerDie || formatVal(sps.SpacerDie_Asli || sps.spacerDie_Asli || sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Min || sps.spacerDie_Min, sps.SpacerDie_Max || sps.spacerDie_Max),
-                'ToleranceDie': sps.ToleranceDie || sps.toleranceDie || formatVal(sps.ADistance_Asli || sps.aDistance_Asli, sps.ADistance_Min || sps.aDistance_Min, sps.ADistance_Max || sps.aDistance_Max)
+                'NippleDie':    cleanDieSpec(sps.NippleDie || sps.nippleDie, sps.Nipple_Asli || sps.nipple_Asli, sps.Nipple || sps.nipple, sps.Nipple_Min || sps.nipple_Min, sps.Nipple_Max || sps.nipple_Max),
+                'TubeDie':      cleanDieSpec(sps.TubeDie   || sps.tubeDie,   sps.TubeDie_Asli || sps.tubeDie_Asli, sps.TubeDie || sps.tubeDie, sps.TubeDie_Min || sps.tubeDie_Min, sps.TubeDie_Max || sps.tubeDie_Max),
+                'MiddleDie':    cleanDieSpec(sps.MiddleDie  || sps.middleDie,  sps.MiddleDie_Asli || sps.middleDie_Asli, sps.MiddleDie || sps.middleDie, sps.MiddleDie_Min || sps.middleDie_Min, sps.MiddleDie_Max || sps.middleDie_Max),
+                'CoverDie':     cleanDieSpec(sps.CoverDie  || sps.coverDie,  sps.CoverDie_Asli || sps.coverDie_Asli, sps.CoverDie || sps.coverDie, sps.CoverDie_Min || sps.coverDie_Min, sps.CoverDie_Max || sps.coverDie_Max),
+                'SpacerDie':    cleanDieSpec(sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Asli || sps.spacerDie_Asli, sps.SpacerDie || sps.spacerDie, sps.SpacerDie_Min || sps.spacerDie_Min, sps.SpacerDie_Max || sps.spacerDie_Max),
+                'ToleranceDie': cleanDieSpec(sps.ToleranceDie || sps.toleranceDie, sps.ADistance_Asli || sps.aDistance_Asli, sps.ADistance || sps.aDistance, sps.ADistance_Min || sps.aDistance_Min, sps.ADistance_Max || sps.aDistance_Max)
             };
 
             for (const [key, val] of Object.entries(specMappings)) {
@@ -1852,7 +1943,7 @@
 
                 if (el) {
                     el.innerText = val;
-                    // Populate min/std/max split display for die cards
+                    // Populate min/std/max split display for parameter and die cards
                     const minEl = document.getElementById('spec_min_' + key);
                     const stdEl = document.getElementById('spec_std_' + key);
                     const maxEl = document.getElementById('spec_max_' + key);
@@ -1861,14 +1952,75 @@
                         const parts = val.split('|').map(s => s.trim());
                         if (parts.length === 1) {
                             finalStd = parts[0];
-                            if (minEl) minEl.textContent = '--';
-                            if (stdEl) stdEl.textContent = parts[0] || '--';
-                            if (maxEl) maxEl.textContent = '--';
+                            // Check ± format in single part (e.g. "15±2" or "12 ± 1")
+                            const pmMatch = finalStd && String(finalStd).match(/^([\d,.]+)\s*(?:[\u00b1\uFFFD]|\+\s*[\/-]|\+\s*-)\s*([\d,.]+)$/);
+                            if (pmMatch) {
+                                const center = parseFloat(pmMatch[1].replace(',', '.'));
+                                const tol = parseFloat(pmMatch[2].replace(',', '.'));
+                                if (!isNaN(center) && !isNaN(tol)) {
+                                    finalMin = String(center - tol).replace('.', ',');
+                                    finalStd = String(center).replace('.', ',');
+                                    finalMax = String(center + tol).replace('.', ',');
+                                }
+                            }
+                            // Check Max. X or Min. X prefix
+                            const maxMatch = finalStd && String(finalStd).match(/^Max\.?\s*([\d,.]+)/i);
+                            if (maxMatch) {
+                                finalMax = maxMatch[1];
+                                finalStd = '--';
+                            }
+                            const minMatch = finalStd && String(finalStd).match(/^Min\.?\s*([\d,.]+)/i);
+                            if (minMatch) {
+                                finalMin = minMatch[1];
+                                finalStd = '--';
+                            }
+
+                            const stdDisplay = (finalStd === '--' || !finalStd)
+                                ? ((finalMin && finalMin !== '--') || (finalMax && finalMax !== '--') 
+                                    ? ((finalMin && finalMin !== '--' && finalMax && finalMax !== '--')
+                                        ? `${finalMin} ~ ${finalMax}` 
+                                        : (finalMax && finalMax !== '--' ? `Max ${finalMax}` : `Min ${finalMin}`))
+                                    : '--')
+                                : finalStd;
+
+                            if (minEl) minEl.textContent = finalMin || '--';
+                            if (stdEl) stdEl.textContent = stdDisplay;
+                            if (maxEl) maxEl.textContent = finalMax || '--';
                         } else {
                             finalMin = parts[0]; finalStd = parts[1]; finalMax = parts[2];
-                            if (minEl) minEl.textContent = parts[0] || '--';
-                            if (stdEl) stdEl.textContent = parts[1] || (parts[0] || '--');
-                            if (maxEl) maxEl.textContent = parts[2] || '--';
+
+                            // Check ± format in middle part
+                            const pmMatch = finalStd && String(finalStd).match(/^([\d,.]+)\s*(?:[\u00b1\uFFFD]|\+\s*[\/-]|\+\s*-)\s*([\d,.]+)$/);
+                            if (pmMatch) {
+                                const center = parseFloat(pmMatch[1].replace(',', '.'));
+                                const tol = parseFloat(pmMatch[2].replace(',', '.'));
+                                if (!isNaN(center) && !isNaN(tol)) {
+                                    finalMin = String(center - tol).replace('.', ',');
+                                    finalStd = String(center).replace('.', ',');
+                                    finalMax = String(center + tol).replace('.', ',');
+                                }
+                            }
+
+                            if (minEl) minEl.textContent = finalMin || '--';
+                            // If STD is '--' or empty, show intelligent label (Range, Max-only, Min-only)
+                            const stdDisplay = (finalStd === '--' || !finalStd)
+                                ? ((finalMin && finalMin !== '--') || (finalMax && finalMax !== '--') 
+                                    ? ((finalMin && finalMin !== '--' && finalMax && finalMax !== '--')
+                                        ? `${finalMin} ~ ${finalMax}` 
+                                        : (finalMax && finalMax !== '--' ? `Max ${finalMax}` : `Min ${finalMin}`))
+                                    : '--')
+                                : finalStd;
+                            if (stdEl) stdEl.textContent = stdDisplay;
+                            if (maxEl) maxEl.textContent = finalMax || '--';
+                        }
+
+                        // Show standard zone if any min, std, or max value exists
+                        if (stdEl) {
+                            const stdZone = stdEl.closest('.std-zone');
+                            const hasAnyValue = (finalStd && finalStd !== '--' && finalStd !== '---') || 
+                                                (finalMin && finalMin !== '--' && finalMin !== '---') || 
+                                                (finalMax && finalMax !== '--' && finalMax !== '---');
+                            if (stdZone) stdZone.style.display = hasAnyValue ? 'block' : 'none';
                         }
                     }
                     
@@ -1910,14 +2062,25 @@
                         const d = dieRadios[key];
                         if (d) {
                             const container = document.getElementsByName(d.init)[0]?.closest('.die-card');
-                            if (isNoData) {
+                            const machineH = document.getElementById('MachineName')?.value || '';
+                            const navMach = Array.from(document.querySelectorAll('.navbar-right .text-warning.fw-bold'))
+                                                 .map(el => el.textContent.trim())
+                                                 .find(txt => txt.length > 0) || '';
+                            const isDL = (machineH + navMach).toUpperCase().includes('DL');
+                            const isReqDL = isDL && (key === 'NippleDie' || key === 'TubeDie' || key === 'CoverDie');
+                            const isForbiddenDL = isDL && (key === 'MiddleDie' || key === 'ToleranceDie' || key === 'SpacerDie');
+
+                            if (isForbiddenDL || (isNoData && !isReqDL)) {
                                 document.getElementsByName(d.init)[0].disabled = true;
                                 document.getElementsByName(d.final)[0].disabled = true;
                                 if (container) {
                                     container.style.opacity = "0.4";
                                     container.style.pointerEvents = "none";
                                     const colParent = container.closest('.die-container-item');
-                                    if (colParent) colParent.style.display = 'none';
+                                    if (colParent) {
+                                        colParent.style.setProperty('display', 'none', 'important');
+                                        colParent.classList.add('d-none');
+                                    }
                                 }
                             } else {
                                 document.getElementsByName(d.init)[0].disabled = false;
@@ -1926,10 +2089,13 @@
                                     container.style.opacity = "1";
                                     container.style.pointerEvents = "auto";
                                     const colParent = container.closest('.die-container-item');
-                                    if (colParent) colParent.style.display = '';
+                                    if (colParent) {
+                                        colParent.style.display = '';
+                                        colParent.classList.remove('d-none');
+                                    }
                                 }
+                                checkDieStatus('spec_' + key, d.field, d.init, d.final);
                             }
-                            checkDieStatus('spec_' + key, d.field, d.init, d.final);
                         }
                     } else {
                         const inputs = document.querySelectorAll(`[name$="${key}"]`);
@@ -1948,6 +2114,10 @@
 
             // Hide parameter sections if all their tiles are hidden
             document.querySelectorAll('#parameterCardsContainer .col-12.col-xxl-6').forEach(colWrapper => {
+                if (colWrapper.id === 'card_col_middle' && !is3Layer) {
+                    colWrapper.style.setProperty('display', 'none', 'important');
+                    return;
+                }
                 const paramRow = colWrapper.querySelector('.row.g-4');
                 if (paramRow) {
                     const visibleCols = Array.from(paramRow.children).filter(col => col.style.display !== 'none');
@@ -1972,20 +2142,27 @@
             const tubeCard = document.getElementById('die_card_TubeDie');
             const coverCard = document.getElementById('die_card_CoverDie');
             
-            const nippleVal = String(sps.NippleDie || sps.nippleDie || sps.Nipple || sps.nipple || sps.Nipple_Asli || sps.nipple_Asli || '').trim();
-            const midVal = String(sps.MiddleDie || sps.middleDie || '').trim();
-            const spacerVal = String(sps.SpacerDie || sps.spacerDie || '').trim();
-            const toleranceVal = String(sps.ToleranceDie || sps.toleranceDie || sps.ADistance || sps.aDistance || '').trim();
-            const tubeVal = String(sps.TubeDie || sps.tubeDie || '').trim();
-            const coverVal = String(sps.CoverDie || sps.coverDie || '').trim();
+            const nippleVal = cleanSpsVal(sps.NippleDie || sps.nippleDie || sps.Nipple_Asli || sps.nipple_Asli) 
+                            ?? cleanSpsVal(sps.Nipple || sps.nipple)
+                            ?? (((sps.Nipple_Min || sps.nipple_Min) || (sps.Nipple_Max || sps.nipple_Max)) ? 'range' : '');
+            const midVal = String(sps.MiddleDie || sps.middleDie || sps.MiddleDie_Asli || sps.middleDie_Asli || '').trim();
+            const spacerVal = String(sps.SpacerDie || sps.spacerDie || sps.SpacerDie_Asli || sps.spacerDie_Asli || '').trim();
+            const toleranceVal = cleanSpsVal(sps.ToleranceDie || sps.toleranceDie || sps.ADistance || sps.aDistance || sps.ADistance_Asli || sps.aDistance_Asli)
+                                ?? (((sps.ADistance_Min || sps.aDistance_Min) || (sps.ADistance_Max || sps.aDistance_Max)) ? 'range' : '');
+            const tubeVal = cleanSpsVal(sps.TubeDie || sps.tubeDie || sps.TubeDie_Asli || sps.tubeDie_Asli)
+                            ?? cleanSpsVal(sps.Tube || sps.tube)
+                            ?? (((sps.TubeDie_Min || sps.tubeDie_Min) || (sps.TubeDie_Max || sps.tubeDie_Max)) ? 'range' : '');
+            const coverVal = cleanSpsVal(sps.CoverDie || sps.coverDie || sps.CoverDie_Asli || sps.coverDie_Asli)
+                            ?? cleanSpsVal(sps.Cover || sps.cover)
+                            ?? (((sps.CoverDie_Min || sps.coverDie_Min) || (sps.CoverDie_Max || sps.coverDie_Max)) ? 'range' : '');
 
             if (nippleCard) {
-                if (!nippleVal || nippleVal === '--' || nippleVal === '0' || nippleVal === '') {
-                    nippleCard.classList.add('d-none');
-                    nippleCard.style.setProperty('display', 'none', 'important');
-                } else {
+                if (isDoubleLayer || (nippleVal && nippleVal !== '--' && nippleVal !== '0' && nippleVal !== '')) {
                     nippleCard.classList.remove('d-none');
                     nippleCard.style.display = 'block';
+                } else {
+                    nippleCard.classList.add('d-none');
+                    nippleCard.style.setProperty('display', 'none', 'important');
                 }
             }
 
@@ -2000,43 +2177,54 @@
             }
 
             if (spacerCard) {
-                if (!spacerVal || spacerVal === '--' || spacerVal === '0' || spacerVal === '') {
-                    spacerCard.classList.add('d-none');
-                    spacerCard.style.setProperty('display', 'none', 'important');
-                } else {
+                if (!isDoubleLayer && (spacerVal && spacerVal !== '--' && spacerVal !== '0' && spacerVal !== '')) {
                     spacerCard.classList.remove('d-none');
                     spacerCard.style.display = 'block';
+                } else {
+                    spacerCard.classList.add('d-none');
+                    spacerCard.style.setProperty('display', 'none', 'important');
                 }
             }
 
             if (toleranceCard) {
-                if (!toleranceVal || toleranceVal === '--' || toleranceVal === '0' || toleranceVal === '') {
-                    toleranceCard.classList.add('d-none');
-                    toleranceCard.style.setProperty('display', 'none', 'important');
-                } else {
+                if (!isDoubleLayer && (toleranceVal && toleranceVal !== '--' && toleranceVal !== '0' && toleranceVal !== '')) {
                     toleranceCard.classList.remove('d-none');
                     toleranceCard.style.display = 'block';
+                } else {
+                    toleranceCard.classList.add('d-none');
+                    toleranceCard.style.setProperty('display', 'none', 'important');
                 }
             }
 
             if (tubeCard) {
-                if (!tubeVal || tubeVal === '--' || tubeVal === '0' || tubeVal === '') {
-                    tubeCard.classList.add('d-none');
-                    tubeCard.style.setProperty('display', 'none', 'important');
-                } else {
+                if (isDoubleLayer || (tubeVal && tubeVal !== '--' && tubeVal !== '0' && tubeVal !== '')) {
                     tubeCard.classList.remove('d-none');
                     tubeCard.style.display = 'block';
+                } else {
+                    tubeCard.classList.add('d-none');
+                    tubeCard.style.setProperty('display', 'none', 'important');
                 }
             }
 
             if (coverCard) {
-                if (!coverVal || coverVal === '--' || coverVal === '0' || coverVal === '') {
-                    coverCard.classList.add('d-none');
-                    coverCard.style.setProperty('display', 'none', 'important');
-                } else {
+                if (isDoubleLayer || (coverVal && coverVal !== '--' && coverVal !== '0' && coverVal !== '')) {
                     coverCard.classList.remove('d-none');
                     coverCard.style.display = 'block';
+                } else {
+                    coverCard.classList.add('d-none');
+                    coverCard.style.setProperty('display', 'none', 'important');
                 }
+            }
+
+            // On DL machines, AM Meter does not exist -> hide all AM Meter tiles
+            if (isDoubleLayer) {
+                ['AmMeterInner', 'AmMeterMiddle', 'AmMeterOuter'].forEach(k => {
+                    const col = document.getElementById('tile_col_' + k);
+                    if (col) {
+                        col.classList.add('d-none');
+                        col.style.setProperty('display', 'none', 'important');
+                    }
+                });
             }
 
 
@@ -2173,36 +2361,85 @@
 
         // ====== QUICK-TAP DYNAMIC GENERATOR ======
         function generateSteps(minStr, stdStr, maxStr) {
-            // --- RANGE FORMAT: "5-8" or "5,0-8,0" passed as stdStr ---
-            // Detect when stdStr itself contains a dash/tilde between two numbers
-            const rangeMatch = stdStr && String(stdStr).trim().match(/^([\d,.]+)\s*[-–~]\s*([\d,.]+)$/);
-            if (rangeMatch) {
-                const rangeMin = parseFloat(rangeMatch[1].replace(',', '.'));
-                const rangeMax = parseFloat(rangeMatch[2].replace(',', '.'));
-                if (!isNaN(rangeMin) && !isNaN(rangeMax) && rangeMin < rangeMax) {
-                    // Determine decimal places from the range string parts
-                    const part1Dec = (rangeMatch[1].includes(',') ? rangeMatch[1].split(',')[1] : (rangeMatch[1].includes('.') ? rangeMatch[1].split('.')[1] : '')).length;
-                    const part2Dec = (rangeMatch[2].includes(',') ? rangeMatch[2].split(',')[1] : (rangeMatch[2].includes('.') ? rangeMatch[2].split('.')[1] : '')).length;
-                    const decimalsToUse = Math.max(part1Dec, part2Dec);
-                    const diff = rangeMax - rangeMin;
-                    // For integer ranges (like 5-8), step by 1. For decimal ranges, step by 0.5 or smaller.
-                    const stepSize = decimalsToUse === 0 ? 1 : (diff > 5 ? Math.ceil(diff / 10) : 0.5);
-                    const stepCount = Math.min(Math.round(diff / stepSize), 20);
-                    const stepValue = diff / stepCount;
-                    const values = [];
-                    for (let i = 0; i <= stepCount; i++) {
-                        values.push(rangeMin + stepValue * i);
-                    }
-                    const fmt = v => v.toFixed(decimalsToUse).replace('.', ',');
-                    const unique = [...new Set(values.map(v => Number(v.toFixed(3))))].sort((a, b) => a - b);
-                    return { steps: unique.map(v => fmt(v)), rangeMin: fmt(rangeMin), rangeMax: fmt(rangeMax), isRange: true };
-                }
-            }
-
             const min = parseFloat((minStr || '').replace(',', '.'));
             const std = parseFloat((stdStr || '').replace(',', '.'));
             const max = parseFloat((maxStr || '').replace(',', '.'));
-            
+
+            let rangeMin = NaN, rangeMax = NaN;
+            let rangeDecimals = 0;
+
+            // --- RANGE DETECTION ---
+            // 1. stdStr contains range "5-8" or "2 ~ 5" or "2.0-5.0"
+            const rangeMatch = stdStr && String(stdStr).trim().match(/^([\d,.]+)\s*[-–~]\s*([\d,.]+)$/);
+            if (rangeMatch) {
+                rangeMin = parseFloat(rangeMatch[1].replace(',', '.'));
+                rangeMax = parseFloat(rangeMatch[2].replace(',', '.'));
+                const p1Dec = (rangeMatch[1].includes(',') ? rangeMatch[1].split(',')[1] : (rangeMatch[1].includes('.') ? rangeMatch[1].split('.')[1] : '')).replace(/0+$/, '').length;
+                const p2Dec = (rangeMatch[2].includes(',') ? rangeMatch[2].split(',')[1] : (rangeMatch[2].includes('.') ? rangeMatch[2].split('.')[1] : '')).replace(/0+$/, '').length;
+                rangeDecimals = Math.max(p1Dec, p2Dec);
+            }
+            // 2. Or std is missing/NaN/--, but min and max exist with min < max (e.g. DL Nipple Die min=2, max=5)
+            else if ((isNaN(std) || stdStr === '--' || stdStr === '---' || !stdStr) && !isNaN(min) && !isNaN(max) && min < max) {
+                rangeMin = min;
+                rangeMax = max;
+                const getDec = s => {
+                    if (!s) return 0;
+                    const c = String(s).trim();
+                    const d = c.includes(',') ? c.split(',')[1] : (c.includes('.') ? c.split('.')[1] : '');
+                    return (d || '').replace(/0+$/, '').length;
+                };
+                rangeDecimals = Math.max(getDec(minStr), getDec(maxStr));
+            }
+
+            if (!isNaN(rangeMin) && !isNaN(rangeMax) && rangeMin < rangeMax) {
+                const diff = rangeMax - rangeMin;
+                let stepSize = 1;
+                if (diff <= 1) {
+                    stepSize = 0.1;
+                } else if (diff <= 3) {
+                    stepSize = 0.5;
+                } else if (diff <= 6) {
+                    stepSize = 0.5;
+                } else if (diff > 10) {
+                    stepSize = Math.ceil(diff / 10);
+                }
+
+                const decimalsToUse = (stepSize % 1 !== 0) ? Math.max(rangeDecimals, 1) : rangeDecimals;
+                const stepCount = Math.min(Math.round(diff / stepSize), 20);
+                const stepValue = diff / stepCount;
+                const values = [];
+                for (let i = 0; i <= stepCount; i++) {
+                    values.push(rangeMin + stepValue * i);
+                }
+                const fmt = v => {
+                    let s = v.toFixed(decimalsToUse);
+                    return s.replace('.', ',');
+                };
+                const unique = [...new Set(values.map(v => Number(v.toFixed(3))))].sort((a, b) => a - b);
+                return { 
+                    steps: unique.map(v => fmt(v)), 
+                    rangeMin: fmt(rangeMin), 
+                    rangeMax: fmt(rangeMax), 
+                    isRange: true 
+                };
+            }
+
+            // 3. Max-only spec (e.g. Chiller Water Temp max 15 or max 9)
+            if (!isNaN(max) && (isNaN(min) || minStr === '--') && (isNaN(std) || stdStr === '--' || String(stdStr).toLowerCase().includes('max'))) {
+                let stepMin = Math.max(1, max <= 10 ? max - 4 : (max <= 20 ? max - 5 : Math.round(max * 0.7)));
+                const values = [];
+                for (let v = stepMin; v <= max; v++) {
+                    values.push(v);
+                }
+                const fmt = v => String(v).replace('.', ',');
+                return {
+                    steps: values.map(v => fmt(v)),
+                    rangeMax: fmt(max),
+                    isMaxOnly: true,
+                    isRange: false
+                };
+            }
+
             if (isNaN(std)) return stdStr && stdStr !== '--' && stdStr !== '---' ? { steps: [stdStr], isRange: false } : { steps: [], isRange: false };
             if (isNaN(min) || isNaN(max) || min === max) return { steps: [stdStr], isRange: false };
             
@@ -2243,20 +2480,47 @@
             const result = generateSteps(finalMin, finalStd, finalMax);
             const steps = result.steps;
             const isRange = result.isRange;
+            const isMaxOnly = result.isMaxOnly;
             const rangeMin = result.rangeMin;
             const rangeMax = result.rangeMax;
 
             if (steps.length === 0) return;
 
+            const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
+
             // Section 01-04
             const qtBtns = document.getElementById('qt_btns_' + key);
             if (qtBtns) {
-                // If only 1 step (max-only or min-only spec), render 2 buttons: OK (Manual Input) and NG (Manual Input)
+                // Max-only spec (e.g. Chiller Water Temp)
+                if (isMaxOnly) {
+                    const limitLabel = finalMax || result.rangeMax;
+                    let html = `<div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">MAX: ${limitLabel}</div>`;
+                    html += '<div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center; width:100%;">';
+                    steps.forEach(val => {
+                        const isMaxVal = (val === result.rangeMax);
+                        const label = isMaxVal ? 'MAX' : '&nbsp;';
+                        html += `<button type="button" class="qt-btn qt-std" style="${btnStyle} flex: 1 1 calc(33% - 4px); min-width: 45px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2;" onclick="quickFillParamDynamic('${key}', '${val}', true, this)">
+                            <span style="font-size:0.45rem; opacity:0.6; font-weight:normal; letter-spacing:0.5px;">${label}</span>
+                            <span>${val}</span>
+                        </button>`;
+                    });
+                    html += `</div>`;
+                    html += `<div style="margin-top:4px; display:flex; gap:4px; width:100%;">
+                        <button type="button" class="qt-btn qt-std" style="${btnStyle} flex:1;" onclick="quickFillParamDynamic('${key}', 'ok_manual', true, this)">OK (Manual)</button>
+                        <button type="button" class="qt-btn qt-ng" style="${btnStyle} flex:1;" onclick="quickFillParamDynamic('${key}', 'ng', false, this)">NG (Manual)</button>
+                    </div>`;
+                    qtBtns.innerHTML = html;
+                    
+                    const themeColor = qtBtns.closest('.param-tile-modern')?.querySelector('.vibrant-hud-input')?.style.getPropertyValue('--theme-color');
+                    if(themeColor) qtBtns.style.setProperty('--qt-color', themeColor);
+                    return;
+                }
+
+                // If only 1 step (fallback single spec), render 2 buttons: OK (Manual Input) and NG (Manual Input)
                 if (steps.length === 1 && !isRange) {
                     const limitLabel = finalStd || steps[0];
-                    const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
                     const html = `
-                        <div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">MAX: ${limitLabel}</div>
+                        <div style="margin-bottom:4px; font-size:0.55rem; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-align:center;">STD: ${limitLabel}</div>
                         <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
                             <button type="button" class="qt-btn qt-std" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ok_manual', false, this)">OK (Manual Input)</button>
                             <button type="button" class="qt-btn qt-ng" style="${btnStyle} width:100%;" onclick="quickFillParamDynamic('${key}', 'ng', false, this)">NG (Manual Input)</button>
@@ -2269,8 +2533,6 @@
                     
                     return;
                 }
-
-                const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
                 
                 // Header label for range specs
                 if (isRange) {
@@ -2322,8 +2584,6 @@
                 };
                 const d = dieRadios[key];
                 if (d) {
-                    const btnStyle = "font-size: 0.65rem; padding: 6px 2px;";
-                    
                     let html = '';
                     // Header label for range specs
                     if (isRange) {
@@ -3827,11 +4087,43 @@
                     midCard.classList.add('d-none');
                     midCard.style.setProperty('display', 'none', 'important');
                 }
+                const toleranceCard = document.getElementById('die_card_ToleranceDie');
+                if (toleranceCard) {
+                    toleranceCard.classList.add('d-none');
+                    toleranceCard.style.setProperty('display', 'none', 'important');
+                }
+                const spacerCard = document.getElementById('die_card_SpacerDie');
+                if (spacerCard) {
+                    spacerCard.classList.add('d-none');
+                    spacerCard.style.setProperty('display', 'none', 'important');
+                }
                 const yarnCard = document.getElementById('yarnMaterialCard');
                 if (yarnCard) {
                     yarnCard.classList.add('d-none');
                     yarnCard.style.setProperty('display', 'none', 'important');
                 }
+                const nippleCard = document.getElementById('die_card_NippleDie');
+                if (nippleCard) {
+                    nippleCard.classList.remove('d-none');
+                    nippleCard.style.display = 'block';
+                }
+                const tubeCard = document.getElementById('die_card_TubeDie');
+                if (tubeCard) {
+                    tubeCard.classList.remove('d-none');
+                    tubeCard.style.display = 'block';
+                }
+                const coverCard = document.getElementById('die_card_CoverDie');
+                if (coverCard) {
+                    coverCard.classList.remove('d-none');
+                    coverCard.style.display = 'block';
+                }
+                ['AmMeterInner', 'AmMeterMiddle', 'AmMeterOuter'].forEach(k => {
+                    const col = document.getElementById('tile_col_' + k);
+                    if (col) {
+                        col.classList.add('d-none');
+                        col.style.setProperty('display', 'none', 'important');
+                    }
+                });
             }
         });
         function resetHUD() {

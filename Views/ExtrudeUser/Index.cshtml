@@ -104,6 +104,22 @@
         </div>
     </div>
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7;">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @ViewBag.ErrorMessage
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <!-- Filters & Search -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div class="position-relative">
@@ -136,7 +152,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="avatar-sm rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-weight: bold;">
-                                        @user.FullName.Substring(0, 1).ToUpper()
+                                        @(!string.IsNullOrWhiteSpace(user.FullName) ? user.FullName.Substring(0, 1).ToUpper() : "U")
                                     </div>
                                     <div>
                                         <div class="text-white fw-bold">@user.FullName</div>

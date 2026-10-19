@@ -49,7 +49,7 @@
     <nav class="top-navbar no-print">
         <div class="navbar-content">
             <div class="navbar-left">
-                <button class="sidebar-toggle" id="sidebarToggle">
+                <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle Sidebar">
                     <i class="bi bi-list"></i>
                 </button>
                 <div class="brand">
@@ -289,7 +289,7 @@
             }
         });
 
-        // Sidebar toggle
+        // Responsive Sidebar toggle (Support Desktop, Tablet & Mobile for all roles)
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
@@ -302,20 +302,62 @@
             document.body.appendChild(backdrop);
         }
 
-        sidebarToggle.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('show');
-                backdrop.classList.toggle('show');
-            } else {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
+        function isMobileOrTablet() {
+            return window.innerWidth <= 991.98 || window.matchMedia('(max-width: 991.98px)').matches;
+        }
+
+        function toggleSidebar(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
             }
+            if (!sidebar) return;
+
+            if (isMobileOrTablet()) {
+                const isOpen = sidebar.classList.toggle('show');
+                if (backdrop) backdrop.classList.toggle('show', isOpen);
+            } else {
+                const isCollapsed = sidebar.classList.toggle('collapsed');
+                if (mainContent) mainContent.classList.toggle('expanded', isCollapsed);
+            }
+        }
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+            sidebarToggle.addEventListener('touchstart', function(e) {
+                // Prevent ghost double triggers on touch screens
+                e.preventDefault();
+                toggleSidebar(e);
+            }, { passive: false });
+        }
+
+        // Close when backdrop clicked or touched
+        if (backdrop) {
+            ['click', 'touchstart'].forEach(evt => {
+                backdrop.addEventListener(evt, function(e) {
+                    e.preventDefault();
+                    if (sidebar) sidebar.classList.remove('show');
+                    backdrop.classList.remove('show');
+                }, { passive: false });
+            });
+        }
+
+        // Auto-close sidebar on tablet/mobile when a menu item is selected
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (isMobileOrTablet() && sidebar) {
+                    sidebar.classList.remove('show');
+                    if (backdrop) backdrop.classList.remove('show');
+                }
+            });
         });
 
-        // Close when backdrop clicked
-        backdrop.addEventListener('click', function() {
-            sidebar.classList.remove('show');
-            backdrop.classList.remove('show');
+        // Window resize event to keep layout state clean
+        window.addEventListener('resize', function() {
+            if (!isMobileOrTablet()) {
+                if (sidebar) sidebar.classList.remove('show');
+                if (backdrop) backdrop.classList.remove('show');
+            }
         });
 
 

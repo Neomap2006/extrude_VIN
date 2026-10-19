@@ -1,0 +1,123 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram name="4. Class Diagram" id="d4">
+    <mxGraphModel dx="802" dy="508" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="p4_2" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;SpsNoDoc&lt;/b&gt;&lt;hr size=1 color=&quot;#0284c7&quot;&gt;+ DocumentNumber : string (PK)&lt;br&gt;+ RevisionNumber : string&lt;br&gt;+ IsActive : bool&lt;br&gt;+ Customer : string&lt;br&gt;+ HoseType : string&lt;br&gt;+ Dimensi : string&lt;br&gt;+ InnerTube : string&lt;br&gt;+ OuterCover : string&lt;br&gt;+ MiddleTube : string&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="220" x="336" y="249" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_3" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;SpsItemList&lt;/b&gt;&lt;hr size=1 color=&quot;#0284c7&quot;&gt;+ Id : int (PK)&lt;br&gt;+ ItemList : string&lt;br&gt;+ DocumentNumber : string (FK)&lt;br&gt;+ LengthShrinkMin : float&lt;br&gt;+ LengthShrinkStd : float&lt;br&gt;+ LengthShrinkMax : float&lt;br&gt;+ LengthCuttingMin : float&lt;br&gt;+ LengthCuttingStd : float&lt;br&gt;+ LengthCuttingMax : float&lt;/font&gt;" vertex="1">
+          <mxGeometry height="180" width="220" x="300" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_4" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;ApprovalRequest&lt;/b&gt;&lt;hr size=1 color=&quot;#d97706&quot;&gt;+ Id : int (PK)&lt;br&gt;+ RequestCode : string&lt;br&gt;+ ActionType : int&lt;br&gt;+ TargetKey : string&lt;br&gt;+ RequesterUserName : string&lt;br&gt;+ Status : int&lt;br&gt;+ CreatedAt : DateTime&lt;/font&gt;" vertex="1">
+          <mxGeometry height="165" width="220" x="40" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_5" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;ApprovalRequestLog&lt;/b&gt;&lt;hr size=1 color=&quot;#d97706&quot;&gt;+ Id : int (PK)&lt;br&gt;+ ApprovalRequestId : int (FK)&lt;br&gt;+ ToStatus : int&lt;br&gt;+ Comment : string&lt;br&gt;+ ActorUserName : string&lt;br&gt;+ CreatedAt : DateTime&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="220" x="40" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_6" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#f8fafc;strokeColor=#475569;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;PlanningMaster&lt;/b&gt;&lt;hr size=1 color=&quot;#475569&quot;&gt;+ Id : int (PK)&lt;br&gt;+ TanggalPlanning : DateTime&lt;br&gt;+ KodeMesin : string&lt;br&gt;+ KodeItem : string&lt;br&gt;+ PartName : string&lt;br&gt;+ TargetPcs : int&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="220" x="560" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_7" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#f8fafc;strokeColor=#475569;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;Machine&lt;/b&gt;&lt;hr size=1 color=&quot;#475569&quot;&gt;+ Id : int (PK)&lt;br&gt;+ KodeMesin : string&lt;br&gt;+ NamaMesin : string&lt;br&gt;+ IsActive : bool&lt;/font&gt;" vertex="1">
+          <mxGeometry height="130" width="220" x="300" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_8" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#f8fafc;strokeColor=#475569;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;ElwpUser&lt;/font&gt;&lt;hr size=1 color=&quot;#475569&quot;&gt;+ Id : int (PK)&lt;br&gt;+ Username : string&lt;br&gt;+ FullName : string&lt;br&gt;+ NPK : string&lt;br&gt;+ Role : string&lt;br&gt;+ IsActive : bool&lt;/font&gt;" vertex="1">
+          <mxGeometry height="140" width="220" x="820" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_9" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#f8fafc;strokeColor=#475569;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;SensorIngestLog&lt;/b&gt;&lt;hr size=1 color=&quot;#475569&quot;&gt;+ Id : long (PK)&lt;br&gt;+ MachineCode : string&lt;br&gt;+ SensorTimestamp : DateTime&lt;br&gt;+ PayloadJson : string&lt;br&gt;+ IdempotencyKey : string&lt;/font&gt;" vertex="1">
+          <mxGeometry height="140" width="220" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_10" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;ProductionReport&lt;/b&gt;&lt;hr size=1 color=&quot;#16a34a&quot;&gt;+ Id : int (PK)&lt;br&gt;+ ProductionDate : DateTime&lt;br&gt;+ DocumentNumber : string&lt;br&gt;+ MachineName : string&lt;br&gt;+ Shift : string&lt;br&gt;+ Customer : string&lt;br&gt;+ InnerLotNumber : string&lt;br&gt;+ OuterLotNumber : string&lt;br&gt;+ Status : string&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="220" x="602" y="249" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_11" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;ProductionReading&lt;/b&gt;&lt;hr size=1 color=&quot;#16a34a&quot;&gt;+ Id : int (PK)&lt;br&gt;+ ProductionReportId : int (FK)&lt;br&gt;+ ReadingTime : DateTime&lt;br&gt;+ ScrewSpeedInner : decimal&lt;br&gt;+ HeadTempInner : decimal&lt;br&gt;+ PressureInner : decimal&lt;br&gt;+ ScrewSpeedOuter : decimal&lt;/font&gt;" vertex="1">
+          <mxGeometry height="165" width="220" x="560" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_12" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fce7f3;strokeColor=#db2777;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;DimensionReport&lt;/b&gt;&lt;hr size=1 color=&quot;#db2777&quot;&gt;+ Id : int (PK)&lt;br&gt;+ ProductionReportId : int (FK)&lt;br&gt;+ InspectorName : string&lt;br&gt;+ CheckDate : DateTime&lt;br&gt;+ QtyOk : int&lt;br&gt;+ QtyNg : int&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="220" x="923" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_13" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fce7f3;strokeColor=#db2777;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;DimensionMeasurement&lt;/b&gt;&lt;hr size=1 color=&quot;#db2777&quot;&gt;+ Id : int (PK)&lt;br&gt;+ DimensionReportId : int (FK)&lt;br&gt;+ SampleNo : int&lt;br&gt;+ ParameterName : string&lt;br&gt;+ Value : decimal&lt;br&gt;+ IsInSpec : bool&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="220" x="820" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_14" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=6;fillColor=#fce7f3;strokeColor=#db2777;strokeWidth=1.5;fontSize=11;fontColor=#0f172a;" value="&lt;font style=&quot;color: #0f172a;&quot;&gt;&lt;b&gt;&amp;lt;&amp;lt;Entity&amp;gt;&amp;gt;&lt;br&gt;DimensionSummary&lt;/b&gt;&lt;hr size=1 color=&quot;#db2777&quot;&gt;+ Id : int (PK)&lt;br&gt;+ DimensionReportId : int (FK)&lt;br&gt;+ QtyOk : int&lt;br&gt;+ QtyNg : int&lt;br&gt;+ AvgInnerDiameter : decimal&lt;br&gt;+ AvgThickness : decimal&lt;br&gt;+ AvgPitch : decimal&lt;/font&gt;" vertex="1">
+          <mxGeometry height="165" width="220" x="1206" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_15" edge="1" parent="1" source="p4_2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;endArrow=open;endFill=0;startArrow=none;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#0f172a;" target="p4_3" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;memiliki&lt;/span&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_16" connectable="0" parent="p4_15" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;1&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_17" connectable="0" parent="p4_15" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;*&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_18" edge="1" parent="1" source="p4_2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;endArrow=open;endFill=0;startArrow=none;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#0f172a;" target="p4_4" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;diajukan&lt;/span&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_19" connectable="0" parent="p4_18" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_20" connectable="0" parent="p4_18" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="*" vertex="1">
+          <mxGeometry relative="1" x="0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_21" edge="1" parent="1" source="p4_4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;endArrow=open;endFill=0;startArrow=none;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#0f172a;" target="p4_5" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;mencatat log&lt;/span&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_22" connectable="0" parent="p4_21" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_23" connectable="0" parent="p4_21" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="*" vertex="1">
+          <mxGeometry relative="1" x="0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_24" edge="1" parent="1" source="p4_6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;endArrow=open;endFill=0;startArrow=none;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#0f172a;" target="p4_10" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;dibuat dari&lt;/span&gt;">
+          <mxGeometry relative="1" x="0.0084" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4_25" connectable="0" parent="p4_24" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;1&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_26" connectable="0" parent="p4_24" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;*&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_27" edge="1" parent="1" source="p4_10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;endArrow=open;endFill=0;startArrow=none;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#0f172a;" target="p4_11" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;mencatat bacaan&lt;/span&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_28" connectable="0" parent="p4_27" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_29" connectable="0" parent="p4_27" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="*" vertex="1">
+          <mxGeometry relative="1" x="0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_30" edge="1" parent="1" source="p4_10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;endArrow=open;endFill=0;startArrow=none;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#0f172a;" target="p4_12" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;diinspeksi&lt;/span&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_31" connectable="0" parent="p4_30" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_32" connectable="0" parent="p4_30" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="1" vertex="1">
+          <mxGeometry relative="1" x="0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_33" edge="1" parent="1" source="p4_12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;endArrow=open;endFill=0;startArrow=none;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#0f172a;" target="p4_13" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;memiliki sampel&lt;/span&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_34" connectable="0" parent="p4_33" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_35" connectable="0" parent="p4_33" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="*" vertex="1">
+          <mxGeometry relative="1" x="0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_36" edge="1" parent="1" source="p4_12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;endArrow=open;endFill=0;startArrow=none;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#0f172a;" target="p4_14" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;memiliki ringkasan&lt;/span&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_37" connectable="0" parent="p4_36" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;1&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.85" y="-12" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_38" connectable="0" parent="p4_36" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#0f172a;" value="&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;1&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.85" y="-12" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

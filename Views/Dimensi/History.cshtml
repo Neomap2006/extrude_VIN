@@ -932,6 +932,13 @@
 
                             <td>
                                 <div class="trace-val">@(item.VinCode ?? "---")</div>
+                                @if (!string.IsNullOrWhiteSpace(item.StandardLength) || !string.IsNullOrWhiteSpace(item.StandardShrink))
+                                {
+                                    <div class="super-small" style="font-size: 0.65rem; color: #38bdf8; margin-top: 2px; font-weight: 700;">
+                                        @(string.IsNullOrWhiteSpace(item.StandardLength) ? "" : $"Cut: {item.StandardLength}")
+                                        @(string.IsNullOrWhiteSpace(item.StandardShrink) ? "" : $" | Shrink: {item.StandardShrink}")
+                                    </div>
+                                }
                             </td>
 
                             <td style="text-align: center;">
