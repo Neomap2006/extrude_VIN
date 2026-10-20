@@ -2,6 +2,8 @@
 @{
     var machineFilter = (ViewBag.MachineFilter as string) ?? "";
     var machineList = (ViewBag.MachineList as IEnumerable<string>) ?? new List<string>();
+    var sessionRole = Context.Session.GetString("UserRole")?.ToUpper() ?? "";
+    var isLeaderOrAdmin = sessionRole.Contains("LEADER") || sessionRole.Contains("ADMIN") || sessionRole == "SUPERADMIN";
 }
 
 <style>
@@ -192,9 +194,12 @@
                         <a asp-action="Details" asp-route-id="@item.Id" asp-route-portal="dimension" class="btn-circle" title="View Dossier">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-circle edit" title="Edit Record">
-                            <i class="bi bi-sliders"></i>
-                        </a>
+                        @if (isLeaderOrAdmin)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-circle edit leader-only-btn" title="Edit Record">
+                                <i class="bi bi-sliders"></i>
+                            </a>
+                        }
                         <a asp-action="Delete" asp-route-id="@item.Id" class="btn-circle del" title="Delete Record">
                             <i class="bi bi-trash3"></i>
                         </a>

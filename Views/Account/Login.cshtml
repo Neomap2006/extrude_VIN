@@ -384,7 +384,7 @@
                         <option value="" disabled selected>Pilih User...</option>
                         @foreach (var user in ViewBag.Users)
                         {
-                            <option value="@user.Id">@user.FullName (@user.NPK)</option>
+                            <option value="@user.Id" data-role="@user.Role">@user.FullName (@user.NPK)</option>
                         }
                     </select>
                 </div>
@@ -477,7 +477,7 @@
             const razorUsers = [];
             $('#userId option').each(function() {
                 const val = $(this).val();
-                if (val) razorUsers.push({ id: val, fullName: $(this).text() });
+                if (val) razorUsers.push({ id: val, fullName: $(this).text(), role: $(this).data('role') || 'Operator' });
             });
             const razorMachines = [];
             $('#machineId option').each(function() {
@@ -515,7 +515,7 @@
             if (lsUsers.length > 0 && lsMachines.length > 0) {
                 let userHtml = '<option value="">-- Pilih Operator --</option>';
                 lsUsers.forEach(u => {
-                    userHtml += `<option value="${u.id}">${u.fullName}</option>`;
+                    userHtml += `<option value="${u.id}" data-role="${u.role || 'Operator'}">${u.fullName}</option>`;
                 });
                 $('#userId').html(userHtml);
 
@@ -653,8 +653,15 @@
                 }
                 displayName = $('#userId option:selected').text();
                 machineName = $('#machineId option:selected').text().split(' - ')[0];
-                if (displayName.toUpperCase().includes('TRIAL')) {
+                const selectedRole = ($('#userId option:selected').data('role') || '').toUpperCase();
+                if (selectedRole.includes('LEADER')) {
+                    userRole = "LEADER";
+                } else if (selectedRole.includes('ADMIN')) {
+                    userRole = "ADMIN_PROD";
+                } else if (displayName.toUpperCase().includes('TRIAL')) {
                     userRole = "ENGINEERING";
+                } else {
+                    userRole = "OPERATOR";
                 }
             }
 

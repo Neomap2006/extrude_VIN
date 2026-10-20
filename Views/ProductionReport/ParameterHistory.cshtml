@@ -16,6 +16,8 @@
     var endDate = (ViewBag.EndDate as string) ?? "";
     var machineFilter = (ViewBag.MachineFilter as string) ?? "";
     var machineList = (ViewBag.MachineList as IEnumerable<string>) ?? new List<string>();
+    var sessionRole = Context.Session.GetString("UserRole")?.ToUpper() ?? "";
+    var isLeaderOrAdmin = sessionRole.Contains("LEADER") || sessionRole.Contains("ADMIN") || sessionRole == "SUPERADMIN";
 }
 
 <div class="hud-dashboard-container" style="min-height: 100vh; background: #020617; color: #fff; padding: 1.5rem; font-family: 'Inter', sans-serif;">
@@ -291,9 +293,12 @@
                                     <a asp-action="Details" asp-route-id="@item.Id" asp-route-portal="parameter" class="btn btn-action-glass btn-blue" title="View Details">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-action-glass btn-orange" title="Edit">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
+                                    @if (isLeaderOrAdmin)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-action-glass btn-orange leader-only-btn" title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                    }
                                     <button type="button" class="btn btn-action-glass btn-red delete-btn" 
                                             data-id="@item.Id" 
                                             data-doc="@item.DocumentNumber" 
@@ -1635,6 +1640,15 @@
             }
 
             setupPagination('paramTable', 10);
+
+            // Leader authorization check for client-side offline cache
+            try {
+                const sess = JSON.parse(localStorage.getItem('offline_session') || '{}');
+                const r = (sess.userRole || '').toUpperCase();
+                if (!r.includes('LEADER') && !r.includes('ADMIN')) {
+                    document.querySelectorAll('.leader-only-btn').forEach(el => el.style.display = 'none');
+                }
+            } catch(e) {}
         });
 
 

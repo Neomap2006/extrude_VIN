@@ -137,13 +137,21 @@
     }
 </style>
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-3 no-print" role="alert" style="max-width: 1350px; margin: 15px auto; border-radius: 10px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fff;">
+        <strong><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i></strong>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 <div class="no-print-btns">
     @{
         var currentPortal = Context.Request.Query["portal"].ToString();
         var backUrl = "/Dimensi/History";
         var backLabel = "Kembali";
-        var userRole = Context.Session.GetString("UserRole");
+        var userRole = Context.Session.GetString("UserRole")?.ToUpper() ?? "";
         var isOperator = userRole != "ADMIN_ENG" && userRole != "LEADER_QC";
+        var isLeaderOrAdmin = userRole.Contains("LEADER") || userRole.Contains("ADMIN") || userRole == "SUPERADMIN";
         var referer = Context.Request.Headers["Referer"].ToString();
 
         if (currentPortal == "dimension") {
@@ -157,7 +165,10 @@
         }
     }
     <a href="@backUrl" class="btn btn-secondary btn-sm shadow">← @backLabel</a>
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm shadow text-dark fw-bold">✏️ Edit / Revisi</a>
+    @if (isLeaderOrAdmin)
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm shadow text-dark fw-bold leader-only-btn">✏️ Edit / Revisi</a>
+    }
     <button onclick="window.print()" class="btn btn-primary btn-sm shadow">Cetak A4 Landscape</button>
 </div>
 
@@ -613,3 +624,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Leader authorization check for client-side offline cache
+    (function() {
+        try {
+            const sess = JSON.parse(localStorage.getItem('offline_session') || '{}');
+            const r = (sess.userRole || '').toUpperCase();
+            if (!r.includes('LEADER') && !r.includes('ADMIN')) {
+                document.querySelectorAll('.leader-only-btn').forEach(el => el.style.display = 'none');
+            }
+        } catch(e) {}
+    })();
+</script>

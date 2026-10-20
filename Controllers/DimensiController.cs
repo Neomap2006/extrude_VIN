@@ -630,6 +630,15 @@ namespace VelastoProductionSystem.Controllers
             {
                 return RedirectToAction("Login", "Account");
             }
+
+            var sessionRole = HttpContext.Session.GetString("UserRole")?.ToUpper() ?? "";
+            var isLeaderOrAdmin = sessionRole.Contains("LEADER") || sessionRole.Contains("ADMIN") || sessionRole == "SUPERADMIN";
+            if (!isLeaderOrAdmin)
+            {
+                TempData["ErrorMessage"] = "Akses ditolak: Menu Edit/Revisi data hanya untuk Role LEADER.";
+                return RedirectToAction("Details", new { id = id, portal = "dimension" });
+            }
+
             var report = await _context.DimensionReports
                 .Include(r => r.Measurements)
                 .Include(r => r.Summaries)
@@ -858,6 +867,13 @@ namespace VelastoProductionSystem.Controllers
                 DimensionReport? report = null;
                 if (data.ReportId > 0)
                 {
+                    var sessionRole = HttpContext.Session.GetString("UserRole")?.ToUpper() ?? "";
+                    var isLeaderOrAdmin = sessionRole.Contains("LEADER") || sessionRole.Contains("ADMIN") || sessionRole == "SUPERADMIN";
+                    if (!isLeaderOrAdmin)
+                    {
+                        return new { success = false, message = "Akses ditolak: Fitur Edit/Revisi data hanya untuk Role LEADER." };
+                    }
+
                     report = await _context.DimensionReports
                         .Include(r => r.Measurements)
                         .FirstOrDefaultAsync(r => r.Id == data.ReportId);

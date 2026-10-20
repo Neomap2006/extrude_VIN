@@ -5,6 +5,8 @@
     var spsMap = ViewBag.SpsMap as Dictionary<string, VelastoProductionSystem.Models.SpsNoDoc>;
     var machineFilter = (ViewBag.MachineFilter as string) ?? "";
     var machineList = (ViewBag.MachineList as IEnumerable<string>) ?? new List<string>();
+    var sessionRole = Context.Session.GetString("UserRole")?.ToUpper() ?? "";
+    var isLeaderOrAdmin = sessionRole.Contains("LEADER") || sessionRole.Contains("ADMIN") || sessionRole == "SUPERADMIN";
 }
 
 <style>
@@ -951,9 +953,12 @@
                                     <a asp-action="Details" asp-route-id="@item.Id" asp-route-portal="dimension" class="btn-action-sm" title="View">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action-sm" title="Edit">
-                                        <i class="bi bi-sliders"></i>
-                                    </a>
+                                    @if (isLeaderOrAdmin)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action-sm leader-only-btn" title="Edit">
+                                            <i class="bi bi-sliders"></i>
+                                        </a>
+                                    }
                                     <form asp-action="Delete" method="post" onsubmit="return confirm('ERASE DOSSIER?');" style="display:inline;">
                                         <input type="hidden" name="id" value="@item.Id" />
                                         <button type="submit" class="btn-action-sm del" title="Delete">
@@ -1353,5 +1358,14 @@
             // Jalankan filter agar tampil sesuai mesin offline
             filterHistory();
         }
+
+        // Leader authorization check for client-side offline cache
+        try {
+            const sess = JSON.parse(localStorage.getItem('offline_session') || '{}');
+            const r = (sess.userRole || '').toUpperCase();
+            if (!r.includes('LEADER') && !r.includes('ADMIN')) {
+                document.querySelectorAll('.leader-only-btn').forEach(el => el.style.display = 'none');
+            }
+        } catch(e) {}
     });
 </script>

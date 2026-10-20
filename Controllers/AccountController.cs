@@ -185,13 +185,16 @@ namespace VelastoProductionSystem.Controllers
                 resolvedUserName.Contains("TRIAL", StringComparison.OrdinalIgnoreCase) ||
                 (user.Username?.Contains("TRIAL", StringComparison.OrdinalIgnoreCase) ?? false);
 
-            var operatorRole = isTrialEngineering ? "ENGINEERING" : "OPERATOR";
+            var roleFromDb = user.Role?.Trim().ToUpper() ?? "OPERATOR";
+            var resolvedRole = isTrialEngineering ? "ENGINEERING" :
+                               (roleFromDb.Contains("LEADER") ? "LEADER" :
+                               (roleFromDb.Contains("ADMIN") ? "ADMIN_PROD" : "OPERATOR"));
 
             // Simpan ke Session
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("UserName", resolvedUserName);
-            HttpContext.Session.SetString("IsAdmin", "false");
-            HttpContext.Session.SetString("UserRole", operatorRole);
+            HttpContext.Session.SetString("IsAdmin", resolvedRole.Contains("ADMIN") ? "true" : "false");
+            HttpContext.Session.SetString("UserRole", resolvedRole);
             HttpContext.Session.SetInt32("MachineId", machine.Id);
             HttpContext.Session.SetString("MachineName", machine.KodeMesin ?? machine.NamaMesin ?? "");
 

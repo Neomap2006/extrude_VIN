@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Production Report";
+    var sessionRole = Context.Session.GetString("UserRole")?.ToUpper() ?? "";
+    var isLeaderOrAdmin = sessionRole.Contains("LEADER") || sessionRole.Contains("ADMIN") || sessionRole == "SUPERADMIN";
 }
 
 <div class="production-dashboard-sapphire fade-in">
@@ -80,9 +82,12 @@
                                             <a asp-action="App" asp-route-id="@item.Id" class="btn btn-action-glass btn-success" title="Open Tablet App">
                                                 <i class="bi bi-tablet"></i>
                                             </a>
-                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-action-glass btn-orange" title="Edit">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </a>
+                                            @if (isLeaderOrAdmin)
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-action-glass btn-orange leader-only-btn" title="Edit">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </a>
+                                            }
                                             <button type="button" class="btn btn-action-glass btn-red delete-btn" 
                                                     data-id="@item.Id" 
                                                     data-doc="@item.DocumentNumber" 

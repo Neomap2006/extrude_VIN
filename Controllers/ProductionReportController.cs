@@ -1252,6 +1252,13 @@ namespace VelastoProductionSystem.Controllers
         {
             if (dto == null || dto.Id == 0) return Json(new { success = false, message = "Invalid data payload" });
 
+            var sessionRole = HttpContext.Session.GetString("UserRole")?.ToUpper() ?? "";
+            var isLeaderOrAdmin = sessionRole.Contains("LEADER") || sessionRole.Contains("ADMIN") || sessionRole == "SUPERADMIN";
+            if (!isLeaderOrAdmin)
+            {
+                return Json(new { success = false, message = "Akses ditolak: Fitur Edit/Revisi data hanya untuk Role LEADER." });
+            }
+
             try
             {
                 var report = await _context.ProductionReports
@@ -1580,6 +1587,14 @@ namespace VelastoProductionSystem.Controllers
         {
             if (id == null) return NotFound();
 
+            var sessionRole = HttpContext.Session.GetString("UserRole")?.ToUpper() ?? "";
+            var isLeaderOrAdmin = sessionRole.Contains("LEADER") || sessionRole.Contains("ADMIN") || sessionRole == "SUPERADMIN";
+            if (!isLeaderOrAdmin)
+            {
+                TempData["ErrorMessage"] = "Akses ditolak: Menu Edit/Revisi data hanya untuk Role LEADER.";
+                return RedirectToAction("Details", new { id = id, portal = "parameter" });
+            }
+
             var report = await _context.ProductionReports
                 .Include(p => p.ProductionReadings)
                 .Include(p => p.MaterialLots)
@@ -1609,6 +1624,14 @@ namespace VelastoProductionSystem.Controllers
         public async Task<IActionResult> Edit(int id, ProductionReport report)
         {
             if (id != report.Id) return NotFound();
+
+            var sessionRole = HttpContext.Session.GetString("UserRole")?.ToUpper() ?? "";
+            var isLeaderOrAdmin = sessionRole.Contains("LEADER") || sessionRole.Contains("ADMIN") || sessionRole == "SUPERADMIN";
+            if (!isLeaderOrAdmin)
+            {
+                TempData["ErrorMessage"] = "Akses ditolak: Menu Edit/Revisi data hanya untuk Role LEADER.";
+                return RedirectToAction("Details", new { id = id, portal = "parameter" });
+            }
 
             ModelState.Remove("CreatedBy");
             ModelState.Remove("CreatedDate");

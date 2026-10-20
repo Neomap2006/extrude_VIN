@@ -70,6 +70,13 @@
 }
 
 <div class="production-dashboard-sapphire fade-in">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-3 no-print" role="alert" style="border-radius: 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fff;">
+            <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
     <!-- PREMIUM ACTION TOOLBAR (No Print) -->
     <div class="no-print mb-4 p-2 p-md-3 bg-hud-navy-dark shadow-lg fade-in" style="position: sticky; top: calc(var(--navbar-height, 55px) + 8px); z-index: 100; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -77,8 +84,9 @@
                 @{
                     var backUrl = "/ProductionReport/Index";
                     var backLabel = "MONITOR";
-                    var userRole = Context.Session.GetString("UserRole");
+                    var userRole = Context.Session.GetString("UserRole")?.ToUpper() ?? "";
                     var isOperator = userRole != "ADMIN_ENG" && userRole != "LEADER_QC";
+                    var isLeaderOrAdmin = userRole.Contains("LEADER") || userRole.Contains("ADMIN") || userRole == "SUPERADMIN";
                     var referer = Context.Request.Headers["Referer"].ToString();
                     
                     if (currentPortal == "dimension") {
@@ -113,9 +121,12 @@
             </div>
 
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm px-3 px-md-4 rounded-pill fw-bold text-dark shadow-sm d-inline-flex align-items-center" style="box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);">
-                    <i class="bi bi-pencil-square me-1"></i> <span class="d-none d-sm-inline">REVISI / EDIT DATA</span><span class="d-inline d-sm-none">EDIT</span>
-                </a>
+                @if (isLeaderOrAdmin)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm px-3 px-md-4 rounded-pill fw-bold text-dark shadow-sm d-inline-flex align-items-center leader-only-btn" style="box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);">
+                        <i class="bi bi-pencil-square me-1"></i> <span class="d-none d-sm-inline">REVISI / EDIT DATA</span><span class="d-inline d-sm-none">EDIT</span>
+                    </a>
+                }
                 <button onclick="downloadPDF()" class="btn btn-outline-info btn-sm px-3 px-md-4 rounded-pill fw-bold neon-glow-info d-inline-flex align-items-center">
                     <i class="bi bi-file-earmark-pdf me-1"></i> <span class="d-none d-sm-inline">DOWNLOAD PDF</span><span class="d-inline d-sm-none">PDF</span>
                 </button>
@@ -2062,6 +2073,17 @@
                 Swal.fire({ icon: 'error', title: 'GAGAL!', text: data.message });
             }
         }
+
+        // Leader authorization check for client-side offline cache
+        (function() {
+            try {
+                const sess = JSON.parse(localStorage.getItem('offline_session') || '{}');
+                const r = (sess.userRole || '').toUpperCase();
+                if (!r.includes('LEADER') && !r.includes('ADMIN')) {
+                    document.querySelectorAll('.leader-only-btn').forEach(el => el.style.display = 'none');
+                }
+            } catch(e) {}
+        })();
     </script>
 }
 
